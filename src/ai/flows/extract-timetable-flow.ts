@@ -52,12 +52,15 @@ Analyze the provided image of a timetable and extract every class slot. For each
 - endTime (in 24-hour HH:MM format)
 
 **CRITICAL INSTRUCTIONS FOR END TIME CALCULATION:**
-Timetables often do not explicitly write the end time for a class. You MUST infer it using the following logic:
+Your primary goal is to infer the end time. Follow these rules in order:
 
 1.  **Look Ahead:** The end time for one class is ALWAYS the start time of the next class that occurs on the SAME DAY.
     - *Example*: If "Physics" is at 10:00 on Monday and "Math" is at 11:00 on Monday, the end time for "Physics" is "11:00".
 
-2.  **Last Class of the Day:** If a class is the final one scheduled for a particular day (i.e., there are no more classes after it on that day), you MUST calculate its end time by assuming a standard duration of **50 minutes**.
+2.  **Special Afternoon Slot**: As a specific exception, if a class starts at "13:30" (1:30 PM) and there is no other class starting before "15:10" on the same day, its end time MUST be "15:10".
+    - *Example*: If "Chemistry Lab" starts at 13:30 on Tuesday, and the next class is at 16:00, the end time for "Chemistry Lab" is "15:10".
+
+3.  **Default Duration for Last Class:** If a class is the final one scheduled for a particular day and the above rules do not apply, you MUST calculate its end time by assuming a standard duration of **50 minutes**.
     - *Example*: If "History" is at 14:00 on Wednesday and it's the last class, its end time will be "14:50".
 
 **OTHER IMPORTANT RULES:**
