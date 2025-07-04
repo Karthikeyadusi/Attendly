@@ -48,31 +48,21 @@ const prompt = ai.definePrompt({
 Analyze the provided image and extract every class slot. For each slot, you must identify:
 - subjectName
 - day (one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
-- startTime (in 24-hour HH:MM format)
+- startTime (in 24-hour HH:MM format). The only possible start times are 09:00, 10:40, and 13:30.
 - endTime (in 24-hour HH:MM format)
 
-**CRITICAL, UNIVERSAL RULE FOR DETERMINING END TIME:**
-There is only one logic for determining the end time for ALL classes, regardless of whether they are in the morning or afternoon. Follow this logic precisely.
+**SINGLE, CRITICAL RULE FOR DETERMINING END TIME:**
+To determine the \`endTime\` for any class, you MUST add exactly **100 minutes** to its \`startTime\`. This is the only rule. Do not use any other method, such as looking at the next class.
 
-1.  **Default Duration:** First, as a default, assume every class lasts for **100 minutes**. Calculate a potential end time by adding 100 minutes to the start time.
-    - *Example A (Morning):* A class at 09:00 would have a potential end time of 10:40.
-    - *Example B (Afternoon):* A class at 14:00 would have a potential end time of 15:40.
-
-2.  **Prevent Overlaps:** This is the most important final step. Look ahead to the next class scheduled on the **SAME DAY**.
-    - If the next class starts *before* the potential end time you calculated, you **MUST** use the start time of that next class as the final \`endTime\`.
-    - If there is no next class on the same day, then the potential end time (startTime + 100 minutes) is the correct final \`endTime\`.
-
-**Example of overlap prevention:**
-- Class A starts at 09:00. Its potential end time is 10:40.
-- Class B on the same day starts at 10:00.
-- Since 10:00 is earlier than 10:40, the final \`endTime\` for Class A MUST be 10:00.
-
-This logic applies to every single class you find. Do not use any other method.
+**Examples:**
+- If a class starts at \`09:00\`, its \`endTime\` MUST be \`10:40\`.
+- If a class starts at \`10:40\`, its \`endTime\` MUST be \`12:20\`.
+- If a class starts at \`13:30\`, its \`endTime\` MUST be \`15:10\`.
 
 **OTHER IMPORTANT INSTRUCTIONS:**
-- **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
+- **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:00 AM" becomes "09:00", "1:30 PM" becomes "13:30").
 - **Day Formatting**: Days must be abbreviated to 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
-- **Data Cleaning**: Ignore all non-schedule text like names, room numbers, or university logos.
+- **Data Cleaning**: Ignore all non-schedule text like names, room numbers, or university logos. Only extract slots for the specified start times.
 - **Strict Schema:** The final output must perfectly match the provided JSON schema.
 
 Image to analyze: {{media url=photoDataUri}}`,
