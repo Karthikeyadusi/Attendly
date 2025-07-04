@@ -25,6 +25,13 @@ export type AttendanceRecord = {
   credits: number;
 };
 
+export type ExtractedSlot = {
+  day: DayOfWeek;
+  startTime: string; // "HH:MM"
+  endTime: string; // "HH:MM"
+  subjectName: string;
+};
+
 export interface AppData {
   subjects: Subject[];
   timetable: TimeSlot[];

@@ -3,9 +3,10 @@
 import { useApp } from "@/components/AppProvider";
 import Timetable from "@/components/timetable/Timetable";
 import TimetableSlotForm from "@/components/timetable/TimetableSlotForm";
+import TimetableImportDialog from "@/components/timetable/TimetableImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import Link from 'next/link';
 import { Info } from 'lucide-react';
@@ -13,12 +14,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function TimetablePage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isImportOpen, setIsImportOpen] = useState(false);
     const { subjects, isLoaded } = useApp();
 
     if (!isLoaded) {
       return (
         <div className="space-y-4">
-            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-64 w-full" />
         </div>
@@ -48,15 +50,22 @@ export default function TimetablePage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold tracking-tight">Weekly Timetable</h2>
-                <Button onClick={() => setIsFormOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Class
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={() => setIsImportOpen(true)} variant="outline">
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Import with AI
+                    </Button>
+                    <Button onClick={() => setIsFormOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Class
+                    </Button>
+                </div>
             </div>
             
             <Timetable />
             
             <TimetableSlotForm open={isFormOpen} onOpenChange={setIsFormOpen} />
+            <TimetableImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
         </div>
     );
 }

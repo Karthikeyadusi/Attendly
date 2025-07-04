@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus } from '@/types';
+import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot } from '@/types';
 import { useIsClient } from './useIsClient';
 
 const APP_DATA_KEY = 'classCompassData';
@@ -105,6 +105,60 @@ export function useAppData() {
   const setMinAttendancePercentage = useCallback((percentage: number) => {
     setData(prev => ({ ...prev, minAttendancePercentage: percentage }));
   }, []);
+  
+  const importTimetable = useCallback((extractedSlots: ExtractedSlot[]) => {
+    setData(prev => {
+        const newSubjects = [...prev.subjects];
+        const newTimetable = [...prev.timetable];
+        const existingSubjectNames = new Set(prev.subjects.map(s => s.name.toLowerCase()));
+
+        // Create any new subjects needed
+        extractedSlots.forEach(slot => {
+            if (slot.subjectName && !existingSubjectNames.has(slot.subjectName.toLowerCase())) {
+                const newSubject: Subject = {
+                    id: crypto.randomUUID(),
+                    name: slot.subjectName,
+                    type: 'Lecture', // default
+                    credits: 2, // default
+                };
+                newSubjects.push(newSubject);
+                existingSubjectNames.add(newSubject.name.toLowerCase());
+            }
+        });
+
+        const subjectNameToIdMap = new Map(newSubjects.map(s => [s.name.toLowerCase(), s.id]));
+
+        // Create timetable slots
+        extractedSlots.forEach(slot => {
+            if (!slot.subjectName || !slot.day || !slot.startTime || !slot.endTime) return;
+            
+            const subjectId = subjectNameToIdMap.get(slot.subjectName.toLowerCase());
+            if (subjectId) {
+                // Avoid adding duplicate slots
+                const slotExists = newTimetable.some(
+                    ts => ts.day === slot.day && ts.startTime === slot.startTime && ts.subjectId === subjectId
+                );
+
+                if (!slotExists) {
+                    const newSlot: TimeSlot = {
+                        id: crypto.randomUUID(),
+                        day: slot.day,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                        subjectId: subjectId,
+                    };
+                    newTimetable.push(newSlot);
+                }
+            }
+        });
+        
+        return {
+            ...prev,
+            subjects: newSubjects,
+            timetable: newTimetable,
+        };
+    });
+  }, []);
 
   return {
     ...data,
@@ -116,5 +170,6 @@ export function useAppData() {
     deleteTimetableSlot,
     logAttendance,
     setMinAttendancePercentage,
+    importTimetable,
   };
 }
