@@ -137,7 +137,7 @@ export default function AttendanceStats() {
                     <CardTitle>Overall Attendance</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <Progress value={stats.attendancePercentage} style={{'--primary': progressColor } as React.CSSProperties} />
+                    <Progress value={stats.attendancePercentage} indicatorClassName={stats.attendancePercentage < minAttendancePercentage ? 'bg-destructive' : undefined} />
                     <p className="text-lg font-bold text-center" style={{ color: progressColor }}>
                         {stats.attendancePercentage.toFixed(2)}%
                     </p>

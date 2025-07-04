@@ -92,7 +92,7 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
                                         {percentage.toFixed(1)}%
                                     </span>
                                 </div>
-                                <Progress value={percentage} style={{'--primary': progressColor } as React.CSSProperties} className="h-2" />
+                                <Progress value={percentage} indicatorClassName={percentage < minAttendancePercentage ? 'bg-destructive' : undefined} className="h-2" />
                                 {helperMessage && (
                                      <p className="text-xs text-muted-foreground text-right pt-1">{helperMessage}</p>
                                 )}
