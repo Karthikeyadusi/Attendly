@@ -36,6 +36,10 @@ export type HistoricalData = {
   attendedCredits: number;
 };
 
+export type SubjectMap = Map<string, Subject>;
+export type TimetableByDayMap = Map<DayOfWeek, TimeSlot[]>;
+export type AttendanceByDateMap = Map<string, AttendanceRecord[]>;
+
 export interface AppData {
   subjects: Subject[];
   timetable: TimeSlot[];
@@ -43,4 +47,9 @@ export interface AppData {
   minAttendancePercentage: number;
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;
+
+  // Derived, memoized data for performance
+  subjectMap: SubjectMap;
+  timetableByDay: TimetableByDayMap;
+  attendanceByDate: AttendanceByDateMap;
 }

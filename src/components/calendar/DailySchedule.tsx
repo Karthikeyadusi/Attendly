@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { format, getDay } from 'date-fns';
-import type { DayOfWeek, AttendanceStatus, AttendanceRecord, TimeSlot } from '@/types';
+import type { DayOfWeek, AttendanceStatus, AttendanceRecord } from '@/types';
 import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -56,23 +56,8 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { timetable, subjects, attendance, logAttendance, isLoaded } = useApp();
+  const { subjectMap, timetableByDay, attendanceByDate, logAttendance, isLoaded } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
-
-  const subjectMap = useMemo(() => {
-    if (!isLoaded) return new Map();
-    return new Map(subjects.map(s => [s.id, s]));
-  }, [subjects, isLoaded]);
-
-  const attendanceByDate = useMemo(() => {
-    if (!isLoaded) return new Map<string, AttendanceRecord[]>();
-    return attendance.reduce((acc, record) => {
-      const records = acc.get(record.date) || [];
-      records.push(record);
-      acc.set(record.date, records);
-      return acc;
-    }, new Map<string, AttendanceRecord[]>());
-  }, [attendance, isLoaded]);
 
   const attendanceForSelectedDateMap = useMemo(() => {
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
@@ -80,16 +65,6 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
     const recordsForDate = attendanceByDate.get(dateStr) || [];
     return new Map(recordsForDate.map(record => [record.slotId, record]));
   }, [selectedDate, attendanceByDate, isLoaded]);
-
-  const timetableByDay = useMemo(() => {
-    if (!isLoaded) return new Map<DayOfWeek, TimeSlot[]>();
-    return timetable.reduce((acc, slot) => {
-      const daySlots = acc.get(slot.day) || [];
-      daySlots.push(slot);
-      acc.set(slot.day, daySlots);
-      return acc;
-    }, new Map<DayOfWeek, TimeSlot[]>());
-  }, [timetable, isLoaded]);
 
   const scheduleForSelectedDate = useMemo(() => {
     const dayOfWeek = selectedDate ? dayMap[getDay(selectedDate)] : undefined;

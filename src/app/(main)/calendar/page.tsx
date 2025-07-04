@@ -6,24 +6,12 @@ import { useApp } from '@/components/AppProvider';
 import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
-import type { AttendanceRecord } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import DailySchedule from '@/components/calendar/DailySchedule';
 
 export default function CalendarPage() {
-    const { attendance, isLoaded } = useApp();
+    const { attendanceByDate, isLoaded } = useApp();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-
-    const attendanceByDate = useMemo(() => {
-        if (!isLoaded) return new Map<string, AttendanceRecord[]>();
-        
-        return attendance.reduce((acc, record) => {
-            const records = acc.get(record.date) || [];
-            records.push(record);
-            acc.set(record.date, records);
-            return acc;
-        }, new Map<string, AttendanceRecord[]>());
-    }, [attendance, isLoaded]);
 
     const dailyAttendanceStatus = useMemo(() => {
         if (!isLoaded) return {};
@@ -35,10 +23,11 @@ export default function CalendarPage() {
                  statusByDate[date] = 'cancelled';
                  continue;
             }
-            const statuses = new Set(records.map(r => r.status));
-            if (statuses.has('Absent')) {
+            // Check for absence first, as a single absence marks the day
+            if (records.some(r => r.status === 'Absent')) {
                 statusByDate[date] = 'absent';
-            } else if (statuses.has('Attended')) {
+            } else if (records.some(r => r.status === 'Attended')) {
+                // Only mark as attended if no absences and at least one attended class
                 statusByDate[date] = 'attended';
             }
         }
@@ -76,7 +65,7 @@ export default function CalendarPage() {
     return (
         <div className="space-y-6">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
-            <Card className="flex justify-center">
+            <Card className="flex justify-center p-0 sm:p-4">
                 <Calendar
                     mode="single"
                     selected={selectedDate}
