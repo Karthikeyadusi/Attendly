@@ -23,22 +23,22 @@ export default function CalendarPage() {
                  statusByDate[date] = 'cancelled';
                  continue;
             }
-            // Check for absence first, as a single absence marks the day
             if (records.some(r => r.status === 'Absent')) {
                 statusByDate[date] = 'absent';
-            } else if (records.some(r => r.status === 'Attended')) {
-                // Only mark as attended if no absences and at least one attended class
-                statusByDate[date] = 'attended';
+            } else if (records.every(r => r.status === 'Attended' || r.status === 'Cancelled')) {
+                if (records.some(r => r.status === 'Attended')) {
+                    statusByDate[date] = 'attended';
+                }
             }
         }
         return statusByDate;
     }, [attendanceByDate, isLoaded]);
 
-    const modifiers = {
+    const modifiers = useMemo(() => ({
         attended: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended',
         absent: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'absent',
         cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled',
-    };
+    }), [dailyAttendanceStatus]);
 
     const modifierStyles = {
         attended: { 
