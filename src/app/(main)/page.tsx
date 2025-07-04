@@ -24,7 +24,11 @@ export default function DashboardPage() {
   }
 
   if (subjects.length === 0 || timetable.length === 0) {
-    return <Onboarding />;
+    return (
+      <div className="flex flex-1 items-center">
+        <Onboarding />
+      </div>
+    );
   }
 
   return (

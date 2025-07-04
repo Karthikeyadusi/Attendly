@@ -108,14 +108,13 @@ export default function CalendarPage() {
     return (
         <div className="space-y-6">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
-            <Card>
+            <Card className="flex justify-center">
                 <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     modifiers={modifiers}
                     modifiersStyles={modifierStyles}
-                    className="w-full"
                 />
             </Card>
 

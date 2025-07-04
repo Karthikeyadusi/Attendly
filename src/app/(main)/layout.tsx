@@ -11,7 +11,7 @@ export default function MainAppLayout({
     <AppProvider>
       <div className="relative flex h-screen w-full flex-col">
         <Header />
-        <main className="flex-1 overflow-y-auto pb-20 p-4">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto pb-20 p-4">{children}</main>
         <BottomNav />
       </div>
     </AppProvider>
