@@ -4,7 +4,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Class Compass',
+  title: 'Attendly',
   description: 'Your smart college attendance tracker.',
 };
 

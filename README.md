@@ -1,6 +1,6 @@
-# Class Compass: Your Smart College Attendance Tracker
+# Attendly: Your Smart College Attendance Tracker
 
-Class Compass is a modern, AI-powered web application designed to help college students effortlessly track their class attendance, manage their schedule, and stay on top of their academic requirements. Built with a focus on a seamless mobile-first experience, it leverages AI to simplify setup and provides clear, actionable insights into attendance data.
+Attendly is a modern, AI-powered web application designed to help college students effortlessly track their class attendance, manage their schedule, and stay on top of their academic requirements. Built with a focus on a seamless mobile-first experience, it leverages AI to simplify setup and provides clear, actionable insights into attendance data.
 
 ## ✨ Core Features
 
@@ -15,7 +15,7 @@ Class Compass is a modern, AI-powered web application designed to help college s
 
 ## 🚀 Technical Stack & Architecture
 
-Class Compass is built with a modern, robust, and scalable tech stack.
+Attendly is built with a modern, robust, and scalable tech stack.
 
 - **Framework**: **Next.js 15** (with App Router) for a high-performance React application with server-side rendering capabilities.
 - **Language**: **TypeScript** for type safety and improved developer experience.
@@ -70,7 +70,7 @@ The entire application state (subjects, timetable, attendance) is managed throug
 
 ### The AI Timetable Import Flow
 
-This is the most complex and powerful feature of Class Compass.
+This is the most complex and powerful feature of Attendly.
 
 1.  **User Interaction (`TimetableImportDialog.tsx`)**:
     - The user clicks "Import with AI" and selects an image file.
@@ -135,4 +135,4 @@ To run this project locally, follow these steps:
       ```
       The Genkit UI will be available at `http://localhost:4000`.
 
-Now you can open your browser and start using Class Compass!
+Now you can open your browser and start using Attendly!

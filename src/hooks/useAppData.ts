@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData, SubjectStatsMap, SubjectStats, AppCoreData, BackupData } from '@/types';
 import { useIsClient } from './useIsClient';
 
-const APP_DATA_KEY = 'classCompassData';
+const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
 
 const getInitialData = (): AppCoreData => ({

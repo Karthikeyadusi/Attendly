@@ -46,7 +46,7 @@ export default function SettingsPage() {
     const link = document.createElement('a');
     link.href = url;
     const date = new Date().toISOString().split('T')[0];
-    link.download = `class-compass-backup-${date}.json`;
+    link.download = `attdendly-backup-${date}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
