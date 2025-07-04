@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,6 +61,50 @@
 }
 
 @layer base {
+  .theme-navy {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 207 44% 49%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 14% 95%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 14% 95%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 14% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 207 44% 49%;
+  }
+
+  .dark .theme-navy {
+    --background: 240 30% 9%;
+    --foreground: 210 40% 98%;
+    --card: 240 30% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 30% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 207 44% 49%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 14% 30%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 14% 25%;
+    --muted-foreground: 210 14% 60%;
+    --accent: 210 14% 50%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 14% 25%;
+    --input: 210 14% 25%;
+    --ring: 207 44% 49%;
+  }
+
   .theme-zinc {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -201,3 +246,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+    
