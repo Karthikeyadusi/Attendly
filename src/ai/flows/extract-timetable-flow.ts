@@ -45,20 +45,20 @@ const prompt = ai.definePrompt({
   output: {schema: ExtractTimetableOutputSchema},
   prompt: `You are an expert AI timetable parser. Your task is to extract class schedule information from the provided image and return it in a structured JSON format.
 
-While parsing the timetable, extract all classes with accurate startTime and endTime. Many subjects appear as two consecutive 50-minute blocks (e.g., "FLAT" at 09:00 and again at 09:50) but represent one logical class.
+Your logic must be very simple. The only two things you need to do are merge consecutive classes and handle single classes.
 
-**Valid start times must include:**
-- 09:00
-- 10:40
-- 1:30 PM
+**Rule 1: Merge Consecutive Identical Subjects**
+- If you see the same subject in two back-to-back time slots on the same day, you MUST merge them into a single 100-minute class.
+- **Example:** 'FLAT' at 09:00 and 'FLAT' at 09:50 becomes one class from \`09:00\` to \`10:40\`.
+- **Example:** 'AFN' at 13:30 and 'AFN' at 14:20 becomes one class from \`13:30\` to \`15:10\`.
 
-**Rules:**
-1.  **Time Conversion:** You must convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
-2.  **Merge Consecutive Subjects:** If the same subject appears in two consecutive slots on the same day, you must merge them into one. For example, if 'FLAT' is at 09:00 and 09:50, the result is a single entry with startTime: "09:00" and endTime: "10:40".
-3.  **Afternoon Class End Time:** If an afternoon class starts at 1:30 PM (13:30), its endTime MUST be 15:10. This is a 100-minute duration. This rule is absolute and does not depend on other classes.
-4.  **Ignore Duplicates:** You must ignore duplicate entries after merging them.
+**Rule 2: Handle Single Classes**
+- If a class is not part of a consecutive pair, it is a single 50-minute class.
+- **Example:** A class at 10:40 is from \`10:40\` to \`11:30\`.
 
-Follow these rules precisely.
+**Important:**
+- Convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
+- Ignore duplicate entries after merging.
 
 Image to analyze: {{media url=photoDataUri}}`,
 });
