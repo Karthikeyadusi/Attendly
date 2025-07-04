@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -87,7 +86,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Subject</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a subject" />
@@ -107,7 +106,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Day of the Week</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a day" />
