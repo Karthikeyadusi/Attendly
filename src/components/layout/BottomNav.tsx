@@ -6,7 +6,7 @@ import { BookCopy, Calendar, CalendarDays, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/timetable", label: "Timetable", icon: CalendarDays },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/subjects", label: "Subjects", icon: BookCopy },
