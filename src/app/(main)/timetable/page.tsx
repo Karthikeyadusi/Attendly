@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
-import Link from 'next/link';
-import { Info } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TimeSlot } from "@/types";
 
 export default function TimetablePage() {
@@ -47,25 +44,6 @@ export default function TimetablePage() {
       );
     }
     
-    if (subjects.length === 0) {
-        return (
-             <Card className="w-full mt-8">
-                <CardHeader className="items-center text-center">
-                    <Info className="w-12 h-12 text-primary mb-2" />
-                    <CardTitle className="text-xl">Add Subjects First</CardTitle>
-                    <CardDescription>
-                        You need to add subjects before you can build your timetable.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center">
-                    <Link href="/subjects">
-                        <Button>Go to Subjects</Button>
-                    </Link>
-                </CardContent>
-            </Card>
-        )
-    }
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -75,7 +53,7 @@ export default function TimetablePage() {
                         <Sparkles className="mr-2 h-4 w-4" />
                         Import with AI
                     </Button>
-                    <Button onClick={handleAddSlot}>
+                    <Button onClick={handleAddSlot} disabled={subjects.length === 0}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Class
                     </Button>
