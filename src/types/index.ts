@@ -1,3 +1,4 @@
+
 export type Subject = {
   id: string;
   name: string;
@@ -36,9 +37,16 @@ export type HistoricalData = {
   attendedCredits: number;
 };
 
+export type SubjectStats = {
+  attendedClasses: number;
+  conductedClasses: number;
+  percentage: number;
+};
+
 export type SubjectMap = Map<string, Subject>;
 export type TimetableByDayMap = Map<DayOfWeek, TimeSlot[]>;
 export type AttendanceByDateMap = Map<string, AttendanceRecord[]>;
+export type SubjectStatsMap = Map<string, SubjectStats>;
 
 export interface AppData {
   subjects: Subject[];
@@ -52,4 +60,5 @@ export interface AppData {
   subjectMap: SubjectMap;
   timetableByDay: TimetableByDayMap;
   attendanceByDate: AttendanceByDateMap;
+  subjectStats: SubjectStatsMap;
 }

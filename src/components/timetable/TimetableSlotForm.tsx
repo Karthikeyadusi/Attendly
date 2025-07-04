@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -90,7 +91,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a subject" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -110,7 +111,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a day" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}

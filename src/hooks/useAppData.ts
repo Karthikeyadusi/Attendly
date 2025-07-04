@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData } from '@/types';
+import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData, SubjectStatsMap, SubjectStats } from '@/types';
 import { useIsClient } from './useIsClient';
 
 const APP_DATA_KEY = 'classCompassData';
@@ -18,11 +18,12 @@ const getInitialData = (): AppData => ({
   subjectMap: new Map(),
   timetableByDay: new Map(),
   attendanceByDate: new Map(),
+  subjectStats: new Map(),
 });
 
 export function useAppData() {
   const isClient = useIsClient();
-  const [data, setData] = useState<Omit<AppData, 'subjectMap' | 'timetableByDay' | 'attendanceByDate'>>(getInitialData());
+  const [data, setData] = useState<Omit<AppData, 'subjectMap' | 'timetableByDay' | 'attendanceByDate' | 'subjectStats'>>(getInitialData());
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -221,6 +222,45 @@ export function useAppData() {
     }, new Map<string, AttendanceRecord[]>());
   }, [data.attendance]);
 
+  const subjectStats: SubjectStatsMap = useMemo(() => {
+    const stats: SubjectStatsMap = new Map();
+    if (!isLoaded) return stats;
+
+    const slotSubjectMap = new Map(data.timetable.map(slot => [slot.id, slot.subjectId]));
+
+    for (const subject of data.subjects) {
+      stats.set(subject.id, { attendedClasses: 0, conductedClasses: 0, percentage: 100 });
+    }
+
+    const filteredAttendance = data.trackingStartDate
+      ? data.attendance.filter(r => r.date >= data.trackingStartDate!)
+      : data.attendance;
+
+    for (const record of filteredAttendance) {
+      if (record.status === 'Cancelled') continue;
+      
+      const subjectId = slotSubjectMap.get(record.slotId);
+      if (subjectId) {
+        const subjectStat = stats.get(subjectId);
+        if (subjectStat) {
+          subjectStat.conductedClasses += 1;
+          if (record.status === 'Attended') {
+            subjectStat.attendedClasses += 1;
+          }
+        }
+      }
+    }
+    
+    for(const stat of stats.values()) {
+      if (stat.conductedClasses > 0) {
+        stat.percentage = (stat.attendedClasses / stat.conductedClasses) * 100;
+      } else {
+        stat.percentage = 100;
+      }
+    }
+    
+    return stats;
+  }, [data.subjects, data.timetable, data.attendance, data.trackingStartDate, isLoaded]);
 
   return {
     ...data,
@@ -239,5 +279,6 @@ export function useAppData() {
     subjectMap,
     timetableByDay,
     attendanceByDate,
+    subjectStats,
   };
 }
