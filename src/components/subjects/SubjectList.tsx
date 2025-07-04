@@ -1,22 +1,15 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Info } from "lucide-react";
-import SubjectForm from "./SubjectForm";
-import { useState } from "react";
 import type { Subject } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => void; }) {
     const { subjects, deleteSubject } = useApp();
-    const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-
-    const handleEditClick = (subject: Subject) => {
-        setEditingSubject(subject);
-        onEdit(subject);
-    };
 
     if (subjects.length === 0) {
         return (
@@ -41,7 +34,7 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
                                 <CardDescription>{subject.type} • {subject.credits} {subject.credits === 1 ? 'Credit' : 'Credits'}</CardDescription>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditClick(subject)}>
+                                <Button variant="ghost" size="icon" onClick={() => onEdit(subject)}>
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog>
@@ -70,13 +63,6 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
                     </CardHeader>
                 </Card>
             ))}
-            {editingSubject && (
-                 <SubjectForm
-                    open={!!editingSubject}
-                    onOpenChange={(isOpen) => !isOpen && setEditingSubject(null)}
-                    subject={editingSubject}
-                />
-            )}
         </div>
     );
 }

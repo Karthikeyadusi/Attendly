@@ -1,13 +1,13 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus, DayOfWeek } from "@/types";
 import { CheckCircle2, XCircle, Ban, Info } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "../ui/button";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -65,29 +65,26 @@ export default function TodaysClasses() {
                 </div>
                 <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-1 rounded-full">{subject.type}</span>
               </div>
-              <RadioGroup
-                defaultValue={record?.status}
-                onValueChange={(status) => logAttendance(slot, todayDateString, status as AttendanceStatus)}
+              <div
                 className="grid grid-cols-3 gap-2"
               >
                 {statusOptions.map(opt => (
-                  <div key={opt.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={opt.value} id={`${slot.id}-${opt.value}`} className="sr-only" />
-                    <Label
-                      htmlFor={`${slot.id}-${opt.value}`}
-                      className={cn(
-                        "flex flex-col items-center justify-center gap-1 cursor-pointer p-2 rounded-md transition-colors h-16",
-                        record?.status === opt.value
-                          ? `bg-primary/20 ${opt.color}`
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      )}
-                    >
-                      <opt.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-xs font-medium">{opt.value}</span>
-                    </Label>
-                  </div>
+                  <Button
+                    key={opt.value}
+                    variant="ghost"
+                    onClick={() => logAttendance(slot, todayDateString, opt.value as AttendanceStatus)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-1 cursor-pointer p-2 rounded-md transition-colors h-16",
+                      record?.status === opt.value
+                        ? `bg-primary/20 ${opt.color} hover:bg-primary/20`
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <opt.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <span className="text-xs font-medium">{opt.value}</span>
+                  </Button>
                 ))}
-              </RadioGroup>
+              </div>
             </div>
           );
         })}

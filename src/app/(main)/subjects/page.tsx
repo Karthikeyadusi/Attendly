@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
@@ -8,11 +9,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PlusCircle, History } from "lucide-react";
 import { useState } from "react";
 import HistoricalDataDialog from "@/components/subjects/HistoricalDataDialog";
+import type { Subject } from "@/types";
 
 export default function SubjectsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const { isLoaded } = useApp();
+
+    const handleAddSubject = () => {
+        setEditingSubject(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEditSubject = (subject: Subject) => {
+        setEditingSubject(subject);
+        setIsFormOpen(true);
+    };
+
+    const handleFormOpenChange = (open: boolean) => {
+        setIsFormOpen(open);
+        if (!open) {
+            setEditingSubject(null);
+        }
+    };
+
 
     if (!isLoaded) {
       return (
@@ -34,16 +55,20 @@ export default function SubjectsPage() {
                         <History className="mr-2 h-4 w-4" />
                         Import History
                     </Button>
-                    <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
+                    <Button onClick={handleAddSubject} className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Subject
                     </Button>
                 </div>
             </div>
 
-            <SubjectList onEdit={(subject) => setIsFormOpen(true)} />
+            <SubjectList onEdit={handleEditSubject} />
             
-            <SubjectForm open={isFormOpen} onOpenChange={setIsFormOpen} />
+            <SubjectForm 
+              open={isFormOpen} 
+              onOpenChange={handleFormOpenChange}
+              subject={editingSubject}
+            />
             <HistoricalDataDialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
         </div>
     );
