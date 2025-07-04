@@ -35,7 +35,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ThemeProvider>
-          <div className="bg-zinc-100 dark:bg-zinc-900 flex justify-center items-start min-h-screen">
+          <div className="bg-muted flex justify-center items-start min-h-screen">
             <div className="w-full max-w-lg bg-background shadow-lg min-h-screen">
               {children}
             </div>
