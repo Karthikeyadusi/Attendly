@@ -107,7 +107,7 @@ export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalD
 
                 <p className="text-sm text-muted-foreground pt-2">Enter the total credits conducted and attended for all subjects combined before this date.</p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="conductedCredits"
