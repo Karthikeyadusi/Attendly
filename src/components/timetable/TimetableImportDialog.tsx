@@ -21,8 +21,69 @@ import { Loader2, Upload, Trash2, Sparkles } from "lucide-react";
 import type { ExtractedSlot, DayOfWeek } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { addMinutes, parse } from 'date-fns';
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+type RawExtractedSlot = {
+    day: DayOfWeek;
+    startTime: string;
+    subjectName: string;
+};
+
+// This function implements the robust merging logic on the client-side.
+const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
+    const finalSlots: ExtractedSlot[] = [];
+    const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
+
+    // 1. Group raw slots by day
+    for (const slot of rawSlots) {
+        if (!slotsByDay.has(slot.day)) {
+            slotsByDay.set(slot.day, []);
+        }
+        slotsByDay.get(slot.day)!.push(slot);
+    }
+
+    // 2. For each day, sort slots by time and then process them
+    for (const day of slotsByDay.keys()) {
+        const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        
+        let i = 0;
+        while (i < daySlots.length) {
+            const currentSlot = daySlots[i];
+            const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
+
+            const baseDate = new Date();
+            const startTimeDate = parse(currentSlot.startTime, 'HH:mm', baseDate);
+
+            // 3. Check if the next slot should be merged with the current one
+            let shouldMerge = false;
+            if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
+                const nextStartTimeDate = parse(nextSlot.startTime, 'HH:mm', baseDate);
+                const diffInMinutes = (nextStartTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60);
+                // A consecutive slot typically starts 50 minutes later. Allow a small buffer.
+                if (diffInMinutes >= 50 && diffInMinutes <= 60) {
+                    shouldMerge = true;
+                }
+            }
+
+            if (shouldMerge) {
+                // 4a. If merging, create a 100-minute class
+                const endTime = addMinutes(startTimeDate, 100).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                finalSlots.push({ ...currentSlot, endTime });
+                i += 2; // Crucially, skip the next slot as it's been consumed by the merge
+            } else {
+                // 4b. If not merging, create a standard 50-minute class
+                const endTime = addMinutes(startTimeDate, 50).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                finalSlots.push({ ...currentSlot, endTime });
+                i += 1;
+            }
+        }
+    }
+
+    return finalSlots;
+};
+
 
 export default function TimetableImportDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { importTimetable } = useApp();
@@ -67,7 +128,8 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     try {
       const result = await extractTimetable({ photoDataUri: imageData });
       if (result && result.slots.length > 0) {
-        setExtractedSlots(result.slots);
+        const processed = processRawSlots(result.slots);
+        setExtractedSlots(processed);
       } else {
         toast({
             variant: "destructive",

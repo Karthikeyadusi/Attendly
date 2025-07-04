@@ -23,15 +23,15 @@ const ExtractTimetableInputSchema = z.object({
 });
 export type ExtractTimetableInput = z.infer<typeof ExtractTimetableInputSchema>;
 
-const ExtractedSlotSchema = z.object({
+// The AI now returns raw, unprocessed slots. The end time will be calculated in the client.
+const RawExtractedSlotSchema = z.object({
   day: z.enum(days).describe("Day of the week (must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')."),
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).describe("The start time of the class in 24-hour HH:MM format."),
-  endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).describe("The end time of the class in 24-hour HH:MM format."),
   subjectName: z.string().describe('The name of the subject or course.'),
 });
 
 const ExtractTimetableOutputSchema = z.object({
-  slots: z.array(ExtractedSlotSchema),
+  slots: z.array(RawExtractedSlotSchema),
 });
 export type ExtractTimetableOutput = z.infer<typeof ExtractTimetableOutputSchema>;
 
@@ -43,22 +43,18 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  prompt: `You are an expert AI timetable parser. Your task is to extract class schedule information from the provided image and return it in a structured JSON format.
+  prompt: `You are an AI assistant. Your only task is to look at the timetable image and extract every single class block you see.
 
-Your logic must be very simple. The only two things you need to do are merge consecutive classes and handle single classes.
+For each class block, provide the following information:
+1.  **day**: The day of the week ('Mon', 'Tue', etc.).
+2.  **startTime**: The start time of that block in 24-hour HH:MM format.
+3.  **subjectName**: The name of the subject in that block.
 
-**Rule 1: Merge Consecutive Identical Subjects**
-- If you see the same subject in two back-to-back time slots on the same day, you MUST merge them into a single 100-minute class.
-- **Example:** 'FLAT' at 09:00 and 'FLAT' at 09:50 becomes one class from \`09:00\` to \`10:40\`.
-- **Example:** 'AFN' at 13:30 and 'AFN' at 14:20 becomes one class from \`13:30\` to \`15:10\`.
-
-**Rule 2: Handle Single Classes**
-- If a class is not part of a consecutive pair, it is a single 50-minute class.
-- **Example:** A class at 10:40 is from \`10:40\` to \`11:30\`.
-
-**Important:**
-- Convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
-- Ignore duplicate entries after merging.
+**CRITICAL INSTRUCTIONS:**
+-   You MUST extract EVERY block, even if the same subject appears multiple times. For example, if 'FLAT' is at 09:00 and also at 09:50, you must return two separate entries for it.
+-   Do NOT merge classes.
+-   Do NOT calculate end times.
+-   You MUST convert all times to 24-hour HH:MM format. For example, "1:30 PM" becomes "13:30".
 
 Image to analyze: {{media url=photoDataUri}}`,
 });
