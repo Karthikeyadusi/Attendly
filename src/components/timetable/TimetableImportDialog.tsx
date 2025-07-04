@@ -35,6 +35,7 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     // Helper function to fix inconsistent time formats from the AI.
     const normalizeTime = (timeStr: string): string => {
         try {
+            if (!timeStr) return "00:00";
             timeStr = timeStr.replace('.', ':').trim();
             const isPM = timeStr.toLowerCase().includes('pm');
             const isAM = timeStr.toLowerCase().includes('am');
@@ -51,7 +52,6 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             } else if (isAM && hour === 12) {
                 hour = 0;
             } else if (!isPM && !isAM) {
-                // Heuristic: if a time is between 1-6, it's likely PM
                 if (hour >= 1 && hour <= 7) { 
                     hour += 12;
                 }
@@ -69,24 +69,24 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     };
     
-    // 1. Normalize times for ALL slots first.
-    const allSlotsNormalized = rawSlots.map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }));
-    
+    // 1. Normalize times and filter out invalid slots
+    const allSlotsNormalized = rawSlots
+        .map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }))
+        .filter(slot => slot.day && slot.startTime && slot.subjectName && slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/));
+
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
     // 2. Group ALL normalized slots by day
     for (const slot of allSlotsNormalized) {
-        if (!slot.day || !slot.startTime || !slot.subjectName) continue;
-        if (!slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) continue;
         if (!slotsByDay.has(slot.day)) {
             slotsByDay.set(slot.day, []);
         }
         slotsByDay.get(slot.day)!.push(slot);
     }
 
-    const slotsWithEndTime: ExtractedSlot[] = [];
+    const timedSlots: ExtractedSlot[] = [];
 
-    // 3. Calculate end times using the full schedule (including non-academic)
+    // 3. Calculate end times using the full schedule (including non-academic blocks)
     for (const day of slotsByDay.keys()) {
         const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
         
@@ -96,17 +96,15 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
 
             try {
                 let endTime;
-                
                 if (nextSlot) {
                     endTime = nextSlot.startTime;
                 } else {
-                    // If it's the last class of the day, assume a duration.
                     const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
                     const duration = isLab ? 100 : 50; 
                     endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
                 }
                 
-                slotsWithEndTime.push({
+                timedSlots.push({
                     day: currentSlot.day,
                     startTime: currentSlot.startTime,
                     endTime: endTime,
@@ -118,27 +116,21 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
 
-    // 4. NOW filter out non-academic slots
-    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
-    const academicSlotsWithEndTime = slotsWithEndTime.filter(slot => 
-      !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
-    );
-
-    // 5. Merge consecutive ACADEMIC slots that have the same subject name
+    // 4. Merge consecutive slots that have the same subject name
     const mergedSlots: ExtractedSlot[] = [];
-    const processedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
-    for (const slot of academicSlotsWithEndTime) {
-        if (!processedSlotsByDay.has(slot.day)) {
-            processedSlotsByDay.set(slot.day, []);
+    const timedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
+    for (const slot of timedSlots) {
+        if (!timedSlotsByDay.has(slot.day)) {
+            timedSlotsByDay.set(slot.day, []);
         }
-        processedSlotsByDay.get(slot.day)!.push(slot);
+        timedSlotsByDay.get(slot.day)!.push(slot);
     }
     
-    for (const day of processedSlotsByDay.keys()) {
-        const daySlots = processedSlotsByDay.get(day)!.sort((a,b) => a.startTime.localeCompare(b.startTime));
+    for (const day of timedSlotsByDay.keys()) {
+        const daySlots = timedSlotsByDay.get(day)!.sort((a,b) => a.startTime.localeCompare(b.startTime));
         let i = 0;
         while (i < daySlots.length) {
-            let currentSlot = daySlots[i];
+            let currentSlot = { ...daySlots[i] };
             
             let j = i + 1;
             while (
@@ -155,8 +147,14 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
     
+    // 5. NOW filter out purely structural slots like 'LUNCH' or 'BREAK'
+    const structuralKeywords = ['lunch', 'break'];
+    const finalSchedule = mergedSlots.filter(slot => 
+      !structuralKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
+    );
+
     // Return sorted by day, then time
-    return mergedSlots.sort((a,b) => {
+    return finalSchedule.sort((a,b) => {
         if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
         return a.startTime.localeCompare(b.startTime);
     });

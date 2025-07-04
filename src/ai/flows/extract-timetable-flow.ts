@@ -26,7 +26,7 @@ export type ExtractTimetableInput = z.infer<typeof ExtractTimetableInputSchema>;
 // The AI now returns raw, unprocessed slots. The end time will be calculated in the client.
 const RawExtractedSlotSchema = z.object({
   day: z.enum(days).describe("Day of the week (must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')."),
-  startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).describe("The start time of the class in 24-hour HH:MM format."),
+  startTime: z.string().regex(/^(0?[1-9]|1[0-2]):[0-5][0-9]\s*(AM|PM)?|([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).describe("The start time of the class in HH:MM format (e.g., '09:50', '1:30 PM')."),
   subjectName: z.string().describe('The name of the subject or course.'),
 });
 
@@ -47,15 +47,15 @@ const prompt = ai.definePrompt({
 
 For each block, provide the following information:
 1.  **day**: The day of the week ('Mon', 'Tue', etc.).
-2.  **startTime**: The start time of that block in 24-hour HH:MM format.
+2.  **startTime**: The start time of that block in HH:MM format. It's okay to use AM/PM if it's written that way (e.g., '1:30 PM').
 3.  **subjectName**: The name of the subject or activity in that block (e.g., "Physics 101", "LUNCH", "LIBRARY").
 
 **CRITICAL INSTRUCTIONS:**
 -   You MUST extract every block, even if the same subject appears multiple times.
--   You MUST include non-academic blocks like "LUNCH", "BREAK", "LIBRARY", "SPORTS", "NCC", "NSS", etc.
+-   You MUST include non-academic blocks like "LUNCH", "BREAK", "LIBRARY", "SPORTS", "NCC", "NSS", "SWACHBHARAT", "PEUHV", etc.
 -   Do NOT merge classes.
 -   Do NOT calculate end times.
--   You MUST convert all times to 24-hour HH:MM format. For example, "1:30 PM" becomes "13:30".
+-   Do NOT convert times to 24-hour format yourself. Just provide the time as it is written.
 
 Image to analyze: {{media url=photoDataUri}}`,
 });
@@ -71,3 +71,4 @@ const extractTimetableFlow = ai.defineFlow(
     return output!;
   }
 );
+
