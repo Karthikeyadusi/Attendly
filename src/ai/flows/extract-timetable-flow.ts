@@ -42,17 +42,27 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  prompt: `You are an intelligent timetable parser. Analyze the provided image of a college timetable. Your task is to extract all class schedules and return them in a structured JSON format.
+  prompt: `You are an expert AI specializing in parsing visual timetables for college students. Your goal is to accurately extract class schedule information from an image and return it in a structured JSON format.
 
-  Carefully follow these instructions:
-  - Identify the subject name, the day of the week, and the start and end times for each class.
-  - The days of the week MUST be one of: 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
-  - Times MUST be in 24-hour HH:MM format. Convert AM/PM times to 24-hour format. For example, 2 PM is 14:00.
-  - CRITICAL LOGIC FOR END TIMES: Many timetables only show a subject at its starting time slot. To determine the end time, you must look ahead to the next scheduled class on the SAME DAY. The end time for one class is the start time of the next class. For example, if on Monday, "Math" starts at 09:00 and the next class, "History", starts at 10:40, then the time slot for "Math" is 09:00-10:40. If a class is the last one of the day, assume a standard duration of 50 minutes.
-  - Make your best effort to parse all entries. If some information is ambiguous, make a reasonable guess. It is critical that the output matches the specified JSON schema exactly.
-  - Ensure that for every slot, the end time is after the start time.
+Core Task:
+Analyze the provided image of a timetable and extract every class slot. For each slot, identify the subject name, day of the week, start time, and end time.
 
-  Image to analyze: {{media url=photoDataUri}}`,
+CRITICAL INSTRUCTIONS (Follow these precisely):
+
+1.  **Output Format**: The final output MUST conform strictly to the provided JSON schema. Do not add extra fields.
+2.  **Day of the Week**: Days must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'. Abbreviate days if they are written out (e.g., "Monday" becomes "Mon").
+3.  **Time Formatting**: All times MUST be in 24-hour HH:MM format.
+    - Convert AM/PM to 24-hour format (e.g., 2 PM is 14:00).
+    - Add leading zeros where necessary (e.g., "9:30" becomes "09:30").
+4.  **End Time Calculation Logic**: This is the most important rule. Timetables often do not explicitly state an end time.
+    - The end time for one class is the start time of the *next class on the same day*.
+    - **Example**: If on Tuesday, "Chemistry" is at 10:00 and "Lab" is at 11:00, the end time for "Chemistry" is 11:00.
+    - If a class is the **last one for that day**, assume a standard duration of **50 minutes** to calculate its end time. (e.g., a 14:00 class would end at 14:50).
+5.  **Data Cleaning**:
+    - Ignore any irrelevant text on the image, such as student names, university logos, or page numbers. Focus only on the schedule grid.
+    - Ensure that for every slot, the calculated end time is after the start time.
+
+Image to analyze: {{media url=photoDataUri}}`,
 });
 
 const extractTimetableFlow = ai.defineFlow(
