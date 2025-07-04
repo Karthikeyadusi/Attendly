@@ -55,7 +55,7 @@ While parsing the timetable, extract all classes with accurate startTime and end
 **Rules:**
 1.  **Time Conversion:** You must convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
 2.  **Merge Consecutive Subjects:** If the same subject appears in two consecutive slots on the same day, you must merge them into one. For example, if 'FLAT' is at 09:00 and 09:50, the result is a single entry with startTime: "09:00" and endTime: "10:40".
-3.  **Afternoon Class End Time:** Afternoon classes (starting at 1:30 PM / 13:30) should end at the start of the next block if one is available on the same day (e.g., if next class is at 3:10 PM, end time is 15:10). If it's the last class of the day, default to a 100-minute duration, making the end time 15:10.
+3.  **Afternoon Class End Time:** If an afternoon class starts at 1:30 PM (13:30), its endTime MUST be 15:10. This is a 100-minute duration. This rule is absolute and does not depend on other classes.
 4.  **Ignore Duplicates:** You must ignore duplicate entries after merging them.
 
 Follow these rules precisely.
