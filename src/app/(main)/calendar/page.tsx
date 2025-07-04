@@ -63,18 +63,26 @@ export default function CalendarPage() {
         if (!isLoaded) return new Map();
         return new Map(subjects.map(s => [s.id, s]));
     }, [subjects, isLoaded]);
+    
+    // OPTIMIZATION: Group attendance records by date once to avoid re-calculating on every interaction.
+    const attendanceByDate = useMemo(() => {
+        if (!isLoaded) return new Map<string, AttendanceRecord[]>();
+        
+        return attendance.reduce((acc, record) => {
+            const records = acc.get(record.date) || [];
+            records.push(record);
+            acc.set(record.date, records);
+            return acc;
+        }, new Map<string, AttendanceRecord[]>());
+    }, [attendance, isLoaded]);
+
 
     const dailyAttendanceStatus = useMemo(() => {
         if (!isLoaded) return {};
         const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' } = {};
 
-        const attendanceByDate = attendance.reduce((acc, record) => {
-            (acc[record.date] = acc[record.date] || []).push(record.status);
-            return acc;
-        }, {} as Record<string, AttendanceStatus[]>);
-
-        for (const date in attendanceByDate) {
-            const statuses = new Set(attendanceByDate[date]);
+        for (const [date, records] of attendanceByDate.entries()) {
+            const statuses = new Set(records.map(r => r.status));
             if (statuses.has('Absent')) {
                 statusByDate[date] = 'absent';
             } else if (statuses.has('Attended')) {
@@ -84,20 +92,19 @@ export default function CalendarPage() {
             }
         }
         return statusByDate;
-    }, [attendance, isLoaded]);
+    }, [attendanceByDate, isLoaded]);
 
     const attendanceForSelectedDateMap = useMemo(() => {
         const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
         if (!dateStr || !isLoaded) return new Map<string, AttendanceRecord>();
 
+        const recordsForDate = attendanceByDate.get(dateStr) || [];
         const records = new Map<string, AttendanceRecord>();
-        for (const record of attendance) {
-            if (record.date === dateStr) {
-                records.set(record.slotId, record);
-            }
+        for (const record of recordsForDate) {
+            records.set(record.slotId, record);
         }
         return records;
-    }, [selectedDate, attendance, isLoaded]);
+    }, [selectedDate, attendanceByDate, isLoaded]);
 
     const modifiers = {
         attended: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended',
