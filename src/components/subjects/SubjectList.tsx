@@ -4,7 +4,7 @@
 import { useApp } from "@/components/AppProvider";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Info } from "lucide-react";
+import { Pencil, Trash2, BookHeart } from "lucide-react";
 import type { Subject } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -13,13 +13,15 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
 
     if (subjects.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center h-48">
-                <Info className="w-8 h-8 text-muted-foreground mb-2" />
-                <h3 className="text-lg font-semibold">No Subjects Yet</h3>
-                <p className="text-sm text-muted-foreground">
-                    Click "Add Subject" to get started.
-                </p>
-            </div>
+            <Card className="h-48">
+                <CardHeader className="flex flex-col items-center justify-center text-center h-full">
+                    <BookHeart className="w-12 h-12 text-primary mb-4" />
+                    <CardTitle className="text-xl">No Subjects Yet</CardTitle>
+                    <CardDescription>
+                        Click "Add Subject" to create your first course.
+                    </CardDescription>
+                </CardHeader>
+            </Card>
         );
     }
 

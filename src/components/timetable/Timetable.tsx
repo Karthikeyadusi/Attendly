@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
-import type { DayOfWeek } from "@/types";
+import type { DayOfWeek, TimeSlot } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
-import { Trash2, Book, FlaskConical, Info } from "lucide-react";
+import { Trash2, Book, FlaskConical, CalendarX, Pencil } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
   Carousel,
@@ -27,7 +28,7 @@ const dayNames: { [key in DayOfWeek]: string } = {
   Sat: 'Saturday',
 };
 
-export default function Timetable() {
+export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void }) {
   const { timetable, subjects, deleteTimetableSlot } = useApp();
   const [api, setApi] = useState<CarouselApi>()
   const [todayIndex, setTodayIndex] = useState(-1);
@@ -53,13 +54,15 @@ export default function Timetable() {
 
   if (timetable.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center h-48">
-          <Info className="w-8 h-8 text-muted-foreground mb-2" />
-          <h3 className="text-lg font-semibold">Empty Timetable</h3>
-          <p className="text-sm text-muted-foreground">
-              Click "Add Class" to build your schedule.
-          </p>
-      </div>
+      <Card className="h-64">
+          <CardHeader className="flex flex-col items-center justify-center text-center h-full">
+              <CalendarX className="w-12 h-12 text-primary mb-4" />
+              <CardTitle className="text-xl">Your Timetable is Empty</CardTitle>
+              <CardDescription>
+                  Add your first class to build your schedule.
+              </CardDescription>
+          </CardHeader>
+      </Card>
     );
   }
 
@@ -91,6 +94,9 @@ export default function Timetable() {
                                             <p className="font-semibold">{subject?.name || "Unknown Subject"}</p>
                                             <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
                                         </div>
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 flex-shrink-0" onClick={() => onEdit(slot)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8 flex-shrink-0">

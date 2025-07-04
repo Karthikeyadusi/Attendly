@@ -91,6 +91,13 @@ export function useAppData() {
   const addTimetableSlot = useCallback((slot: Omit<TimeSlot, 'id'>) => {
     setData(prev => ({ ...prev, timetable: [...prev.timetable, { ...slot, id: crypto.randomUUID() }] }));
   }, []);
+
+  const updateTimetableSlot = useCallback((updatedSlot: TimeSlot) => {
+    setData(prev => ({
+      ...prev,
+      timetable: prev.timetable.map(s => s.id === updatedSlot.id ? updatedSlot : s),
+    }));
+  }, []);
   
   const deleteTimetableSlot = useCallback((slotId: string) => {
     setData(prev => ({
@@ -222,6 +229,7 @@ export function useAppData() {
     updateSubject,
     deleteSubject,
     addTimetableSlot,
+    updateTimetableSlot,
     deleteTimetableSlot,
     logAttendance,
     setMinAttendancePercentage,

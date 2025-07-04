@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { DayOfWeek } from "@/types";
+import type { DayOfWeek, TimeSlot } from "@/types";
 import { useEffect } from "react";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -29,10 +30,11 @@ type TimeSlotFormValues = z.infer<typeof timeSlotSchema>;
 interface TimeSlotFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  slot?: TimeSlot | null;
 }
 
-export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormProps) {
-  const { subjects, addTimetableSlot } = useApp();
+export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlotFormProps) {
+  const { subjects, addTimetableSlot, updateTimetableSlot } = useApp();
 
   const form = useForm<TimeSlotFormValues>({
     resolver: zodResolver(timeSlotSchema),
@@ -46,12 +48,25 @@ export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormPr
 
   useEffect(() => {
     if (open) {
-      form.reset();
+      if (slot) {
+        form.reset(slot);
+      } else {
+        form.reset({
+          day: 'Mon',
+          startTime: "09:00",
+          endTime: "10:00",
+          subjectId: "",
+        });
+      }
     }
-  }, [open, form]);
+  }, [open, slot, form]);
 
   const onSubmit = (values: TimeSlotFormValues) => {
-    addTimetableSlot(values);
+    if (slot) {
+        updateTimetableSlot({ ...values, id: slot.id });
+    } else {
+        addTimetableSlot(values);
+    }
     onOpenChange(false);
   };
 
@@ -59,9 +74,9 @@ export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Class to Timetable</DialogTitle>
+          <DialogTitle>{slot ? "Edit Class" : "Add Class to Timetable"}</DialogTitle>
           <DialogDescription>
-            Select a day, time, and subject to add a new class to your schedule.
+            {slot ? "Update the details for this class." : "Select a day, time, and subject to add a new class to your schedule."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -72,11 +87,11 @@ export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Subject</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a subject" />
-                      </SelectTrigger>
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
                       {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -92,11 +107,11 @@ export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Day of the Week</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a day" />
-                      </SelectTrigger>
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
                       {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -135,7 +150,7 @@ export default function TimetableSlotForm({ open, onOpenChange }: TimeSlotFormPr
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Add Class</Button>
+              <Button type="submit">{slot ? "Save Changes" : "Add Class"}</Button>
             </DialogFooter>
           </form>
         </Form>

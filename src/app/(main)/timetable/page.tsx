@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
@@ -11,11 +12,30 @@ import { useState } from "react";
 import Link from 'next/link';
 import { Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { TimeSlot } from "@/types";
 
 export default function TimetablePage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isImportOpen, setIsImportOpen] = useState(false);
+    const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
     const { subjects, isLoaded } = useApp();
+
+    const handleAddSlot = () => {
+        setEditingSlot(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEditSlot = (slot: TimeSlot) => {
+        setEditingSlot(slot);
+        setIsFormOpen(true);
+    };
+
+    const handleFormOpenChange = (open: boolean) => {
+        if (!open) {
+            setEditingSlot(null);
+        }
+        setIsFormOpen(open);
+    };
 
     if (!isLoaded) {
       return (
@@ -55,16 +75,20 @@ export default function TimetablePage() {
                         <Sparkles className="mr-2 h-4 w-4" />
                         Import with AI
                     </Button>
-                    <Button onClick={() => setIsFormOpen(true)}>
+                    <Button onClick={handleAddSlot}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Class
                     </Button>
                 </div>
             </div>
             
-            <Timetable />
+            <Timetable onEdit={handleEditSlot} />
             
-            <TimetableSlotForm open={isFormOpen} onOpenChange={setIsFormOpen} />
+            <TimetableSlotForm 
+              open={isFormOpen} 
+              onOpenChange={handleFormOpenChange}
+              slot={editingSlot}
+            />
             <TimetableImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
         </div>
     );
