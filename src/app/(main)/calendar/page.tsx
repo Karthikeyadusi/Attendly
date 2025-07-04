@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { format, getDay } from 'date-fns';
-import type { DayOfWeek, AttendanceStatus, AttendanceRecord } from '@/types';
+import type { DayOfWeek, AttendanceStatus, AttendanceRecord, TimeSlot } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -82,13 +82,16 @@ export default function CalendarPage() {
         const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' } = {};
 
         for (const [date, records] of attendanceByDate.entries()) {
+            const allCancelled = records.every(r => r.status === 'Cancelled');
+            if (allCancelled && records.length > 0) {
+                 statusByDate[date] = 'cancelled';
+                 continue;
+            }
             const statuses = new Set(records.map(r => r.status));
             if (statuses.has('Absent')) {
                 statusByDate[date] = 'absent';
             } else if (statuses.has('Attended')) {
                 statusByDate[date] = 'attended';
-            } else if (statuses.has('Cancelled')) {
-                statusByDate[date] = 'cancelled';
             }
         }
         return statusByDate;
@@ -124,13 +127,27 @@ export default function CalendarPage() {
         },
     };
 
+    // OPTIMIZATION: Pre-process the timetable into a Map for instant lookups by day.
+    const timetableByDay = useMemo(() => {
+        if (!isLoaded) return new Map<DayOfWeek, TimeSlot[]>();
+
+        return timetable.reduce((acc, slot) => {
+            const daySlots = acc.get(slot.day) || [];
+            daySlots.push(slot);
+            acc.set(slot.day, daySlots);
+            return acc;
+        }, new Map<DayOfWeek, TimeSlot[]>());
+        
+    }, [timetable, isLoaded]);
+
     const scheduleForSelectedDate = useMemo(() => {
         const dayOfWeek = selectedDate ? dayMap[getDay(selectedDate)] : undefined;
         if (!dayOfWeek) return [];
-        return timetable
-            .filter(slot => slot.day === dayOfWeek)
-            .sort((a, b) => a.startTime.localeCompare(b.startTime));
-    }, [selectedDate, timetable]);
+        
+        const daySlots = timetableByDay.get(dayOfWeek) || [];
+        // Sort here, as sorting the entire timetable once is complex if it can be edited.
+        return daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }, [selectedDate, timetableByDay]);
     
     const selectedDateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
 
