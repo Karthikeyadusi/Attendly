@@ -25,9 +25,9 @@ export default function SubjectsPage() {
     
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight">Your Subjects</h2>
-                <Button onClick={() => setIsFormOpen(true)}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Your Subjects</h2>
+                <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Subject
                 </Button>

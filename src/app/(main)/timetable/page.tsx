@@ -48,9 +48,9 @@ export default function TimetablePage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight">Weekly Timetable</h2>
-                <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Weekly Timetable</h2>
+                <div className="flex flex-col sm:flex-row gap-2">
                     <Button onClick={() => setIsImportOpen(true)} variant="outline">
                         <Sparkles className="mr-2 h-4 w-4" />
                         Import with AI

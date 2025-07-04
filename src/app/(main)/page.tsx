@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
       <AttendanceStats />
       <TodaysClasses />
     </div>

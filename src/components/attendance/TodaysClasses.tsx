@@ -57,18 +57,18 @@ export default function TodaysClasses() {
           const record = attendance.find(r => r.id === `${todayDateString}-${slot.id}`);
 
           return (
-            <div key={slot.id} className="p-4 rounded-lg border bg-card-foreground/5">
-              <div className="flex justify-between items-center mb-4">
+            <div key={slot.id} className="p-3 rounded-lg border bg-card-foreground/5">
+              <div className="flex justify-between items-center mb-3">
                 <div>
-                  <p className="font-semibold text-lg">{subject.name}</p>
+                  <p className="font-semibold text-base sm:text-lg">{subject.name}</p>
                   <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
                 </div>
-                <span className="text-xs font-semibold bg-primary/20 text-primary-foreground px-2 py-1 rounded-full">{subject.type}</span>
+                <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-1 rounded-full">{subject.type}</span>
               </div>
               <RadioGroup
                 defaultValue={record?.status}
                 onValueChange={(status) => logAttendance(slot, todayDateString, status as AttendanceStatus)}
-                className="flex justify-around"
+                className="grid grid-cols-3 gap-2"
               >
                 {statusOptions.map(opt => (
                   <div key={opt.value} className="flex items-center space-x-2">
@@ -76,13 +76,13 @@ export default function TodaysClasses() {
                     <Label
                       htmlFor={`${slot.id}-${opt.value}`}
                       className={cn(
-                        "flex flex-col items-center gap-1 cursor-pointer p-2 rounded-md transition-colors w-20 text-center",
+                        "flex flex-col items-center justify-center gap-1 cursor-pointer p-2 rounded-md transition-colors h-16",
                         record?.status === opt.value
                           ? `bg-primary/20 ${opt.color}`
                           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       )}
                     >
-                      <opt.icon className="h-6 w-6" />
+                      <opt.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       <span className="text-xs font-medium">{opt.value}</span>
                     </Label>
                   </div>

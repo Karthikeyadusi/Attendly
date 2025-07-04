@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -99,7 +98,7 @@ export default function CalendarPage() {
     if (!isLoaded) {
         return (
             <div className="space-y-6">
-                <h2 className="text-2xl font-bold tracking-tight">Calendar</h2>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
                 <Skeleton className="h-[365px] w-full" />
                 <Skeleton className="h-40 w-full" />
             </div>
@@ -108,7 +107,7 @@ export default function CalendarPage() {
     
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Calendar</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
             <Card>
                 <Calendar
                     mode="single"
