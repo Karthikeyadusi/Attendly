@@ -52,17 +52,12 @@ Analyze the provided image and extract every class slot. For each slot, you must
 - endTime (in 24-hour HH:MM format)
 
 **CRITICAL RULES FOR DETERMINING END TIME:**
-You must determine the endTime for each class by following these rules IN ORDER.
+To determine the endTime for each class, you must look ahead to the next scheduled class on the SAME DAY. The end time for one class is the start time of the next class. This is the primary and most important rule.
+Example: If "Physics" starts at 10:00 and "Math" starts at 11:00 on the same day, the endTime for "Physics" is "11:00".
 
-**RULE A: General Look-Ahead Rule**
-For any given class, look for the next class scheduled on the SAME DAY.
-- **If** there is a next class, the \`endTime\` of the current class is the \`startTime\` of that next class.
-- **Example:** "Physics" starts at 10:00. The next class, "Math", starts at 11:00 on the same day. The \`endTime\` for "Physics" is "11:00".
-
-**RULE B: Last Class of the Day Rule**
-- **If** a class is the LAST one for that day (meaning Rule A did not find a 'next class'), you must determine its \`endTime\` based on its \`startTime\`:
-    - **IF THE START TIME IS 12:00 OR LATER:** The end time for this class is **15:10**. For example, if the last class starts at 13:30, its end time is 15:10.
-    - **IF THE START TIME IS BEFORE 12:00:** The end time for this class is 50 minutes after its start time. For example, if the last class starts at 11:00, its end time is 11:50.
+**If a class is the last one of the day**, and you cannot find a 'next class' to determine its end time, you must use ONE of the following fallback rules:
+- **Rule 1: Afternoon Finish.** If the last class of the day starts at 12:00 PM (12:00) or later, its endTime is **3:10 PM (15:10)**.
+- **Rule 2: Morning Finish.** If the last class of the day starts before 12:00 PM (12:00), assume a standard duration of 50 minutes. For example, if it starts at 10:00, its endTime is 10:50.
 
 **OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
