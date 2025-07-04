@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { BookCopy, CalendarPlus, Compass } from "lucide-react";
+import { BookCopy, CalendarPlus } from "lucide-react";
 import { useApp } from "./AppProvider";
+import { Logo } from "./Logo";
 
 export default function Onboarding() {
   const { subjects } = useApp();
@@ -14,7 +15,7 @@ export default function Onboarding() {
   return (
     <Card className="w-full">
       <CardHeader className="items-center text-center">
-        <Compass className="w-12 h-12 text-primary mb-2" />
+        <Logo className="w-12 h-12 text-primary mb-2" />
         <CardTitle className="text-2xl">Welcome to Attendly!</CardTitle>
         <CardDescription>
           Let's get you set up for tracking your attendance.
