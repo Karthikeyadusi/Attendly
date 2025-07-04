@@ -54,17 +54,16 @@ Analyze the provided image and extract every class slot. For each slot, you must
 **CRITICAL RULES FOR DETERMINING THE END TIME:**
 You must determine the 'endTime' by following these rules precisely.
 
-**RULE 1: APPLY A FIXED DURATION BASED ON START TIME**
-This is your primary method. Calculate a 'provisional' endTime based on the following:
-- **Morning Classes:** If a class 'startTime' is before 12:30, its duration is **100 minutes**.
-- **Afternoon Special Class:** If a class 'startTime' is exactly 13:30, its 'endTime' is **15:10**.
-- **Other Classes:** For any other class not covered above, assume a default duration of 50 minutes.
+**RULE 1: CALCULATE A PROVISIONAL END TIME**
+For every class, calculate a provisional \`endTime\` by adding exactly **100 minutes** to its \`startTime\`.
 
 **RULE 2: PREVENT OVERLAPS (FINAL CHECK)**
-After you have the 'provisional' endTime from Rule 1, you must perform this final check:
+After you have the provisional \`endTime\` from Rule 1, you must perform this final check:
 - Look ahead to the next class on the **SAME DAY**.
-- If the 'startTime' of the next class is EARLIER than your 'provisional' endTime, you MUST use the start time of that next class as the FINAL endTime.
-- If there is no next class, or if the next class starts after your provisional end time, then your provisional end time is correct and becomes the FINAL endTime.
+- If the \`startTime\` of the next class is EARLIER than your provisional \`endTime\`, you MUST use the start time of that next class as the FINAL \`endTime\`.
+- If there is no next class on the same day, or if the next class starts after your provisional end time, then your provisional end time is correct and becomes the FINAL \`endTime\`.
+
+This two-step process is crucial. First calculate a 100-minute duration, then adjust it only if needed to avoid an overlap.
 
 **OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
