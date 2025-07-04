@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useApp } from "@/components/AppProvider";
@@ -26,23 +26,16 @@ import { useEffect } from "react";
 import { DatePicker } from "../ui/date-picker";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "../ui/scroll-area";
-
-
-const historicalRecordSchema = z.object({
-  subjectId: z.string(),
-  conducted: z.coerce.number().min(0, "Must be 0 or more"),
-  attended: z.coerce.number().min(0, "Must be 0 or more"),
-}).refine(data => data.attended <= data.conducted, {
-    message: "Attended can't exceed conducted",
-    path: ["attended"],
-});
 
 const formSchema = z.object({
   startDate: z.date({
     required_error: "A start date is required.",
   }),
-  records: z.array(historicalRecordSchema),
+  conductedCredits: z.coerce.number().min(0, "Must be 0 or more"),
+  attendedCredits: z.coerce.number().min(0, "Must be 0 or more"),
+}).refine(data => data.attendedCredits <= data.conductedCredits, {
+    message: "Attended credits can't exceed conducted credits",
+    path: ["attendedCredits"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,44 +46,33 @@ interface HistoricalDataDialogProps {
 }
 
 export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalDataDialogProps) {
-  const { subjects, saveHistoricalData, historicalData, trackingStartDate } = useApp();
+  const { saveHistoricalData, historicalData, trackingStartDate } = useApp();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startDate: trackingStartDate ? new Date(trackingStartDate) : new Date(),
-      records: [],
+      startDate: new Date(),
+      conductedCredits: 0,
+      attendedCredits: 0,
     },
-  });
-
-  const { fields, replace } = useFieldArray({
-    control: form.control,
-    name: "records",
   });
 
   useEffect(() => {
     if (open) {
-      const initialRecords = subjects.map(subject => {
-        const existingRecord = historicalData.find(h => h.subjectId === subject.id);
-        return {
-          subjectId: subject.id,
-          conducted: existingRecord?.conducted ?? 0,
-          attended: existingRecord?.attended ?? 0,
-        };
-      });
-      replace(initialRecords);
       form.reset({
         startDate: trackingStartDate ? new Date(trackingStartDate) : new Date(),
-        records: initialRecords,
+        conductedCredits: historicalData?.conductedCredits ?? 0,
+        attendedCredits: historicalData?.attendedCredits ?? 0,
       });
     }
-  }, [open, subjects, historicalData, trackingStartDate, form, replace]);
+  }, [open, historicalData, trackingStartDate, form]);
 
   const onSubmit = (values: FormValues) => {
     saveHistoricalData({
       startDate: format(values.startDate, 'yyyy-MM-dd'),
-      records: values.records,
+      conductedCredits: values.conductedCredits,
+      attendedCredits: values.attendedCredits,
     });
     toast({
         title: "History Saved",
@@ -101,8 +83,8 @@ export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0">
-        <DialogHeader className="p-4 md:p-6 pb-4 border-b">
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Import Historical Data</DialogTitle>
           <DialogDescription>
             Enter past attendance totals before you started tracking daily.
@@ -110,61 +92,51 @@ export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalD
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ScrollArea className="max-h-[60vh] p-4 md:p-6">
-                <div className="space-y-4">
-                    <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                        <FormLabel>Daily Tracking Start Date</FormLabel>
-                        <DatePicker date={field.value} onSelect={field.onChange} />
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+            <div className="space-y-4 p-0 md:p-0">
+                <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                    <FormLabel>Daily Tracking Start Date</FormLabel>
+                    <DatePicker date={field.value} onSelect={field.onChange} />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
-                    <div className="space-y-4">
-                        {fields.map((field, index) => {
-                            const subject = subjects.find(s => s.id === field.subjectId);
-                            return (
-                                <div key={field.id} className="p-3 border rounded-lg">
-                                    <h4 className="font-semibold mb-2">{subject?.name || 'Unknown Subject'}</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <FormField
-                                            control={form.control}
-                                            name={`records.${index}.conducted`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormLabel>Conducted</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`records.${index}.attended`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormLabel>Attended</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                <p className="text-sm text-muted-foreground pt-2">Enter the total credits conducted and attended for all subjects combined before this date.</p>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="conductedCredits"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Total Conducted Credits</FormLabel>
+                            <FormControl>
+                                <Input type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="attendedCredits"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Total Attended Credits</FormLabel>
+                            <FormControl>
+                                <Input type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
-            </ScrollArea>
-            <DialogFooter className="p-4 md:p-6 pt-4 border-t">
+            </div>
+            <DialogFooter className="pt-6">
               <Button type="submit">Save History</Button>
             </DialogFooter>
           </form>

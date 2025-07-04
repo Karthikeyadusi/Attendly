@@ -12,7 +12,7 @@ import HistoricalDataDialog from "@/components/subjects/HistoricalDataDialog";
 export default function SubjectsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const { isLoaded, subjects } = useApp();
+    const { isLoaded } = useApp();
 
     if (!isLoaded) {
       return (
@@ -30,7 +30,7 @@ export default function SubjectsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Your Subjects</h2>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Button onClick={() => setIsHistoryOpen(true)} variant="outline" disabled={subjects.length === 0}>
+                    <Button onClick={() => setIsHistoryOpen(true)} variant="outline">
                         <History className="mr-2 h-4 w-4" />
                         Import History
                     </Button>

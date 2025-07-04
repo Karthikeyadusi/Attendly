@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalRecord } from '@/types';
+import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData } from '@/types';
 import { useIsClient } from './useIsClient';
 
 const APP_DATA_KEY = 'classCompassData';
@@ -11,7 +11,7 @@ const getInitialData = (): AppData => ({
   timetable: [],
   attendance: [],
   minAttendancePercentage: 75,
-  historicalData: [],
+  historicalData: null,
   trackingStartDate: null,
 });
 
@@ -26,11 +26,16 @@ export function useAppData() {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
           const parsedData = JSON.parse(storedData);
-          // Ensure new fields exist
-          if (!parsedData.historicalData) {
-            parsedData.historicalData = [];
+          
+          // Migration from array of records to single object
+          if (Array.isArray(parsedData.historicalData)) {
+            parsedData.historicalData = null;
           }
-          if (!parsedData.trackingStartDate) {
+          // Ensure fields exist with correct default types
+          if (typeof parsedData.historicalData === 'undefined') {
+            parsedData.historicalData = null;
+          }
+          if (typeof parsedData.trackingStartDate === 'undefined') {
             parsedData.trackingStartDate = null;
           }
            // Migration for existing users: add default credits if missing
@@ -72,13 +77,11 @@ export function useAppData() {
     setData(prev => {
       const newTimetable = prev.timetable.filter(slot => slot.subjectId !== subjectId);
       const newAttendance = prev.attendance.filter(record => !newTimetable.find(slot => slot.id === record.slotId));
-      const newHistoricalData = prev.historicalData.filter(record => record.subjectId !== subjectId);
       return {
         ...prev,
         subjects: prev.subjects.filter(s => s.id !== subjectId),
         timetable: newTimetable,
         attendance: newAttendance,
-        historicalData: newHistoricalData,
       };
     });
   }, []);
@@ -181,11 +184,14 @@ export function useAppData() {
     });
   }, []);
 
-  const saveHistoricalData = useCallback((data: { startDate: string; records: HistoricalRecord[] }) => {
+  const saveHistoricalData = useCallback((data: { startDate: string; conductedCredits: number; attendedCredits: number; }) => {
     setData(prev => ({
       ...prev,
       trackingStartDate: data.startDate,
-      historicalData: data.records,
+      historicalData: {
+        conductedCredits: data.conductedCredits,
+        attendedCredits: data.attendedCredits,
+      },
     }));
   }, []);
 

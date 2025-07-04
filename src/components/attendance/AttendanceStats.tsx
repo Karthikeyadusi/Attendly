@@ -23,21 +23,15 @@ export default function AttendanceStats() {
     const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded } = useApp();
 
     const stats = useMemo(() => {
-        if (!isLoaded || subjects.length === 0) {
+        if (!isLoaded) {
           return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
         }
 
         const subjectMap = new Map(subjects.map(s => [s.id, s]));
 
         // Calculate credits from historical data
-        const historicalConductedCredits = historicalData.reduce((sum, r) => {
-            const subject = subjectMap.get(r.subjectId);
-            return sum + (r.conducted * (subject?.credits ?? 0));
-        }, 0);
-        const historicalAttendedCredits = historicalData.reduce((sum, r) => {
-            const subject = subjectMap.get(r.subjectId);
-            return sum + (r.attended * (subject?.credits ?? 0));
-        }, 0);
+        const historicalConductedCredits = historicalData?.conductedCredits ?? 0;
+        const historicalAttendedCredits = historicalData?.attendedCredits ?? 0;
 
         // Filter daily records based on start date
         const dailyRecords = trackingStartDate
