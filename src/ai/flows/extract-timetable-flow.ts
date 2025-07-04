@@ -43,29 +43,22 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  prompt: `You are an expert AI timetable parser. Your task is to extract class schedule information from an image and return it in a structured JSON format, following very specific rules for class duration and merging.
+  prompt: `You are an expert AI timetable parser. Your task is to extract class schedule information from the provided image and return it in a structured JSON format.
 
-**CRITICAL LOGIC TO FOLLOW:**
+While parsing the timetable, extract all classes with accurate startTime and endTime. Many subjects appear as two consecutive 50-minute blocks (e.g., "FLAT" at 09:00 and again at 09:50) but represent one logical class.
 
-1.  **Recognize and Merge Consecutive Classes:**
-    The timetable image may show long classes as two or more consecutive 50-minute blocks under the same subject name. You MUST recognize this pattern. When you see the same subject listed in back-to-back time slots on the same day, you must **merge** them into a single class entry in your output.
-    - The \`startTime\` of the merged entry is the start time of the very first block.
-    - The \`endTime\` is calculated by adding 100 minutes to that start time.
-    - **Example:** The timetable shows 'FLAT' from 9:00-9:50 and 'FLAT' again from 9:50-10:40. You will output ONLY ONE entry for FLAT: \`{ "day": "Mon", "startTime": "09:00", "endTime": "10:40", "subjectName": "FLAT" }\`. You must skip the duplicate entry.
+**Valid start times must include:**
+- 09:00
+- 10:40
+- 1:30 PM
 
-2.  **Universal 100-Minute Duration Rule:**
-    Every single class slot in your final JSON output, whether it was merged or appeared as a single entry, MUST have a duration of exactly 100 minutes. Calculate the \`endTime\` by adding 100 minutes to the \`startTime\`.
-    - If \`startTime\` is \`09:00\`, \`endTime\` MUST be \`10:40\`.
-    - If \`startTime\` is \`10:40\`, \`endTime\` MUST be \`12:20\`.
-    - If \`startTime\` is \`13:30\`, \`endTime\` MUST be \`15:10\`.
+**Rules:**
+1.  **Time Conversion:** You must convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
+2.  **Merge Consecutive Subjects:** If the same subject appears in two consecutive slots on the same day, you must merge them into one. For example, if 'FLAT' is at 09:00 and 09:50, the result is a single entry with startTime: "09:00" and endTime: "10:40".
+3.  **Afternoon Class End Time:** Afternoon classes (starting at 1:30 PM / 13:30) should end at the start of the next block if one is available on the same day (e.g., if next class is at 3:10 PM, end time is 15:10). If it's the last class of the day, default to a 100-minute duration, making the end time 15:10.
+4.  **Ignore Duplicates:** You must ignore duplicate entries after merging them.
 
-**IMPORTANT INSTRUCTIONS:**
-- **Valid Start Times:** Only extract classes for these start times: 09:00, 10:40, 13:30.
-- **Time Formatting:** Convert all times to 24-hour HH:MM format (e.g., "1:30 PM" becomes "13:30").
-- **Day Formatting:** Days must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
-- **Clean Data:** Ignore any text that is not part of the schedule (like room numbers, teacher names, etc.).
-
-Analyze the provided image and produce a clean, merged, and accurate schedule based on these rules.
+Follow these rules precisely.
 
 Image to analyze: {{media url=photoDataUri}}`,
 });
