@@ -106,7 +106,6 @@ export function useAppData() {
         slotId: slot.id,
         date: date,
         status: status,
-        credits: status === 'Attended' ? subject.credits : 0,
       };
 
       const existingRecordIndex = prev.attendance.findIndex(r => r.id === record.id);
@@ -137,7 +136,6 @@ export function useAppData() {
                     id: crypto.randomUUID(),
                     name: slot.subjectName,
                     type: 'Lecture', // default
-                    credits: 2, // default
                 };
                 newSubjects.push(newSubject);
                 existingSubjectNames.add(newSubject.name.toLowerCase());
