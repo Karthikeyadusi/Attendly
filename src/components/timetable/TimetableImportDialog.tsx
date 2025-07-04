@@ -21,7 +21,7 @@ import { Loader2, Upload, Trash2, Sparkles } from "lucide-react";
 import type { ExtractedSlot, DayOfWeek } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { addMinutes, parse } from 'date-fns';
+import { addMinutes, parse, format as formatDate } from 'date-fns';
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -56,25 +56,37 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             const baseDate = new Date();
             const startTimeDate = parse(currentSlot.startTime, 'HH:mm', baseDate);
 
-            // 3. Check if the next slot should be merged with the current one
+            // 3. Check if the next slot has the same subject name and follows consecutively
             let shouldMerge = false;
             if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
                 const nextStartTimeDate = parse(nextSlot.startTime, 'HH:mm', baseDate);
                 const diffInMinutes = (nextStartTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60);
-                // A consecutive slot typically starts 50 minutes later. Allow a small buffer.
-                if (diffInMinutes >= 50 && diffInMinutes <= 60) {
+                // A consecutive slot typically starts ~50 minutes later. Allow a buffer.
+                if (diffInMinutes >= 45 && diffInMinutes <= 65) {
                     shouldMerge = true;
                 }
             }
 
-            if (shouldMerge) {
-                // 4a. If merging, create a 100-minute class
-                const endTime = addMinutes(startTimeDate, 100).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            if (shouldMerge && nextSlot) {
+                // 4a. If merging, create a 100-minute class. The end time is the start of the class after the next one.
+                const classAfterNext = i + 2 < daySlots.length ? daySlots[i+2] : null;
+                let endTime: string;
+                if(classAfterNext) {
+                    endTime = classAfterNext.startTime;
+                } else {
+                    endTime = formatDate(addMinutes(startTimeDate, 100), 'HH:mm');
+                }
+                
                 finalSlots.push({ ...currentSlot, endTime });
                 i += 2; // Crucially, skip the next slot as it's been consumed by the merge
             } else {
-                // 4b. If not merging, create a standard 50-minute class
-                const endTime = addMinutes(startTimeDate, 50).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                // 4b. If not merging, create a standard 50-minute class from this slot to the next.
+                let endTime: string;
+                if (nextSlot) {
+                    endTime = nextSlot.startTime;
+                } else {
+                    endTime = formatDate(addMinutes(startTimeDate, 50), 'HH:mm');
+                }
                 finalSlots.push({ ...currentSlot, endTime });
                 i += 1;
             }
