@@ -150,33 +150,35 @@ export default function CalendarPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            {record ? (
-                                                <AttendanceBadge status={record.status} />
-                                            ) : (
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    {record ? (
+                                                        <Button variant="ghost" className="h-auto p-0 rounded-full">
+                                                            <AttendanceBadge status={record.status} />
+                                                        </Button>
+                                                    ) : (
                                                         <Button variant="outline" size="sm">Log Now</Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="end">
-                                                        <div className="flex gap-1 p-1">
-                                                            {statusOptions.map(opt => (
-                                                                <Button
-                                                                    key={opt.value}
-                                                                    variant="ghost"
-                                                                    onClick={() => logAttendance(slot, selectedDateString, opt.value as AttendanceStatus)}
-                                                                    className={cn(
-                                                                        "flex flex-col items-center justify-center gap-1 h-14 w-14 rounded-md transition-colors",
-                                                                        opt.color
-                                                                    )}
-                                                                >
-                                                                    <opt.icon className="h-5 w-5" />
-                                                                    <span className="text-xs font-medium">{opt.value}</span>
-                                                                </Button>
-                                                            ))}
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            )}
+                                                    )}
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="end">
+                                                    <div className="flex gap-1 p-1">
+                                                        {statusOptions.map(opt => (
+                                                            <Button
+                                                                key={opt.value}
+                                                                variant="ghost"
+                                                                onClick={() => logAttendance(slot, selectedDateString, opt.value as AttendanceStatus)}
+                                                                className={cn(
+                                                                    "flex flex-col items-center justify-center gap-1 h-14 w-14 rounded-md transition-colors",
+                                                                    opt.color
+                                                                )}
+                                                            >
+                                                                <opt.icon className="h-5 w-5" />
+                                                                <span className="text-xs font-medium">{opt.value}</span>
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
                                         </div>
                                     </div>
                                 );
