@@ -31,7 +31,7 @@ type RawExtractedSlot = {
     subjectName: string;
 };
 
-// This function implements the robust merging logic on the client-side.
+// This new function implements robust logic directly in the code, not in the AI prompt.
 const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     const finalSlots: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
@@ -52,30 +52,42 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         while (i < daySlots.length) {
             const currentSlot = daySlots[i];
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
+            const slotAfterNext = i + 2 < daySlots.length ? daySlots[i + 2] : null;
 
             const baseDate = new Date();
-            const startTimeDate = parse(currentSlot.startTime, 'HH:mm', baseDate);
 
-            // 3. Check if the next slot has the same subject name and follows consecutively
-            let shouldMerge = false;
+            // Check for merge condition (same subject in consecutive slots)
             if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
-                const nextStartTimeDate = parse(nextSlot.startTime, 'HH:mm', baseDate);
-                const diffInMinutes = (nextStartTimeDate.getTime() - startTimeDate.getTime()) / (1000 * 60);
-                // A consecutive slot typically starts ~50 minutes later. Allow a buffer.
-                if (diffInMinutes >= 45 && diffInMinutes <= 65) {
-                    shouldMerge = true;
-                }
-            }
+                // MERGED CLASS (e.g., a 100-minute lab)
+                // The end time is the start time of the next *different* class.
+                // If this is the last block of the day, default to a 100-minute duration.
+                const endTime = slotAfterNext
+                    ? slotAfterNext.startTime
+                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 100), 'HH:mm');
 
-            if (shouldMerge && nextSlot) {
-                // If merging, the total duration is a fixed 100 minutes.
-                const endTime = formatDate(addMinutes(startTimeDate, 100), 'HH:mm');
-                finalSlots.push({ ...currentSlot, endTime });
-                i += 2; // Crucially, skip the next slot as it's been consumed by the merge
+                finalSlots.push({
+                    day: currentSlot.day,
+                    startTime: currentSlot.startTime,
+                    endTime: endTime,
+                    subjectName: currentSlot.subjectName
+                });
+
+                i += 2; // Skip the next slot as it has been merged.
             } else {
-                // If not merging, the class is a fixed 50 minutes. No look-ahead.
-                const endTime = formatDate(addMinutes(startTimeDate, 50), 'HH:mm');
-                finalSlots.push({ ...currentSlot, endTime });
+                // SINGLE CLASS (e.g., a 50-minute lecture)
+                // The end time is the start time of the next class.
+                // If this is the last class of the day, default to a 50-minute duration.
+                const endTime = nextSlot
+                    ? nextSlot.startTime
+                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 50), 'HH:mm');
+                
+                finalSlots.push({
+                    day: currentSlot.day,
+                    startTime: currentSlot.startTime,
+                    endTime: endTime,
+                    subjectName: currentSlot.subjectName
+                });
+
                 i += 1;
             }
         }
