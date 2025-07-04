@@ -32,12 +32,11 @@ type RawExtractedSlot = {
 };
 
 const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
-    const finalSlots: ExtractedSlot[] = [];
+    const slotsWithEndTime: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
     // 1. Group raw slots by day
     for (const slot of rawSlots) {
-        // Basic validation to prevent errors from bad AI output
         if (slot.day && slot.startTime && slot.subjectName) {
             if (!slotsByDay.has(slot.day)) {
                 slotsByDay.set(slot.day, []);
@@ -46,61 +45,69 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
 
-    // 2. For each day, sort slots by time and then process them
+    // Pass 1: Calculate correct end times for every block
     for (const day of slotsByDay.keys()) {
         const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
         
-        let i = 0;
-        while (i < daySlots.length) {
+        for (let i = 0; i < daySlots.length; i++) {
             const currentSlot = daySlots[i];
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
 
-            // MERGE condition: if the next slot exists and has the same subject name.
-            if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
-                // Treat as one merged, 100-minute class.
-                try {
-                    const baseDate = new Date();
-                    const startTime = parse(currentSlot.startTime, 'HH:mm', baseDate);
-                    const endTime = formatDate(addMinutes(startTime, 100), 'HH:mm');
-                    
-                    finalSlots.push({
-                        day: currentSlot.day,
-                        startTime: currentSlot.startTime,
-                        endTime: endTime,
-                        subjectName: currentSlot.subjectName
-                    });
-
-                    i += 2; // Skip the next slot as it has been merged.
-                } catch (e) {
-                    console.error("Error processing merged slot:", currentSlot, e);
-                    // If parsing fails, just skip this slot to avoid crashing
-                    i++;
-                }
-            } else {
-                // SINGLE class, treat as a 50-minute block.
-                try {
-                    const baseDate = new Date();
-                    const startTime = parse(currentSlot.startTime, 'HH:mm', baseDate);
-                    const endTime = formatDate(addMinutes(startTime, 50), 'HH:mm');
-                    
-                    finalSlots.push({
-                        day: currentSlot.day,
-                        startTime: currentSlot.startTime,
-                        endTime: endTime,
-                        subjectName: currentSlot.subjectName
-                    });
-                    
-                    i += 1;
-                } catch (e) {
-                    console.error("Error processing single slot:", currentSlot, e);
-                    i++;
-                }
+            try {
+                // End time is the start time of the next class.
+                // For the last class of the day, default to a 50-minute duration.
+                const endTime = nextSlot
+                    ? nextSlot.startTime
+                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), 50), 'HH:mm');
+                
+                slotsWithEndTime.push({
+                    day: currentSlot.day,
+                    startTime: currentSlot.startTime,
+                    endTime: endTime,
+                    subjectName: currentSlot.subjectName.trim(), // Trim the subject name
+                });
+            } catch (e) {
+                console.error("Error processing slot in Pass 1:", currentSlot, e);
             }
         }
     }
 
+    // Pass 2: Merge consecutive slots with the same subject name
+    const mergedSlots: ExtractedSlot[] = [];
+    // Re-group by day to process merges cleanly
+    const processedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
+    for (const slot of slotsWithEndTime) {
+        if (!processedSlotsByDay.has(slot.day)) {
+            processedSlotsByDay.set(slot.day, []);
+        }
+        processedSlotsByDay.get(slot.day)!.push(slot);
+    }
+    
+    for (const day of processedSlotsByDay.keys()) {
+        const daySlots = processedSlotsByDay.get(day)!.sort((a,b) => a.startTime.localeCompare(b.startTime));
+        let i = 0;
+        while (i < daySlots.length) {
+            let currentSlot = daySlots[i];
+            
+            // Check for subsequent slots to merge
+            let j = i + 1;
+            while (
+                j < daySlots.length &&
+                daySlots[j].subjectName === currentSlot.subjectName &&
+                daySlots[j].startTime === currentSlot.endTime // Ensure they are perfectly consecutive
+            ) {
+                // Extend the end time of the current slot
+                currentSlot.endTime = daySlots[j].endTime;
+                j++;
+            }
+            
+            mergedSlots.push(currentSlot);
+            i = j; // Move index past all merged slots
+        }
+    }
+    
     // A final sort to ensure everything is in order before displaying
-    return finalSlots.sort((a,b) => {
+    return mergedSlots.sort((a,b) => {
         if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
         return a.startTime.localeCompare(b.startTime);
     });
