@@ -1,6 +1,6 @@
 {
   "theme_color": "#191970",
-  "background_color": "#191970",
+  "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
@@ -26,8 +26,7 @@
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
