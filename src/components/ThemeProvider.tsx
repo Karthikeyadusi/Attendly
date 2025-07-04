@@ -2,27 +2,20 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export const THEMES = ['Navy', 'Zinc', 'Forest', 'Rose'] as const;
-export type Theme = typeof THEMES[number];
 type Mode = 'dark' | 'light';
 
 type ThemeProviderProps = {
   children: React.ReactNode;
-  defaultTheme?: Theme;
   defaultMode?: Mode;
   storageKey?: string;
 };
 
 type ThemeProviderState = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
   mode: Mode;
   toggleMode: () => void;
 };
 
 const initialState: ThemeProviderState = {
-  theme: 'Navy',
-  setTheme: () => null,
   mode: 'dark',
   toggleMode: () => null,
 };
@@ -31,55 +24,36 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'Navy',
   defaultMode = 'dark',
-  storageKey = 'attendly-theme-config',
+  storageKey = 'attendly-theme-mode',
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(defaultTheme);
-  const [mode, setModeState] = useState<Mode>(defaultMode);
+  const [mode, setMode] = useState<Mode>(defaultMode);
 
   useEffect(() => {
     try {
-      const storedConfig = localStorage.getItem(storageKey);
-      if (storedConfig) {
-        const { theme: storedTheme, mode: storedMode } = JSON.parse(storedConfig);
-        if (storedTheme && THEMES.includes(storedTheme)) {
-          setThemeState(storedTheme);
-        }
-        if (storedMode && ['light', 'dark'].includes(storedMode)) {
-          setModeState(storedMode);
-        }
+      const storedMode = localStorage.getItem(storageKey) as Mode | null;
+      if (storedMode) {
+        setMode(storedMode);
       }
     } catch (e) {
-      console.error('Failed to parse theme from local storage');
+      console.error('Failed to parse theme mode from local storage');
     }
   }, [storageKey]);
 
   useEffect(() => {
-    const body = window.document.body;
+    const root = window.document.documentElement;
     
-    body.classList.remove('light', 'dark');
-    body.classList.add(mode);
+    root.classList.remove('light', 'dark');
+    root.classList.add(mode);
+    
+    localStorage.setItem(storageKey, mode);
+  }, [mode, storageKey]);
 
-    const themeClasses = THEMES.map(t => `theme-${t.toLowerCase()}`);
-    body.classList.remove(...themeClasses);
-    
-    body.classList.add(`theme-${theme.toLowerCase()}`);
-    
-    localStorage.setItem(storageKey, JSON.stringify({ theme, mode }));
-  }, [theme, mode, storageKey]);
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-  };
-  
   const toggleMode = () => {
-    setModeState((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
   };
 
   const value = {
-    theme,
-    setTheme,
     mode,
     toggleMode,
   };

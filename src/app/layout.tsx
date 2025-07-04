@@ -34,7 +34,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#191970" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={cn("font-body antialiased", "theme-navy")}>
+      <body className={cn("font-body antialiased")}>
         <ThemeProvider>
             <div className="bg-muted flex justify-center items-start min-h-screen">
                 <div className="w-full max-w-lg bg-background shadow-lg min-h-screen">
