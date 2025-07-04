@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { THEMES, useTheme } from "@/components/ThemeProvider";
 import type { Theme } from "@/components/ThemeProvider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const BACKUP_VERSION = 1;
 
@@ -156,19 +157,21 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {THEMES.map((themeName) => (
-              <Button
-                key={themeName}
-                variant={theme === themeName ? "default" : "outline"}
-                onClick={() => setTheme(themeName)}
-                className="justify-start"
-              >
-                <div className="mr-2 h-4 w-4 rounded-full border" style={{ backgroundColor: themeColors[themeName] }} />
-                {themeName}
-              </Button>
-            ))}
-          </div>
+           <Select value={theme} onValueChange={(value) => setTheme(value as Theme)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a theme" />
+              </SelectTrigger>
+              <SelectContent>
+                {THEMES.map((themeName) => (
+                  <SelectItem key={themeName} value={themeName}>
+                     <div className="flex items-center gap-2">
+                        <div className="mr-2 h-4 w-4 rounded-full border" style={{ backgroundColor: themeColors[themeName] }} />
+                        <span>{themeName}</span>
+                     </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
         </CardContent>
       </Card>
       
