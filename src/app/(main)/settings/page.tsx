@@ -7,13 +7,16 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CheckCircle } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { firebaseEnabled } from "@/lib/firebase";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 const BACKUP_VERSION = 1;
 
@@ -129,12 +132,22 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Cloud Sync</CardTitle>
           <CardDescription>
-            Sign in to automatically back up and sync your data across devices.
+            {firebaseEnabled
+              ? "Sign in to automatically back up and sync your data across devices."
+              : "Cloud Sync is not configured."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!isLoaded ? (
             <Skeleton className="h-14 w-full" />
+          ) : !firebaseEnabled ? (
+            <Alert>
+              <CloudOff className="h-4 w-4" />
+              <AlertTitle>Feature Disabled</AlertTitle>
+              <AlertDescription>
+                To enable cloud sync, provide your Firebase keys in your environment variables.
+              </AlertDescription>
+            </Alert>
           ) : user ? (
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">

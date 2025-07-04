@@ -1,5 +1,5 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 
 // Your web app's Firebase configuration from the Firebase console
 const firebaseConfig = {
@@ -11,8 +11,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-// We need to check if an app has already been initialized to prevent errors.
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+let app: FirebaseApp | null = null;
+let firebaseEnabled = false;
 
-export { app };
+// Only initialize Firebase if the API key is provided.
+// This prevents the app from crashing if environment variables are not set.
+if (firebaseConfig.apiKey) {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  firebaseEnabled = true;
+}
+
+export { app, firebaseEnabled };

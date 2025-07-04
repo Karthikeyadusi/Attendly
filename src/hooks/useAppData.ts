@@ -7,7 +7,7 @@ import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, Attenda
 import { useIsClient } from './useIsClient';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
-import { app as firebaseApp } from '@/lib/firebase';
+import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
@@ -44,6 +44,10 @@ export function useAppData() {
   
   // Auth state listener
   useEffect(() => {
+    if (!firebaseEnabled || !firebaseApp) {
+      setIsLoaded(true); // If firebase is disabled, we are "loaded" with local data
+      return;
+    }
     const auth = getAuth(firebaseApp);
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -60,7 +64,7 @@ export function useAppData() {
 
   // Firestore real-time listener for logged-in users
   useEffect(() => {
-    if (!user) return; // Only run for logged-in users
+    if (!user || !firebaseEnabled || !firebaseApp) return; // Only run for logged-in users
 
     const db = getFirestore(firebaseApp);
     const userDocRef = doc(db, 'users', user.uid);
@@ -89,7 +93,7 @@ export function useAppData() {
     localStorage.setItem(APP_DATA_KEY, JSON.stringify(data));
 
     // If user is logged in, save to Firestore
-    if (user) {
+    if (user && firebaseEnabled && firebaseApp) {
       const db = getFirestore(firebaseApp);
       const userDocRef = doc(db, 'users', user.uid);
       setDoc(userDocRef, data).catch(error => {
@@ -100,6 +104,10 @@ export function useAppData() {
 
 
   const signIn = async () => {
+    if (!firebaseEnabled || !firebaseApp) {
+        console.error("Firebase is not configured. Cannot sign in.");
+        return;
+    }
     const auth = getAuth(firebaseApp);
     const provider = new GoogleAuthProvider();
     try {
@@ -127,6 +135,7 @@ export function useAppData() {
   };
 
   const signOutUser = async () => {
+      if (!firebaseEnabled || !firebaseApp) return;
       const auth = getAuth(firebaseApp);
       await signOut(auth);
       // The onAuthStateChanged listener will handle state reset
