@@ -51,19 +51,23 @@ Analyze the provided image and extract every class slot. For each slot, you must
 - startTime (in 24-hour HH:MM format)
 - endTime (in 24-hour HH:MM format)
 
-**CRITICAL RULES FOR DETERMINING THE END TIME:**
-You must determine the 'endTime' by following these rules precisely.
+**CRITICAL, UNIVERSAL RULE FOR DETERMINING END TIME:**
+There is only one logic for determining the end time for ALL classes, regardless of whether they are in the morning or afternoon. Follow this logic precisely.
 
-**RULE 1: CALCULATE A PROVISIONAL END TIME**
-For every class, calculate a provisional \`endTime\` by adding exactly **100 minutes** to its \`startTime\`.
+1.  **Default Duration:** First, as a default, assume every class lasts for **100 minutes**. Calculate a potential end time by adding 100 minutes to the start time.
+    - *Example A (Morning):* A class at 09:00 would have a potential end time of 10:40.
+    - *Example B (Afternoon):* A class at 14:00 would have a potential end time of 15:40.
 
-**RULE 2: PREVENT OVERLAPS (FINAL CHECK)**
-After you have the provisional \`endTime\` from Rule 1, you must perform this final check:
-- Look ahead to the next class on the **SAME DAY**.
-- If the \`startTime\` of the next class is EARLIER than your provisional \`endTime\`, you MUST use the start time of that next class as the FINAL \`endTime\`.
-- If there is no next class on the same day, or if the next class starts after your provisional end time, then your provisional end time is correct and becomes the FINAL \`endTime\`.
+2.  **Prevent Overlaps:** This is the most important final step. Look ahead to the next class scheduled on the **SAME DAY**.
+    - If the next class starts *before* the potential end time you calculated, you **MUST** use the start time of that next class as the final \`endTime\`.
+    - If there is no next class on the same day, then the potential end time (startTime + 100 minutes) is the correct final \`endTime\`.
 
-This two-step process is crucial. First calculate a 100-minute duration, then adjust it only if needed to avoid an overlap.
+**Example of overlap prevention:**
+- Class A starts at 09:00. Its potential end time is 10:40.
+- Class B on the same day starts at 10:00.
+- Since 10:00 is earlier than 10:40, the final \`endTime\` for Class A MUST be 10:00.
+
+This logic applies to every single class you find. Do not use any other method.
 
 **OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
