@@ -44,36 +44,28 @@ const prompt = ai.definePrompt({
   output: {schema: ExtractTimetableOutputSchema},
   prompt: `You are an expert AI specializing in parsing visual timetables for college students. Your goal is to accurately extract class schedule information from an image and return it in a structured JSON format.
 
-Core Task:
-Analyze the provided image of a timetable and extract every class slot. For each slot, you must identify:
+Analyze the provided image and extract every class slot. For each slot, you must identify:
 - subjectName
 - day (one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
 - startTime (in 24-hour HH:MM format)
 - endTime (in 24-hour HH:MM format)
 
-**CRITICAL INSTRUCTIONS FOR END TIME CALCULATION:**
-To determine the end time for each class, you MUST follow these rules in the exact order they are presented. Do not skip a rule unless its conditions are not met.
+**CRITICAL RULES FOR DETERMINING END TIME:**
+You must determine the endTime for each class by following these rules IN ORDER.
 
-**Rule 1: The Special 1:30 PM Lab Slot**
-- **Condition:** Does a class start at exactly "13:30"?
-- **Action:** If YES, check if any other class on the SAME DAY starts between 13:31 and 15:09.
-    - If NO other class starts in that window, set the end time to **"15:10"**.
-    - If YES, another class starts in that window, this rule does not apply. Proceed to Rule 2.
-- *Example*: A class starts at 13:30 and the next one is at 16:00. The end time is "15:10".
-- *Example*: A class starts at 13:30 but another starts at 14:30. Ignore this rule and use Rule 2. The end time will be "14:30".
+**RULE A: General Look-Ahead Rule**
+For any given class, look for the next class scheduled on the SAME DAY.
+- **If** there is a next class, the \`endTime\` of the current class is the \`startTime\` of that next class.
+- **Example:** "Physics" starts at 10:00. The next class, "Math", starts at 11:00 on the same day. The \`endTime\` for "Physics" is "11:00".
 
-**Rule 2: The General 'Look Ahead' Rule (For ALL other classes)**
-- **Condition:** Does a class have another class scheduled after it on the SAME DAY?
-- **Action:** If YES, the end time for the first class is the start time of the next class.
-- *This rule applies to all morning classes and any afternoon classes that did not meet the conditions for Rule 1.*
-- *Example*: "Physics" at 10:00 is followed by "Math" at 11:00. The end time for "Physics" is "11:00".
+**RULE B: Last Class of the Day Rule**
+- **If** a class is the LAST one for that day (meaning Rule A did not find a 'next class'), you must determine its \`endTime\` based on its \`startTime\`:
+    - **If** the \`startTime\` is exactly "13:30", set the \`endTime\` to "15:10".
+    - **For any other \`startTime\`**, set the \`endTime\` by adding 50 minutes.
+    - **Example 1 (Lab):** A class starts at 13:30 and is the last class. Its \`endTime\` is "15:10".
+    - **Example 2 (Normal):** A class starts at 14:00 and is the last class. Its \`endTime\` is "14:50".
 
-**Rule 3: The 'Last Class of the Day' Rule**
-- **Condition:** Is this the last class scheduled for the day?
-- **Action:** If YES, calculate its end time by adding a standard duration of **50 minutes** to its start time.
-- *Example*: The last class is at 14:00. Its end time is "14:50".
-
-**OTHER IMPORTANT RULES:**
+**OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
 - **Day Formatting**: Days must be abbreviated to 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
 - **Data Cleaning**: Ignore all non-schedule text like names, room numbers, or university logos.
