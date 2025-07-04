@@ -21,7 +21,7 @@ import { Loader2, Upload, Trash2, Sparkles } from "lucide-react";
 import type { ExtractedSlot, DayOfWeek } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { addMinutes, parse, format as formatDate, differenceInMinutes } from 'date-fns';
+import { addMinutes, parse, format as formatDate } from 'date-fns';
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -31,32 +31,19 @@ type RawExtractedSlot = {
     subjectName: string;
 };
 
-// This new function implements robust logic directly in the code, not in the AI prompt.
 const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     const finalSlots: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
-    // Helper to check if two slots are consecutive 50-minute blocks
-    const areConsecutive = (slotA: RawExtractedSlot, slotB: RawExtractedSlot): boolean => {
-        try {
-            const baseDate = new Date();
-            const startTimeA = parse(slotA.startTime, 'HH:mm', baseDate);
-            const startTimeB = parse(slotB.startTime, 'HH:mm', baseDate);
-            const diff = differenceInMinutes(startTimeB, startTimeA);
-            // Assuming standard 50-minute slots. This checks if the next slot starts exactly 50 mins after.
-            return diff === 50;
-        } catch (e) {
-            console.error("Error parsing time for consecutiveness check", e);
-            return false;
-        }
-    };
-
     // 1. Group raw slots by day
     for (const slot of rawSlots) {
-        if (!slotsByDay.has(slot.day)) {
-            slotsByDay.set(slot.day, []);
+        // Basic validation to prevent errors from bad AI output
+        if (slot.day && slot.startTime && slot.subjectName) {
+            if (!slotsByDay.has(slot.day)) {
+                slotsByDay.set(slot.day, []);
+            }
+            slotsByDay.get(slot.day)!.push(slot);
         }
-        slotsByDay.get(slot.day)!.push(slot);
     }
 
     // 2. For each day, sort slots by time and then process them
@@ -68,30 +55,46 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             const currentSlot = daySlots[i];
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
 
-            const baseDate = new Date();
+            // MERGE condition: if the next slot exists and has the same subject name.
+            if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
+                // Treat as one merged, 100-minute class.
+                try {
+                    const baseDate = new Date();
+                    const startTime = parse(currentSlot.startTime, 'HH:mm', baseDate);
+                    const endTime = formatDate(addMinutes(startTime, 100), 'HH:mm');
+                    
+                    finalSlots.push({
+                        day: currentSlot.day,
+                        startTime: currentSlot.startTime,
+                        endTime: endTime,
+                        subjectName: currentSlot.subjectName
+                    });
 
-            // Check for merge condition: same subject AND consecutive time slots.
-            if (nextSlot && nextSlot.subjectName === currentSlot.subjectName && areConsecutive(currentSlot, nextSlot)) {
-                // MERGED CLASS (e.g., a 100-minute lab)
-                finalSlots.push({
-                    day: currentSlot.day,
-                    startTime: currentSlot.startTime,
-                    // The end time is 100 minutes from the start of the first slot
-                    endTime: formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 100), 'HH:mm'),
-                    subjectName: currentSlot.subjectName
-                });
-
-                i += 2; // Skip the next slot as it has been merged.
+                    i += 2; // Skip the next slot as it has been merged.
+                } catch (e) {
+                    console.error("Error processing merged slot:", currentSlot, e);
+                    // If parsing fails, just skip this slot to avoid crashing
+                    i++;
+                }
             } else {
-                // SINGLE CLASS (e.g., a 50-minute lecture)
-                finalSlots.push({
-                    day: currentSlot.day,
-                    startTime: currentSlot.startTime,
-                    endTime: formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 50), 'HH:mm'),
-                    subjectName: currentSlot.subjectName
-                });
-
-                i += 1;
+                // SINGLE class, treat as a 50-minute block.
+                try {
+                    const baseDate = new Date();
+                    const startTime = parse(currentSlot.startTime, 'HH:mm', baseDate);
+                    const endTime = formatDate(addMinutes(startTime, 50), 'HH:mm');
+                    
+                    finalSlots.push({
+                        day: currentSlot.day,
+                        startTime: currentSlot.startTime,
+                        endTime: endTime,
+                        subjectName: currentSlot.subjectName
+                    });
+                    
+                    i += 1;
+                } catch (e) {
+                    console.error("Error processing single slot:", currentSlot, e);
+                    i++;
+                }
             }
         }
     }
