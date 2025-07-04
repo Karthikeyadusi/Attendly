@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useApp } from "@/components/AppProvider";
@@ -25,27 +24,15 @@ export default function AttendanceStats() {
 
     const stats = useMemo(() => {
         if (!isLoaded) {
-          return { totalAttendedClasses: 0, totalConductedClasses: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
+          return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
         }
 
         const subjectMap = new Map(subjects.map(s => [s.id, s]));
         const slotMap = new Map(timetable.map(s => [s.id, s]));
         
-        // Calculate average credits per class to handle historical data conversion
-        const uniqueSlotsInTimetable = [...new Map(timetable.map(item => [item.id, item])).values()];
-        const totalCreditsInTimetable = uniqueSlotsInTimetable.reduce((acc, slot) => {
-            const subject = subjectMap.get(slot.subjectId);
-            return acc + (subject?.credits || 0);
-        }, 0);
-        const avgCreditsPerClass = totalCreditsInTimetable > 0 ? totalCreditsInTimetable / uniqueSlotsInTimetable.length : 1;
-        
-        // Calculate credits from historical data
+        // Historical data is already in credits
         const historicalConductedCredits = historicalData?.conductedCredits ?? 0;
         const historicalAttendedCredits = historicalData?.attendedCredits ?? 0;
-
-        // Convert historical credits to approximate classes
-        const historicalConductedClasses = Math.round(historicalConductedCredits / avgCreditsPerClass);
-        const historicalAttendedClasses = Math.round(historicalAttendedCredits / avgCreditsPerClass);
 
         // Filter daily records based on start date
         const dailyRecords = trackingStartDate
@@ -54,8 +41,6 @@ export default function AttendanceStats() {
 
         let dailyAttendedCredits = 0;
         let dailyConductedCredits = 0;
-        let dailyAttendedClasses = 0;
-        let dailyConductedClasses = 0;
         const dailyCancelledCount = dailyRecords.filter(r => r.status === 'Cancelled').length;
 
         for (const record of dailyRecords) {
@@ -69,31 +54,34 @@ export default function AttendanceStats() {
 
             const credits = subject.credits;
             dailyConductedCredits += credits;
-            dailyConductedClasses++;
             if (record.status === 'Attended') {
                 dailyAttendedCredits += credits;
-                dailyAttendedClasses++;
             }
         }
         
         const totalConductedCredits = historicalConductedCredits + dailyConductedCredits;
         const totalAttendedCredits = historicalAttendedCredits + dailyAttendedCredits;
-        const totalConductedClasses = historicalConductedClasses + dailyConductedClasses;
-        const totalAttendedClasses = historicalAttendedClasses + dailyAttendedClasses;
         
-        // Percentage is more accurate when weighted by credits
         const attendancePercentage = totalConductedCredits > 0 ? (totalAttendedCredits / totalConductedCredits) * 100 : 100;
         
         const safeToMiss = () => {
+          // Average credits per class is needed to convert the final number back to classes for the message.
+          const uniqueSlotsInTimetable = [...new Map(timetable.map(item => [item.id, item])).values()];
+          const totalCreditsInTimetable = uniqueSlotsInTimetable.reduce((acc, slot) => {
+              const subject = subjectMap.get(slot.subjectId);
+              return acc + (subject?.credits || 0);
+          }, 0);
+          const avgCreditsPerClass = totalCreditsInTimetable > 0 ? totalCreditsInTimetable / uniqueSlotsInTimetable.length : 1;
+          
           const minRatio = minAttendancePercentage / 100;
           if (attendancePercentage < minAttendancePercentage) {
-            if (1 - minRatio <= 0) return 'N/A';
+            if (1 - minRatio <= 0) return 'N/A'; // Avoid division by zero if min attendance is 100%
             const creditsNeeded = Math.ceil(((minRatio * totalConductedCredits) - totalAttendedCredits) / (1 - minRatio));
             const classesNeeded = Math.ceil(creditsNeeded / avgCreditsPerClass);
             if (classesNeeded <= 0) return null;
             return `Attend ${classesNeeded} more class${classesNeeded !== 1 ? 'es' : ''}`;
           }
-          if(minRatio <= 0) return 'Infinite';
+          if(minRatio <= 0) return 'Infinite'; // Avoid division by zero if min attendance is 0%
           const creditsCanMiss = Math.floor((totalAttendedCredits - minRatio * totalConductedCredits) / minRatio);
           const classesCanMiss = Math.floor(creditsCanMiss / avgCreditsPerClass);
           return classesCanMiss;
@@ -102,8 +90,8 @@ export default function AttendanceStats() {
         const safeMissValue = safeToMiss();
 
         return {
-            totalAttendedClasses,
-            totalConductedClasses,
+            totalAttendedCredits,
+            totalConductedCredits,
             cancelledCount: dailyCancelledCount,
             attendancePercentage,
             safeMissValue,
@@ -140,8 +128,8 @@ export default function AttendanceStats() {
                 </CardContent>
             </Card>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-               <StatCard title="Attended Classes" value={stats.totalAttendedClasses} icon={BookCheck} />
-               <StatCard title="Conducted Classes" value={stats.totalConductedClasses} icon={Library} />
+               <StatCard title="Attended Credits" value={stats.totalAttendedCredits} icon={BookCheck} />
+               <StatCard title="Conducted Credits" value={stats.totalConductedCredits} icon={Library} />
                <StatCard title="Cancelled Classes" value={stats.cancelledCount} icon={CalendarOff} />
                <StatCard title="Safe Miss (Classes)" value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} icon={Star} />
             </div>
