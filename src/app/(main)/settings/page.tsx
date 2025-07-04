@@ -12,8 +12,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { THEMES, useTheme } from "@/components/ThemeProvider";
+import type { Theme } from "@/components/ThemeProvider";
 
 const BACKUP_VERSION = 1;
+
+const themeColors: Record<Theme, string> = {
+  Navy: 'hsl(207 44% 49%)',
+  Forest: 'hsl(142 76% 36%)',
+  Rose: 'hsl(347 77% 50%)',
+  Zinc: 'hsl(240 6% 10%)'
+}
 
 export default function SettingsPage() {
   const { getBackupData, restoreFromBackup, isLoaded, userName, setUserName } = useApp();
@@ -22,6 +31,7 @@ export default function SettingsPage() {
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
   const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
   const [name, setName] = useState('');
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (isLoaded) {
@@ -46,7 +56,7 @@ export default function SettingsPage() {
     const link = document.createElement('a');
     link.href = url;
     const date = new Date().toISOString().split('T')[0];
-    link.download = `attdendly-backup-${date}.json`;
+    link.download = `attendly-backup-${date}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -134,6 +144,30 @@ export default function SettingsPage() {
               />
             </div>
             <Button onClick={handleNameSave} disabled={!isLoaded || name === (userName || '') || !name.trim()}>Save</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>
+            Select a theme for the application.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {THEMES.map((themeName) => (
+              <Button
+                key={themeName}
+                variant={theme === themeName ? "default" : "outline"}
+                onClick={() => setTheme(themeName)}
+                className="justify-start"
+              >
+                <div className="mr-2 h-4 w-4 rounded-full border" style={{ backgroundColor: themeColors[themeName] }} />
+                {themeName}
+              </Button>
+            ))}
           </div>
         </CardContent>
       </Card>
