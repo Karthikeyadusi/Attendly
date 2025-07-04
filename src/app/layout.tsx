@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Attendly',
@@ -33,14 +34,14 @@ export default function RootLayout({
         <meta name="theme-color" content="#191970" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className="font-body antialiased">
+      <body className={cn("font-body antialiased", "theme-navy")}>
         <ThemeProvider>
-          <div className="bg-muted flex justify-center items-start min-h-screen">
-            <div className="w-full max-w-lg bg-background shadow-lg min-h-screen">
-              {children}
+            <div className="bg-muted flex justify-center items-start min-h-screen">
+                <div className="w-full max-w-lg bg-background shadow-lg min-h-screen">
+                {children}
+                </div>
             </div>
-          </div>
-          <Toaster />
+            <Toaster />
         </ThemeProvider>
       </body>
     </html>

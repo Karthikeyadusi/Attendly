@@ -35,12 +35,9 @@ export function ThemeProvider({
   defaultMode = 'dark',
   storageKey = 'attendly-theme-config',
 }: ThemeProviderProps) {
-  // Always initialize with default values to prevent hydration mismatch.
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
   const [mode, setModeState] = useState<Mode>(defaultMode);
 
-  // This effect runs only on the client, after the initial render.
-  // It safely reads the user's preference from localStorage and updates the state.
   useEffect(() => {
     try {
       const storedConfig = localStorage.getItem(storageKey);
@@ -58,17 +55,16 @@ export function ThemeProvider({
     }
   }, [storageKey]);
 
-  // This effect syncs the state back to the DOM and localStorage.
   useEffect(() => {
-    const root = window.document.documentElement;
+    const body = window.document.body;
     
-    root.classList.remove('light', 'dark');
-    root.classList.add(mode);
+    body.classList.remove('light', 'dark');
+    body.classList.add(mode);
 
     const themeClasses = THEMES.map(t => `theme-${t.toLowerCase()}`);
-    root.classList.remove(...themeClasses);
+    body.classList.remove(...themeClasses);
     
-    root.classList.add(`theme-${theme.toLowerCase()}`);
+    body.classList.add(`theme-${theme.toLowerCase()}`);
     
     localStorage.setItem(storageKey, JSON.stringify({ theme, mode }));
   }, [theme, mode, storageKey]);
