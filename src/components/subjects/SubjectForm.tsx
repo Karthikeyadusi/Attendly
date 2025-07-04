@@ -35,6 +35,7 @@ import { useEffect } from "react";
 const subjectSchema = z.object({
   name: z.string().min(1, "Subject name is required."),
   type: z.enum(["Lecture", "Lab"]),
+  credits: z.coerce.number().min(0, "Credits must be 0 or more."),
 });
 
 type SubjectFormValues = z.infer<typeof subjectSchema>;
@@ -53,6 +54,7 @@ export default function SubjectForm({ open, onOpenChange, subject }: SubjectForm
     defaultValues: {
       name: "",
       type: "Lecture",
+      credits: 1,
     },
   });
 
@@ -63,6 +65,7 @@ export default function SubjectForm({ open, onOpenChange, subject }: SubjectForm
       form.reset({
         name: "",
         type: "Lecture",
+        credits: 1,
       });
     }
   }, [subject, open, form]);
@@ -100,27 +103,42 @@ export default function SubjectForm({ open, onOpenChange, subject }: SubjectForm
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Lecture">Lecture</SelectItem>
+                        <SelectItem value="Lab">Lab</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="credits"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credits</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a type" />
-                      </SelectTrigger>
+                      <Input type="number" placeholder="e.g., 3" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Lecture">Lecture</SelectItem>
-                      <SelectItem value="Lab">Lab</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button type="submit">{subject ? "Save Changes" : "Add Subject"}</Button>
             </DialogFooter>

@@ -38,7 +38,7 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
                         <div className="flex items-start justify-between">
                             <div>
                                 <CardTitle>{subject.name}</CardTitle>
-                                <CardDescription>{subject.type}</CardDescription>
+                                <CardDescription>{subject.type} • {subject.credits} {subject.credits === 1 ? 'Credit' : 'Credits'}</CardDescription>
                             </div>
                             <div className="flex gap-2">
                                 <Button variant="ghost" size="icon" onClick={() => handleEditClick(subject)}>

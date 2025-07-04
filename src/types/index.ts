@@ -2,6 +2,7 @@ export type Subject = {
   id: string;
   name: string;
   type: 'Lecture' | 'Lab';
+  credits: number;
 };
 
 export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';

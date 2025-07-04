@@ -33,6 +33,10 @@ export function useAppData() {
           if (!parsedData.trackingStartDate) {
             parsedData.trackingStartDate = null;
           }
+           // Migration for existing users: add default credits if missing
+          if (parsedData.subjects && parsedData.subjects.some((s: Subject) => s.credits === undefined)) {
+            parsedData.subjects = parsedData.subjects.map((s: Subject) => ({...s, credits: s.credits ?? 1}));
+          }
           setData(parsedData);
         }
       } catch (error) {
@@ -136,6 +140,7 @@ export function useAppData() {
                     id: crypto.randomUUID(),
                     name: slot.subjectName,
                     type: 'Lecture', // default
+                    credits: 1, // default credits
                 };
                 newSubjects.push(newSubject);
                 existingSubjectNames.add(newSubject.name.toLowerCase());

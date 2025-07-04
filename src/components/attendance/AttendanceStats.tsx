@@ -3,7 +3,7 @@
 import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BookCheck, BookX, CalendarOff, Star } from 'lucide-react';
+import { BookCheck, Library, CalendarOff, Star } from 'lucide-react';
 import { useMemo } from 'react';
 import { Skeleton } from "../ui/skeleton";
 
@@ -20,53 +20,79 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: s
 );
 
 export default function AttendanceStats() {
-    const { attendance, minAttendancePercentage, historicalData, trackingStartDate, isLoaded } = useApp();
+    const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded } = useApp();
 
     const stats = useMemo(() => {
-        if (!isLoaded) {
-          return { attendedCount: 0, absentCount: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
+        if (!isLoaded || subjects.length === 0) {
+          return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
         }
 
-        const historicalConducted = historicalData.reduce((sum, r) => sum + r.conducted, 0);
-        const historicalAttended = historicalData.reduce((sum, r) => sum + r.attended, 0);
+        const subjectMap = new Map(subjects.map(s => [s.id, s]));
 
+        // Calculate credits from historical data
+        const historicalConductedCredits = historicalData.reduce((sum, r) => {
+            const subject = subjectMap.get(r.subjectId);
+            return sum + (r.conducted * (subject?.credits ?? 0));
+        }, 0);
+        const historicalAttendedCredits = historicalData.reduce((sum, r) => {
+            const subject = subjectMap.get(r.subjectId);
+            return sum + (r.attended * (subject?.credits ?? 0));
+        }, 0);
+
+        // Filter daily records based on start date
         const dailyRecords = trackingStartDate
             ? attendance.filter(r => r.date >= trackingStartDate)
             : attendance;
 
-        const dailyAttendedCount = dailyRecords.filter(r => r.status === 'Attended').length;
-        const dailyAbsentCount = dailyRecords.filter(r => r.status === 'Absent').length;
+        const slotMap = new Map(timetable.map(s => [s.id, s]));
+
+        let dailyAttendedCredits = 0;
+        let dailyConductedCredits = 0;
         const dailyCancelledCount = dailyRecords.filter(r => r.status === 'Cancelled').length;
 
-        const dailyConductedCount = dailyAttendedCount + dailyAbsentCount;
-        
-        const totalConducted = historicalConducted + dailyConductedCount;
-        const totalAttended = historicalAttended + dailyAttendedCount;
-        
-        const totalAbsences = (historicalConducted - historicalAttended) + dailyAbsentCount;
+        for (const record of dailyRecords) {
+            if (record.status === 'Cancelled') continue;
 
-        const attendancePercentage = totalConducted > 0 ? (totalAttended / totalConducted) * 100 : 100;
+            const slot = slotMap.get(record.slotId);
+            if (!slot) continue;
+            
+            const subject = subjectMap.get(slot.subjectId);
+            if (!subject) continue;
+
+            const credits = subject.credits;
+            dailyConductedCredits += credits;
+            if (record.status === 'Attended') {
+                dailyAttendedCredits += credits;
+            }
+        }
+        
+        const totalConductedCredits = historicalConductedCredits + dailyConductedCredits;
+        const totalAttendedCredits = historicalAttendedCredits + dailyAttendedCredits;
+        
+        const attendancePercentage = totalConductedCredits > 0 ? (totalAttendedCredits / totalConductedCredits) * 100 : 100;
         
         const safeToMiss = () => {
+          const minRatio = minAttendancePercentage / 100;
           if (attendancePercentage < minAttendancePercentage) {
-            if (100 - minAttendancePercentage <= 0) return 'N/A';
-            const needed = Math.ceil(((minAttendancePercentage / 100) * totalConducted - totalAttended) / (1 - minAttendancePercentage / 100));
-            return `Attend ${needed} more`;
+            if (1 - minRatio <= 0) return 'N/A';
+            const creditsNeeded = Math.ceil(((minRatio * totalConductedCredits) - totalAttendedCredits) / (1 - minRatio));
+            return `Attend ${creditsNeeded} more credits`;
           }
-          const canMiss = Math.floor((totalAttended - (minAttendancePercentage / 100) * totalConducted) / (minAttendancePercentage / 100));
-          return canMiss;
+          if(minRatio <= 0) return 'Infinite';
+          const creditsCanMiss = Math.floor((totalAttendedCredits - minRatio * totalConductedCredits) / minRatio);
+          return creditsCanMiss;
         };
 
         const safeMissValue = safeToMiss();
 
         return {
-            attendedCount: totalAttended,
-            absentCount: totalAbsences,
+            totalAttendedCredits,
+            totalConductedCredits,
             cancelledCount: dailyCancelledCount,
             attendancePercentage,
             safeMissValue,
         };
-    }, [attendance, historicalData, trackingStartDate, minAttendancePercentage, isLoaded]);
+    }, [attendance, subjects, timetable, historicalData, trackingStartDate, minAttendancePercentage, isLoaded]);
 
     if (!isLoaded) {
       return (
@@ -98,10 +124,10 @@ export default function AttendanceStats() {
                 </CardContent>
             </Card>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-               <StatCard title="Attended" value={stats.attendedCount} icon={BookCheck} />
-               <StatCard title="Absent" value={stats.absentCount} icon={BookX} />
-               <StatCard title="Cancelled" value={stats.cancelledCount} icon={CalendarOff} />
-               <StatCard title="Safe to Miss" value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} icon={Star} />
+               <StatCard title="Attended Credits" value={stats.totalAttendedCredits} icon={BookCheck} />
+               <StatCard title="Conducted Credits" value={stats.totalConductedCredits} icon={Library} />
+               <StatCard title="Cancelled Classes" value={stats.cancelledCount} icon={CalendarOff} />
+               <StatCard title="Safe Miss (Credits)" value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} icon={Star} />
             </div>
             {typeof stats.safeMissValue === 'string' && (
                 <p className="text-sm text-center text-amber-500">{stats.safeMissValue}</p>
