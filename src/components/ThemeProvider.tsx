@@ -35,42 +35,30 @@ export function ThemeProvider({
   defaultMode = 'dark',
   storageKey = 'attendly-theme-config',
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') {
-      return defaultTheme;
-    }
+  // Always initialize with default values to prevent hydration mismatch.
+  const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const [mode, setModeState] = useState<Mode>(defaultMode);
+
+  // This effect runs only on the client, after the initial render.
+  // It safely reads the user's preference from localStorage and updates the state.
+  useEffect(() => {
     try {
       const storedConfig = localStorage.getItem(storageKey);
       if (storedConfig) {
-        const { theme: storedTheme } = JSON.parse(storedConfig);
+        const { theme: storedTheme, mode: storedMode } = JSON.parse(storedConfig);
         if (storedTheme && THEMES.includes(storedTheme)) {
-          return storedTheme;
+          setThemeState(storedTheme);
+        }
+        if (storedMode && ['light', 'dark'].includes(storedMode)) {
+          setModeState(storedMode);
         }
       }
     } catch (e) {
       console.error('Failed to parse theme from local storage');
     }
-    return defaultTheme;
-  });
+  }, [storageKey]);
 
-  const [mode, setModeState] = useState<Mode>(() => {
-     if (typeof window === 'undefined') {
-      return defaultMode;
-    }
-    try {
-      const storedConfig = localStorage.getItem(storageKey);
-      if (storedConfig) {
-        const { mode: storedMode } = JSON.parse(storedConfig);
-        if (storedMode && ['light', 'dark'].includes(storedMode)) {
-          return storedMode;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse mode from local storage');
-    }
-    return defaultMode;
-  });
-
+  // This effect syncs the state back to the DOM and localStorage.
   useEffect(() => {
     const root = window.document.documentElement;
     
