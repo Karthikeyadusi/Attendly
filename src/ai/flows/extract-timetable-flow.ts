@@ -61,10 +61,8 @@ For any given class, look for the next class scheduled on the SAME DAY.
 
 **RULE B: Last Class of the Day Rule**
 - **If** a class is the LAST one for that day (meaning Rule A did not find a 'next class'), you must determine its \`endTime\` based on its \`startTime\`:
-    - **If** the \`startTime\` is "12:00" or later (i.e., it's an afternoon class), set its \`endTime\` to "15:10".
-    - **For any other \`startTime\` (i.e., it's a morning class)**, set the \`endTime\` by adding 50 minutes.
-    - **Example 1 (Afternoon):** A class starts at 13:30 and is the last class. Its \`endTime\` is "15:10".
-    - **Example 2 (Morning):** A class starts at 11:00 and is the last class. Its \`endTime\` is "11:50".
+    - **IF THE START TIME IS 12:00 OR LATER:** The end time for this class is **15:10**. For example, if the last class starts at 13:30, its end time is 15:10.
+    - **IF THE START TIME IS BEFORE 12:00:** The end time for this class is 50 minutes after its start time. For example, if the last class starts at 11:00, its end time is 11:50.
 
 **OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
