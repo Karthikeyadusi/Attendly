@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { format, getDay } from 'date-fns';
-import type { DayOfWeek, AttendanceStatus } from '@/types';
+import type { DayOfWeek, AttendanceStatus, AttendanceRecord } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,11 @@ export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
 
+    const subjectMap = useMemo(() => {
+        if (!isLoaded) return new Map();
+        return new Map(subjects.map(s => [s.id, s]));
+    }, [subjects, isLoaded]);
+
     const dailyAttendanceStatus = useMemo(() => {
         if (!isLoaded) return {};
         const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' } = {};
@@ -80,10 +86,23 @@ export default function CalendarPage() {
         return statusByDate;
     }, [attendance, isLoaded]);
 
+    const attendanceForSelectedDateMap = useMemo(() => {
+        const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
+        if (!dateStr || !isLoaded) return new Map<string, AttendanceRecord>();
+
+        const records = new Map<string, AttendanceRecord>();
+        for (const record of attendance) {
+            if (record.date === dateStr) {
+                records.set(record.slotId, record);
+            }
+        }
+        return records;
+    }, [selectedDate, attendance, isLoaded]);
+
     const modifiers = {
         attended: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended',
         absent: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'absent',
-        cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-M-dd')] === 'cancelled',
+        cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled',
     };
 
     const modifierStyles = {
@@ -98,12 +117,15 @@ export default function CalendarPage() {
         },
     };
 
-    const selectedDayOfWeek = selectedDate ? dayMap[getDay(selectedDate)] : undefined;
+    const scheduleForSelectedDate = useMemo(() => {
+        const dayOfWeek = selectedDate ? dayMap[getDay(selectedDate)] : undefined;
+        if (!dayOfWeek) return [];
+        return timetable
+            .filter(slot => slot.day === dayOfWeek)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }, [selectedDate, timetable]);
+    
     const selectedDateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
-
-    const scheduleForSelectedDate = timetable
-        .filter(slot => slot.day === selectedDayOfWeek)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
     if (!isLoaded) {
         return (
@@ -136,10 +158,10 @@ export default function CalendarPage() {
                     <CardContent className="space-y-3">
                         {scheduleForSelectedDate.length > 0 ? (
                              scheduleForSelectedDate.map(slot => {
-                                const subject = subjects.find(s => s.id === slot.subjectId);
+                                const subject = subjectMap.get(slot.subjectId);
                                 if (!subject) return null;
                                 const SubjectIcon = subject.type === 'Lab' ? FlaskConical : Book;
-                                const record = attendance.find(r => r.id === `${selectedDateString}-${slot.id}`);
+                                const record = attendanceForSelectedDateMap.get(slot.id);
 
                                 const handleLogAndClose = (status: AttendanceStatus) => {
                                     if(selectedDateString) {
