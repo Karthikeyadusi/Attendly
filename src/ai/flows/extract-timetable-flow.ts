@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
   - Identify the subject name, the day of the week, and the start and end times for each class.
   - The days of the week MUST be one of: 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
   - Times MUST be in 24-hour HH:MM format. Convert AM/PM times to 24-hour format. For example, 2 PM is 14:00.
-  - If a class spans multiple consecutive time slots but is only written in the first slot, assume it continues for the empty adjacent slots. For example, if "Physics" is in the 09:00-10:00 slot and the 10:00-11:00 slot for that day is empty, you should create a single slot for "Physics" from 09:00 to 11:00.
+  - CRITICAL LOGIC FOR END TIMES: Many timetables only show a subject at its starting time slot. To determine the end time, you must look ahead to the next scheduled class on the SAME DAY. The end time for one class is the start time of the next class. For example, if on Monday, "Math" starts at 09:00 and the next class, "History", starts at 10:40, then the time slot for "Math" is 09:00-10:40. If a class is the last one of the day, assume a standard duration of 50 minutes.
   - Make your best effort to parse all entries. If some information is ambiguous, make a reasonable guess. It is critical that the output matches the specified JSON schema exactly.
   - Ensure that for every slot, the end time is after the start time.
 
