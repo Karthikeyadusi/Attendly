@@ -7,7 +7,7 @@ import Onboarding from "@/components/Onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
-  const { subjects, timetable, isLoaded } = useApp();
+  const { subjects, timetable, isLoaded, userName } = useApp();
 
   if (!isLoaded) {
     return (
@@ -33,7 +33,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+        {userName ? `Welcome, ${userName}!` : 'Dashboard'}
+      </h2>
       <AttendanceStats />
       <TodaysClasses />
     </div>

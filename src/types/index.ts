@@ -57,6 +57,7 @@ export type AppCoreData = {
   minAttendancePercentage: number;
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;
+  userName: string | null;
 }
 
 // The complete app state including derived data.

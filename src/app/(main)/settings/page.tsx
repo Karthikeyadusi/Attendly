@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +10,32 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, Upload } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const BACKUP_VERSION = 1;
 
 export default function SettingsPage() {
-  const { getBackupData, restoreFromBackup, isLoaded } = useApp();
+  const { getBackupData, restoreFromBackup, isLoaded, userName, setUserName } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
   const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    if (isLoaded) {
+      setName(userName || '');
+    }
+  }, [isLoaded, userName]);
+
+  const handleNameSave = () => {
+    setUserName(name);
+    toast({
+      title: "Profile Updated",
+      description: "Your name has been saved.",
+    });
+  };
 
   const handleExport = () => {
     if (!isLoaded) return;
@@ -96,6 +114,29 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Settings</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Profile</CardTitle>
+          <CardDescription>
+            This name will be used to personalize your experience.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 items-end">
+            <div className="flex-grow space-y-2">
+              <Label htmlFor="name-input">Your Name</Label>
+              <Input
+                id="name-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name or nickname"
+              />
+            </div>
+            <Button onClick={handleNameSave} disabled={!isLoaded || name === (userName || '') || !name.trim()}>Save</Button>
+          </div>
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>

@@ -16,6 +16,7 @@ const getInitialData = (): AppCoreData => ({
   minAttendancePercentage: 75,
   historicalData: null,
   trackingStartDate: null,
+  userName: null,
 });
 
 export function useAppData() {
@@ -42,6 +43,7 @@ export function useAppData() {
           if (parsedData.subjects && parsedData.subjects.some((s: Subject) => s.credits === undefined)) {
             parsedData.subjects = parsedData.subjects.map((s: Subject) => ({...s, credits: s.credits ?? 1}));
           }
+          parsedData.userName = parsedData.userName || null;
           setData(parsedData);
         }
       } catch (error) {
@@ -208,7 +210,13 @@ export function useAppData() {
 
   const restoreFromBackup = useCallback((backupData: BackupData) => {
     const { version, exportedAt, ...restOfData } = backupData;
-    setData(restOfData);
+    const initialData = getInitialData();
+    const finalData = { ...initialData, ...restOfData };
+    setData(finalData);
+  }, []);
+
+  const setUserName = useCallback((name: string) => {
+    setData(prev => ({ ...prev, userName: name.trim() }));
   }, []);
 
   // Memoized derived data for performance
@@ -287,6 +295,7 @@ export function useAppData() {
     saveHistoricalData,
     getBackupData,
     restoreFromBackup,
+    setUserName,
     // Provide memoized data
     subjectMap,
     timetableByDay,
