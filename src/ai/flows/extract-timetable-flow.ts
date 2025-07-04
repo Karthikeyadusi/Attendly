@@ -45,22 +45,26 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert AI specializing in parsing visual timetables for college students. Your goal is to accurately extract class schedule information from an image and return it in a structured JSON format.
 
 Core Task:
-Analyze the provided image of a timetable and extract every class slot. For each slot, identify the subject name, day of the week, start time, and end time.
+Analyze the provided image of a timetable and extract every class slot. For each slot, you must identify:
+- subjectName
+- day (one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
+- startTime (in 24-hour HH:MM format)
+- endTime (in 24-hour HH:MM format)
 
-CRITICAL INSTRUCTIONS (Follow these precisely):
+**CRITICAL INSTRUCTIONS FOR END TIME CALCULATION:**
+Timetables often do not explicitly write the end time for a class. You MUST infer it using the following logic:
 
-1.  **Output Format**: The final output MUST conform strictly to the provided JSON schema. Do not add extra fields.
-2.  **Day of the Week**: Days must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'. Abbreviate days if they are written out (e.g., "Monday" becomes "Mon").
-3.  **Time Formatting**: All times MUST be in 24-hour HH:MM format.
-    - Convert AM/PM to 24-hour format (e.g., 2 PM is 14:00).
-    - Add leading zeros where necessary (e.g., "9:30" becomes "09:30").
-4.  **End Time Calculation Logic**: This is the most important rule. Timetables often do not explicitly state an end time.
-    - The end time for one class is the start time of the *next class on the same day*.
-    - **Example**: If on Tuesday, "Chemistry" is at 10:00 and "Lab" is at 11:00, the end time for "Chemistry" is 11:00.
-    - If a class is the **last one for that day**, assume a standard duration of **50 minutes** to calculate its end time. (e.g., a 14:00 class would end at 14:50).
-5.  **Data Cleaning**:
-    - Ignore any irrelevant text on the image, such as student names, university logos, or page numbers. Focus only on the schedule grid.
-    - Ensure that for every slot, the calculated end time is after the start time.
+1.  **Look Ahead:** The end time for one class is ALWAYS the start time of the next class that occurs on the SAME DAY.
+    - *Example*: If "Physics" is at 10:00 on Monday and "Math" is at 11:00 on Monday, the end time for "Physics" is "11:00".
+
+2.  **Last Class of the Day:** If a class is the final one scheduled for a particular day (i.e., there are no more classes after it on that day), you MUST calculate its end time by assuming a standard duration of **50 minutes**.
+    - *Example*: If "History" is at 14:00 on Wednesday and it's the last class, its end time will be "14:50".
+
+**OTHER IMPORTANT RULES:**
+- **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
+- **Day Formatting**: Days must be abbreviated to 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'.
+- **Data Cleaning**: Ignore all non-schedule text like names, room numbers, or university logos.
+- **Strict Schema:** The final output must perfectly match the provided JSON schema.
 
 Image to analyze: {{media url=photoDataUri}}`,
 });
