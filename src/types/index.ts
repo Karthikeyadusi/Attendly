@@ -32,9 +32,17 @@ export type ExtractedSlot = {
   subjectName: string;
 };
 
+export type HistoricalRecord = {
+  subjectId: string;
+  conducted: number;
+  attended: number;
+};
+
 export interface AppData {
   subjects: Subject[];
   timetable: TimeSlot[];
   attendance: AttendanceRecord[];
   minAttendancePercentage: number;
+  historicalData: HistoricalRecord[];
+  trackingStartDate: string | null;
 }

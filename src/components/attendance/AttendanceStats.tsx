@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BookCheck, BookX, CalendarOff, Star } from 'lucide-react';
 import { useMemo } from 'react';
+import { Skeleton } from "../ui/skeleton";
 
 const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: string | number, icon: React.ElementType, color?: string }) => (
     <Card>
@@ -19,44 +20,67 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: s
 );
 
 export default function AttendanceStats() {
-    const { attendance, minAttendancePercentage } = useApp();
+    const { attendance, minAttendancePercentage, historicalData, trackingStartDate, isLoaded } = useApp();
 
     const stats = useMemo(() => {
-        const attendedRecords = attendance.filter(r => r.status === 'Attended');
-        const absentRecords = attendance.filter(r => r.status === 'Absent');
-        const cancelledRecords = attendance.filter(r => r.status === 'Cancelled');
+        if (!isLoaded) {
+          return { attendedCount: 0, absentCount: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
+        }
 
-        const attendedCredits = attendedRecords.reduce((sum, r) => sum + r.credits, 0);
-        const absentCredits = absentRecords.length > 0 ? absentRecords.reduce((sum, r, index) => {
-          const originalRecord = attendance.find(ar => ar.id === r.id);
-          // This is a rough estimation of credits for missed classes as they are stored with 0.
-          // Assuming all classes are 2 credits for simplicity.
-          return sum + 2; 
-        }, 0) : 0;
+        const historicalConducted = historicalData.reduce((sum, r) => sum + r.conducted, 0);
+        const historicalAttended = historicalData.reduce((sum, r) => sum + r.attended, 0);
+
+        const dailyRecords = trackingStartDate
+            ? attendance.filter(r => r.date >= trackingStartDate)
+            : attendance;
+
+        const dailyAttendedCount = dailyRecords.filter(r => r.status === 'Attended').length;
+        const dailyAbsentCount = dailyRecords.filter(r => r.status === 'Absent').length;
+        const dailyCancelledCount = dailyRecords.filter(r => r.status === 'Cancelled').length;
+
+        const dailyConductedCount = dailyAttendedCount + dailyAbsentCount;
         
-        const totalScheduledCredits = attendedCredits + absentCredits;
-        const attendancePercentage = totalScheduledCredits > 0 ? (attendedCredits / totalScheduledCredits) * 100 : 100;
+        const totalConducted = historicalConducted + dailyConductedCount;
+        const totalAttended = historicalAttended + dailyAttendedCount;
+        
+        const totalAbsences = (historicalConducted - historicalAttended) + dailyAbsentCount;
 
+        const attendancePercentage = totalConducted > 0 ? (totalAttended / totalConducted) * 100 : 100;
+        
         const safeToMiss = () => {
           if (attendancePercentage < minAttendancePercentage) {
-            const neededCredits = (minAttendancePercentage / 100 * totalScheduledCredits) - attendedCredits;
-            // Assuming 2 credits per class
-            return `${Math.ceil(neededCredits / 2)} more classes to attend to reach ${minAttendancePercentage}%`;
+            if (100 - minAttendancePercentage <= 0) return 'N/A';
+            const needed = Math.ceil(((minAttendancePercentage / 100) * totalConducted - totalAttended) / (1 - minAttendancePercentage / 100));
+            return `Attend ${needed} more`;
           }
-          const bunksAvailable = Math.floor((attendedCredits - (minAttendancePercentage / 100) * totalScheduledCredits) / ((minAttendancePercentage / 100) * 2));
-          return bunksAvailable;
+          const canMiss = Math.floor((totalAttended - (minAttendancePercentage / 100) * totalConducted) / (minAttendancePercentage / 100));
+          return canMiss;
         };
-        
+
         const safeMissValue = safeToMiss();
 
         return {
-            attendedCount: attendedRecords.length,
-            absentCount: absentRecords.length,
-            cancelledCount: cancelledRecords.length,
+            attendedCount: totalAttended,
+            absentCount: totalAbsences,
+            cancelledCount: dailyCancelledCount,
             attendancePercentage,
             safeMissValue,
         };
-    }, [attendance, minAttendancePercentage]);
+    }, [attendance, historicalData, trackingStartDate, minAttendancePercentage, isLoaded]);
+
+    if (!isLoaded) {
+      return (
+        <div className="space-y-4">
+          <Skeleton className="h-28 w-full" />
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+      )
+    }
 
     const progressColor = stats.attendancePercentage >= minAttendancePercentage ? 'hsl(var(--primary))' : 'hsl(var(--destructive))';
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot } from '@/types';
+import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalRecord } from '@/types';
 import { useIsClient } from './useIsClient';
 
 const APP_DATA_KEY = 'classCompassData';
@@ -11,6 +11,8 @@ const getInitialData = (): AppData => ({
   timetable: [],
   attendance: [],
   minAttendancePercentage: 75,
+  historicalData: [],
+  trackingStartDate: null,
 });
 
 export function useAppData() {
@@ -23,7 +25,15 @@ export function useAppData() {
       try {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
-          setData(JSON.parse(storedData));
+          const parsedData = JSON.parse(storedData);
+          // Ensure new fields exist
+          if (!parsedData.historicalData) {
+            parsedData.historicalData = [];
+          }
+          if (!parsedData.trackingStartDate) {
+            parsedData.trackingStartDate = null;
+          }
+          setData(parsedData);
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -58,11 +68,13 @@ export function useAppData() {
     setData(prev => {
       const newTimetable = prev.timetable.filter(slot => slot.subjectId !== subjectId);
       const newAttendance = prev.attendance.filter(record => !newTimetable.find(slot => slot.id === record.slotId));
+      const newHistoricalData = prev.historicalData.filter(record => record.subjectId !== subjectId);
       return {
         ...prev,
         subjects: prev.subjects.filter(s => s.id !== subjectId),
         timetable: newTimetable,
         attendance: newAttendance,
+        historicalData: newHistoricalData,
       };
     });
   }, []);
@@ -80,6 +92,12 @@ export function useAppData() {
 
   const logAttendance = useCallback((slot: TimeSlot, date: string, status: AttendanceStatus) => {
     setData(prev => {
+      if (prev.trackingStartDate && date < prev.trackingStartDate) {
+        // Prevent logging for dates before the tracking start date
+        console.warn(`Cannot log attendance for dates before ${prev.trackingStartDate}`);
+        return prev;
+      }
+
       const subject = prev.subjects.find(s => s.id === slot.subjectId);
       if (!subject) return prev;
       
@@ -160,6 +178,14 @@ export function useAppData() {
     });
   }, []);
 
+  const saveHistoricalData = useCallback((data: { startDate: string; records: HistoricalRecord[] }) => {
+    setData(prev => ({
+      ...prev,
+      trackingStartDate: data.startDate,
+      historicalData: data.records,
+    }));
+  }, []);
+
   return {
     ...data,
     isLoaded,
@@ -171,5 +197,6 @@ export function useAppData() {
     logAttendance,
     setMinAttendancePercentage,
     importTimetable,
+    saveHistoricalData,
   };
 }
