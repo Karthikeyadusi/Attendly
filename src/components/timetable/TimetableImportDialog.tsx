@@ -52,39 +52,26 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         while (i < daySlots.length) {
             const currentSlot = daySlots[i];
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
-            const slotAfterNext = i + 2 < daySlots.length ? daySlots[i + 2] : null;
 
             const baseDate = new Date();
 
             // Check for merge condition (same subject in consecutive slots)
             if (nextSlot && nextSlot.subjectName === currentSlot.subjectName) {
                 // MERGED CLASS (e.g., a 100-minute lab)
-                // The end time is the start time of the next *different* class.
-                // If this is the last block of the day, default to a 100-minute duration.
-                const endTime = slotAfterNext
-                    ? slotAfterNext.startTime
-                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 100), 'HH:mm');
-
                 finalSlots.push({
                     day: currentSlot.day,
                     startTime: currentSlot.startTime,
-                    endTime: endTime,
+                    endTime: formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 100), 'HH:mm'),
                     subjectName: currentSlot.subjectName
                 });
 
                 i += 2; // Skip the next slot as it has been merged.
             } else {
                 // SINGLE CLASS (e.g., a 50-minute lecture)
-                // The end time is the start time of the next class.
-                // If this is the last class of the day, default to a 50-minute duration.
-                const endTime = nextSlot
-                    ? nextSlot.startTime
-                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 50), 'HH:mm');
-                
                 finalSlots.push({
                     day: currentSlot.day,
                     startTime: currentSlot.startTime,
-                    endTime: endTime,
+                    endTime: formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', baseDate), 50), 'HH:mm'),
                     subjectName: currentSlot.subjectName
                 });
 
@@ -93,7 +80,11 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
 
-    return finalSlots;
+    // A final sort to ensure everything is in order before displaying
+    return finalSlots.sort((a,b) => {
+        if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
+        return a.startTime.localeCompare(b.startTime);
+    });
 };
 
 
