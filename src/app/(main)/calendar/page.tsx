@@ -4,10 +4,13 @@ import { useState, useMemo } from 'react';
 import { useApp } from '@/components/AppProvider';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { format, getDay } from 'date-fns';
 import type { DayOfWeek, AttendanceStatus } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Book, FlaskConical } from 'lucide-react';
+import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const dayMap: { [key: number]: DayOfWeek | undefined } = {
     1: 'Mon',
@@ -17,6 +20,12 @@ const dayMap: { [key: number]: DayOfWeek | undefined } = {
     5: 'Fri',
     6: 'Sat'
 };
+
+const statusOptions = [
+  { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
+  { value: 'Absent', icon: XCircle, color: 'text-red-500' },
+  { value: 'Cancelled', icon: Ban, color: 'text-gray-500' },
+] as const;
 
 const AttendanceBadge = ({ status }: { status: AttendanceStatus }) => {
     const statusColors: Record<AttendanceStatus, React.CSSProperties> = {
@@ -45,7 +54,7 @@ const AttendanceBadge = ({ status }: { status: AttendanceStatus }) => {
 
 
 export default function CalendarPage() {
-    const { timetable, subjects, attendance, isLoaded } = useApp();
+    const { timetable, subjects, attendance, logAttendance, isLoaded } = useApp();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const dailyAttendanceStatus = useMemo(() => {
@@ -73,7 +82,7 @@ export default function CalendarPage() {
     const modifiers = {
         attended: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended',
         absent: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'absent',
-        cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled',
+        cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-M-dd')] === 'cancelled',
     };
 
     const modifierStyles = {
@@ -118,7 +127,7 @@ export default function CalendarPage() {
                 />
             </Card>
 
-            {selectedDate && (
+            {selectedDate && selectedDateString && (
                  <Card>
                     <CardHeader>
                         <CardTitle>Schedule for {format(selectedDate, 'PPP')}</CardTitle>
@@ -141,7 +150,33 @@ export default function CalendarPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            {record ? <AttendanceBadge status={record.status} /> : <span className="text-xs text-muted-foreground italic">Not Logged</span>}
+                                            {record ? (
+                                                <AttendanceBadge status={record.status} />
+                                            ) : (
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="outline" size="sm">Log Now</Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto p-0" align="end">
+                                                        <div className="flex gap-1 p-1">
+                                                            {statusOptions.map(opt => (
+                                                                <Button
+                                                                    key={opt.value}
+                                                                    variant="ghost"
+                                                                    onClick={() => logAttendance(slot, selectedDateString, opt.value as AttendanceStatus)}
+                                                                    className={cn(
+                                                                        "flex flex-col items-center justify-center gap-1 h-14 w-14 rounded-md transition-colors",
+                                                                        opt.color
+                                                                    )}
+                                                                >
+                                                                    <opt.icon className="h-5 w-5" />
+                                                                    <span className="text-xs font-medium">{opt.value}</span>
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            )}
                                         </div>
                                     </div>
                                 );
