@@ -1,16 +1,32 @@
+
 "use client";
 
 import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BookCheck, Library, CalendarOff, Star } from 'lucide-react';
+import { BookCheck, Library, CalendarOff, Star, Info } from 'lucide-react';
 import { useMemo } from 'react';
 import { Skeleton } from "../ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: string | number, icon: React.ElementType, color?: string }) => (
+const StatCard = ({ title, value, icon: Icon, color, tooltipContent }: { title: string, value: string | number, icon: React.ElementType, color?: string, tooltipContent?: React.ReactNode }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <div className="flex items-center gap-1.5">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                {tooltipContent && (
+                    <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {tooltipContent}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
             <Icon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -131,7 +147,16 @@ export default function AttendanceStats() {
                <StatCard title="Attended Credits" value={stats.totalAttendedCredits} icon={BookCheck} />
                <StatCard title="Conducted Credits" value={stats.totalConductedCredits} icon={Library} />
                <StatCard title="Cancelled Classes" value={stats.cancelledCount} icon={CalendarOff} />
-               <StatCard title="Safe Miss (Classes)" value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} icon={Star} />
+               <StatCard 
+                 title="Safe Miss (Classes)" 
+                 value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} 
+                 icon={Star}
+                 tooltipContent={
+                    <p className="max-w-xs text-sm">
+                        Shows how many classes you can skip and still meet your attendance goal. If you're below the goal, a message will appear below this card.
+                    </p>
+                 }
+                />
             </div>
             {typeof stats.safeMissValue === 'string' && (
                 <p className="text-sm text-center text-amber-500">{stats.safeMissValue}</p>
