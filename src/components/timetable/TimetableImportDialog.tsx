@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
@@ -18,7 +19,6 @@ import { extractTimetable } from "@/ai/flows/extract-timetable-flow";
 import { useApp } from "../AppProvider";
 import { Loader2, Upload, Trash2, Sparkles } from "lucide-react";
 import type { ExtractedSlot, DayOfWeek } from "@/types";
-import { ScrollArea } from "../ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
@@ -108,15 +108,15 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl p-0 max-h-[90dvh] flex flex-col">
+        <DialogHeader className="p-4 md:p-6 pb-4 border-b">
           <DialogTitle>Import Timetable with AI</DialogTitle>
           <DialogDescription>
             Upload a picture of your timetable, and we'll automatically add it to your schedule.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="flex-1 grid grid-cols-1 gap-6 overflow-y-auto p-4 md:grid-cols-2 md:p-6 min-h-0">
             {/* Left side: Upload */}
             <div className="space-y-4">
                  <Label htmlFor="timetable-upload">Timetable Image</Label>
@@ -143,20 +143,18 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
             {/* Right side: Preview */}
             <div className="space-y-4">
                 <Label>Extracted Classes</Label>
-                <ScrollArea className="h-80 w-full rounded-md border p-2">
-                    {isLoading && (
-                        <div className="flex items-center justify-center h-full">
+                <div className="w-full rounded-md border min-h-[280px]">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center h-full p-4">
                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
-                    )}
-                    {!isLoading && extractedSlots.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                    ) : !isLoading && extractedSlots.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
                             <p>Analysis results will appear here.</p>
                             <p className="text-xs">Subjects that don't exist will be created automatically.</p>
                         </div>
-                    )}
-                    {extractedSlots.length > 0 && (
-                         <div className="space-y-2">
+                    ) : (
+                         <div className="space-y-2 p-2">
                              {extractedSlots.map((slot, index) => (
                                  <div key={index} className="p-2 border rounded-lg space-y-2">
                                      <div className="flex justify-between items-center">
@@ -177,7 +175,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                              ))}
                          </div>
                     )}
-                </ScrollArea>
+                </div>
                 {extractedSlots.length > 0 && (
                     <Alert>
                         <AlertTitle>Review Carefully</AlertTitle>
@@ -189,7 +187,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
             </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="p-4 md:p-6 pt-4 border-t">
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={extractedSlots.length === 0}>
             Save to Timetable
