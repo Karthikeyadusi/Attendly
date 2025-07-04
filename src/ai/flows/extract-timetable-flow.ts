@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to extract timetable information from an image.
@@ -60,10 +61,10 @@ For any given class, look for the next class scheduled on the SAME DAY.
 
 **RULE B: Last Class of the Day Rule**
 - **If** a class is the LAST one for that day (meaning Rule A did not find a 'next class'), you must determine its \`endTime\` based on its \`startTime\`:
-    - **If** the \`startTime\` is exactly "13:30", set the \`endTime\` to "15:10".
-    - **For any other \`startTime\`**, set the \`endTime\` by adding 50 minutes.
-    - **Example 1 (Lab):** A class starts at 13:30 and is the last class. Its \`endTime\` is "15:10".
-    - **Example 2 (Normal):** A class starts at 14:00 and is the last class. Its \`endTime\` is "14:50".
+    - **If** the \`startTime\` is "12:00" or later (i.e., it's an afternoon class), set its \`endTime\` to "15:10".
+    - **For any other \`startTime\` (i.e., it's a morning class)**, set the \`endTime\` by adding 50 minutes.
+    - **Example 1 (Afternoon):** A class starts at 13:30 and is the last class. Its \`endTime\` is "15:10".
+    - **Example 2 (Morning):** A class starts at 11:00 and is the last class. Its \`endTime\` is "11:50".
 
 **OTHER IMPORTANT INSTRUCTIONS:**
 - **Time Formatting:** All times must be in 24-hour HH:MM format (e.g., "9:30 AM" becomes "09:30", "2 PM" becomes "14:00").
