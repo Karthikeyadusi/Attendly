@@ -35,30 +35,31 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     // Helper function to fix inconsistent time formats from the AI.
     const normalizeTime = (timeStr: string): string => {
         try {
-            // Handle edge cases like "1.30"
-            timeStr = timeStr.replace('.', ':');
+            timeStr = timeStr.replace('.', ':').trim();
+            // Handle various AM/PM formats
+            const isPM = timeStr.toLowerCase().includes('pm');
+            const isAM = timeStr.toLowerCase().includes('am');
+            timeStr = timeStr.replace(/am|pm/i, '').trim();
+
             let [hourStr, minuteStr] = timeStr.split(':');
-            
             if (!hourStr || !minuteStr) return timeStr; // Malformed
 
-            if (minuteStr.toLowerCase().includes('pm')) {
-                minuteStr = minuteStr.toLowerCase().replace('pm', '').trim();
-                let hour = parseInt(hourStr, 10);
-                if (!isNaN(hour) && hour < 12) hour += 12;
-                hourStr = String(hour);
-            } else if (minuteStr.toLowerCase().includes('am')) {
-                minuteStr = minuteStr.toLowerCase().replace('am', '').trim();
-            }
-
             let hour = parseInt(hourStr, 10);
-            let minute = parseInt(minuteStr, 10);
+            if (isNaN(hour)) return timeStr;
 
-            if (isNaN(hour) || isNaN(minute)) return timeStr;
-
-            // Heuristic for times like 1:30, 2:30, 3:30, 4:30 which are almost always PM
-            if (hour >= 1 && hour <= 5) {
+            if (isPM && hour < 12) {
                 hour += 12;
+            } else if (isAM && hour === 12) { // Midnight case
+                hour = 0;
+            } else if (!isPM && !isAM) {
+                // Heuristic for times like 1:30, 2:30, 3:30, 4:30 which are almost always PM in a timetable
+                if (hour >= 1 && hour <= 6) {
+                    hour += 12;
+                }
             }
+            
+            let minute = parseInt(minuteStr, 10);
+            if (isNaN(minute)) return timeStr;
 
             const h = String(hour).padStart(2, '0');
             const m = String(minute).padStart(2, '0');
@@ -94,10 +95,18 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
 
             try {
-                // End time is the start time of the next class, or a 50-minute default for the last class
-                const endTime = nextSlot
-                    ? nextSlot.startTime
-                    : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), 50), 'HH:mm');
+                let endTime;
+                
+                // NEW: If this is the last class before the hardcoded lunch break (12:20 - 13:30)
+                if (currentSlot.startTime < '12:20' && (!nextSlot || nextSlot.startTime >= '13:30')) {
+                    endTime = '12:20';
+                } else if (nextSlot) {
+                    // Default: end time is start time of next class
+                    endTime = nextSlot.startTime;
+                } else {
+                    // If it's the last class of the day, assume a standard 50-minute duration.
+                     endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), 50), 'HH:mm');
+                }
                 
                 slotsWithEndTime.push({
                     day: currentSlot.day,
@@ -142,7 +151,7 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
     
-    // 5. Final Pass: Filter out non-class blocks
+    // 5. Final Pass: Filter out non-class blocks (as a safeguard)
     const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
     const finalSlots = mergedSlots.filter(slot => 
       !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
@@ -284,7 +293,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                     ) : !isLoading && extractedSlots.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
                             <p>Analysis results will appear here.</p>
-                            <p className="text-xs">Subjects that don't exist will be created automatically.</p>
+                            <p className="text-xs">Subjects not already in your list will be created automatically.</p>
                         </div>
                     ) : (
                          <div className="space-y-2 p-2">
