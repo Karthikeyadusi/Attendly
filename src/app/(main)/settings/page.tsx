@@ -7,16 +7,27 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CheckCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BACKUP_VERSION = 1;
 
 export default function SettingsPage() {
-  const { getBackupData, restoreFromBackup, isLoaded, userName, setUserName } = useApp();
+  const { 
+    isLoaded, 
+    userName, 
+    setUserName,
+    user,
+    signIn,
+    signOutUser,
+    getBackupData,
+    restoreFromBackup,
+  } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
@@ -90,7 +101,6 @@ export default function SettingsPage() {
           description: error instanceof Error ? error.message : "The selected file is not a valid backup.",
         });
       } finally {
-        // Reset file input so the same file can be selected again
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -117,6 +127,42 @@ export default function SettingsPage() {
       
       <Card>
         <CardHeader>
+          <CardTitle>Cloud Sync</CardTitle>
+          <CardDescription>
+            Sign in to automatically back up and sync your data across devices.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!isLoaded ? (
+            <Skeleton className="h-14 w-full" />
+          ) : user ? (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'}/>
+                  <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                  <p className="font-semibold">{user.displayName}</p>
+                  <p className="text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <Button onClick={signOutUser} variant="outline" size="sm">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={signIn} className="w-full h-12 text-base">
+              <LogIn className="mr-2 h-5 w-5" />
+              Sign in with Google
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
           <CardTitle>Your Profile</CardTitle>
           <CardDescription>
             This name will be used to personalize your experience.
@@ -140,9 +186,9 @@ export default function SettingsPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Data Backup & Restore</CardTitle>
+          <CardTitle>Manual Backup</CardTitle>
           <CardDescription>
-            Export your data to a file to keep it safe or move it to another device.
+            Manually export your data to a file. This is not needed if you are signed in.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -3,8 +3,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData, SubjectStatsMap, SubjectStats, AppCoreData, BackupData } from '@/types';
+import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap } from '@/types';
 import { useIsClient } from './useIsClient';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { app as firebaseApp } from '@/lib/firebase';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
@@ -23,46 +26,111 @@ export function useAppData() {
   const isClient = useIsClient();
   const [data, setData] = useState<AppCoreData>(getInitialData());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
+  // Effect to load initial data from localStorage (for signed-out users)
   useEffect(() => {
     if (isClient) {
       try {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          
-          if (Array.isArray(parsedData.historicalData)) {
-            parsedData.historicalData = null;
-          }
-          if (typeof parsedData.historicalData === 'undefined') {
-            parsedData.historicalData = null;
-          }
-          if (typeof parsedData.trackingStartDate === 'undefined') {
-            parsedData.trackingStartDate = null;
-          }
-          if (parsedData.subjects && parsedData.subjects.some((s: Subject) => s.credits === undefined)) {
-            parsedData.subjects = parsedData.subjects.map((s: Subject) => ({...s, credits: s.credits ?? 1}));
-          }
-          parsedData.userName = parsedData.userName || null;
-          setData(parsedData);
+          setData(JSON.parse(storedData));
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
-      } finally {
-        setIsLoaded(true);
       }
     }
   }, [isClient]);
-
+  
+  // Auth state listener
   useEffect(() => {
-    if (isClient && isLoaded) {
-      try {
-        localStorage.setItem(APP_DATA_KEY, JSON.stringify(data));
-      } catch (error) {
-        console.error("Failed to save data to localStorage", error);
+    const auth = getAuth(firebaseApp);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        // User logged out, ensure local data is loaded
+        const storedData = localStorage.getItem(APP_DATA_KEY);
+        setData(storedData ? JSON.parse(storedData) : getInitialData());
+        setIsLoaded(true);
       }
+      // isLoaded will be set to true by the Firestore listener for logged-in users
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Firestore real-time listener for logged-in users
+  useEffect(() => {
+    if (!user) return; // Only run for logged-in users
+
+    const db = getFirestore(firebaseApp);
+    const userDocRef = doc(db, 'users', user.uid);
+
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      // Ignore local changes that are just being echoed back by the server
+      if (docSnap.metadata.hasPendingWrites) {
+        return;
+      }
+      
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as AppCoreData;
+        setData(cloudData);
+      }
+      setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Effect to save data to localStorage and Firestore
+  useEffect(() => {
+    if (!isLoaded || !isClient) return;
+    
+    // Always save to localStorage for offline access and signed-out state
+    localStorage.setItem(APP_DATA_KEY, JSON.stringify(data));
+
+    // If user is logged in, save to Firestore
+    if (user) {
+      const db = getFirestore(firebaseApp);
+      const userDocRef = doc(db, 'users', user.uid);
+      setDoc(userDocRef, data).catch(error => {
+        console.error("Error writing to Firestore:", error);
+      });
     }
-  }, [data, isClient, isLoaded]);
+  }, [data, user, isClient, isLoaded]);
+
+
+  const signIn = async () => {
+    const auth = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const loggedInUser = result.user;
+
+        const db = getFirestore(firebaseApp);
+        const userDocRef = doc(db, 'users', loggedInUser.uid);
+        const docSnap = await getDoc(userDocRef);
+
+        if (!docSnap.exists()) {
+            // New user to Firestore: push local data to cloud
+            const localDataString = localStorage.getItem(APP_DATA_KEY);
+            const localData = localDataString ? JSON.parse(localDataString) : getInitialData();
+            await setDoc(userDocRef, localData);
+            setData(localData); // Ensure local state reflects this
+        } else {
+            // Existing user: onSnapshot will handle fetching the data.
+            setData(docSnap.data() as AppCoreData);
+        }
+
+    } catch (error) {
+        console.error("Google Sign-in failed:", error);
+    }
+  };
+
+  const signOutUser = async () => {
+      const auth = getAuth(firebaseApp);
+      await signOut(auth);
+      // The onAuthStateChanged listener will handle state reset
+  };
 
   const addSubject = useCallback((subject: Omit<Subject, 'id'>) => {
     setData(prev => ({ ...prev, subjects: [...prev.subjects, { ...subject, id: crypto.randomUUID() }] }));
@@ -283,6 +351,9 @@ export function useAppData() {
   return {
     ...data,
     isLoaded,
+    user,
+    signIn,
+    signOutUser,
     addSubject,
     updateSubject,
     deleteSubject,

@@ -1,5 +1,7 @@
 
 
+import type { User } from 'firebase/auth';
+
 export type Subject = {
   id: string;
   name: string;
@@ -60,8 +62,10 @@ export type AppCoreData = {
   userName: string | null;
 }
 
-// The complete app state including derived data.
+// The complete app state including derived data and auth state.
 export interface AppData extends AppCoreData {
+  user: User | null;
+  
   // Derived, memoized data for performance
   subjectMap: SubjectMap;
   timetableByDay: TimetableByDayMap;
