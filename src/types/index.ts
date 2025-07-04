@@ -1,4 +1,5 @@
 
+
 export type Subject = {
   id: string;
   name: string;
@@ -48,17 +49,27 @@ export type TimetableByDayMap = Map<DayOfWeek, TimeSlot[]>;
 export type AttendanceByDateMap = Map<string, AttendanceRecord[]>;
 export type SubjectStatsMap = Map<string, SubjectStats>;
 
-export interface AppData {
+// The core data that gets stored and restored.
+export type AppCoreData = {
   subjects: Subject[];
   timetable: TimeSlot[];
   attendance: AttendanceRecord[];
   minAttendancePercentage: number;
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;
+}
 
+// The complete app state including derived data.
+export interface AppData extends AppCoreData {
   // Derived, memoized data for performance
   subjectMap: SubjectMap;
   timetableByDay: TimetableByDayMap;
   attendanceByDate: AttendanceByDateMap;
   subjectStats: SubjectStatsMap;
+}
+
+// The structure of the backup file.
+export interface BackupData extends AppCoreData {
+  version: number;
+  exportedAt: string;
 }

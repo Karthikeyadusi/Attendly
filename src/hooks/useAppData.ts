@@ -1,29 +1,26 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData, SubjectStatsMap, SubjectStats } from '@/types';
+import type { AppData, Subject, TimeSlot, AttendanceRecord, DayOfWeek, AttendanceStatus, ExtractedSlot, HistoricalData, SubjectStatsMap, SubjectStats, AppCoreData, BackupData } from '@/types';
 import { useIsClient } from './useIsClient';
 
 const APP_DATA_KEY = 'classCompassData';
+const BACKUP_VERSION = 1;
 
-const getInitialData = (): AppData => ({
+const getInitialData = (): AppCoreData => ({
   subjects: [],
   timetable: [],
   attendance: [],
   minAttendancePercentage: 75,
   historicalData: null,
   trackingStartDate: null,
-  // Derived data will be calculated by the hook
-  subjectMap: new Map(),
-  timetableByDay: new Map(),
-  attendanceByDate: new Map(),
-  subjectStats: new Map(),
 });
 
 export function useAppData() {
   const isClient = useIsClient();
-  const [data, setData] = useState<Omit<AppData, 'subjectMap' | 'timetableByDay' | 'attendanceByDate' | 'subjectStats'>>(getInitialData());
+  const [data, setData] = useState<AppCoreData>(getInitialData());
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -201,6 +198,19 @@ export function useAppData() {
     }));
   }, []);
   
+  const getBackupData = useCallback((): BackupData => {
+    return {
+      ...data,
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+    };
+  }, [data]);
+
+  const restoreFromBackup = useCallback((backupData: BackupData) => {
+    const { version, exportedAt, ...restOfData } = backupData;
+    setData(restOfData);
+  }, []);
+
   // Memoized derived data for performance
   const subjectMap = useMemo(() => new Map(data.subjects.map(s => [s.id, s])), [data.subjects]);
   
@@ -275,6 +285,8 @@ export function useAppData() {
     setMinAttendancePercentage,
     importTimetable,
     saveHistoricalData,
+    getBackupData,
+    restoreFromBackup,
     // Provide memoized data
     subjectMap,
     timetableByDay,

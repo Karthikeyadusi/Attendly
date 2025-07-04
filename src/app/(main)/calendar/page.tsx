@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useApp } from '@/components/AppProvider';
 import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
@@ -14,7 +14,6 @@ export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const dailyAttendanceStatus = useMemo(() => {
-        if (!isLoaded) return {};
         const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' } = {};
 
         for (const [date, records] of attendanceByDate.entries()) {
@@ -32,13 +31,26 @@ export default function CalendarPage() {
             }
         }
         return statusByDate;
-    }, [attendanceByDate, isLoaded]);
+    }, [attendanceByDate]);
+    
+    const attendedModifier = useCallback((date: Date) => {
+        return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended';
+    }, [dailyAttendanceStatus]);
+
+    const absentModifier = useCallback((date: Date) => {
+        return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'absent';
+    }, [dailyAttendanceStatus]);
+    
+    const cancelledModifier = useCallback((date: Date) => {
+        return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled';
+    }, [dailyAttendanceStatus]);
+
 
     const modifiers = useMemo(() => ({
-        attended: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'attended',
-        absent: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'absent',
-        cancelled: (date: Date) => dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled',
-    }), [dailyAttendanceStatus]);
+        attended: attendedModifier,
+        absent: absentModifier,
+        cancelled: cancelledModifier,
+    }), [attendedModifier, absentModifier, cancelledModifier]);
 
     const modifierStyles = {
         attended: { 

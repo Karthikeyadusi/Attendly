@@ -1,0 +1,149 @@
+
+"use client";
+
+import { useRef, useState } from "react";
+import { useApp } from "@/components/AppProvider";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Download, Upload } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import type { BackupData } from "@/types";
+
+const BACKUP_VERSION = 1;
+
+export default function SettingsPage() {
+  const { getBackupData, restoreFromBackup, isLoaded } = useApp();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
+  const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
+
+  const handleExport = () => {
+    if (!isLoaded) return;
+    const backupData = getBackupData();
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const date = new Date().toISOString().split('T')[0];
+    link.download = `class-compass-backup-${date}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Data Exported",
+      description: "Your data has been saved to your downloads folder.",
+    });
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') throw new Error("File is not readable");
+        const parsedData = JSON.parse(text);
+
+        // Basic validation
+        if (
+          parsedData.version !== BACKUP_VERSION ||
+          !Array.isArray(parsedData.subjects) ||
+          !Array.isArray(parsedData.timetable) ||
+          !Array.isArray(parsedData.attendance)
+        ) {
+          throw new Error("Invalid backup file format.");
+        }
+
+        setBackupToRestore(parsedData);
+        setIsImportConfirmOpen(true);
+
+      } catch (error) {
+        console.error("Import failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Import Failed",
+          description: error instanceof Error ? error.message : "The selected file is not a valid backup.",
+        });
+      } finally {
+        // Reset file input so the same file can be selected again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirmImport = () => {
+    if (backupToRestore) {
+      restoreFromBackup(backupToRestore);
+      toast({
+        title: "Import Successful",
+        description: "Your data has been restored from the backup file.",
+      });
+    }
+    setIsImportConfirmOpen(false);
+    setBackupToRestore(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Settings</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Backup & Restore</CardTitle>
+          <CardDescription>
+            Export your data to a file to keep it safe or move it to another device.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button onClick={handleExport} className="w-full">
+              <Download className="mr-2 h-4 w-4" />
+              Export Data
+            </Button>
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="w-full">
+              <Upload className="mr-2 h-4 w-4" />
+              Import Data
+            </Button>
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="application/json"
+          />
+           <p className="text-xs text-center text-muted-foreground pt-2">
+            Importing data will overwrite all current subjects, timetable, and attendance records.
+          </p>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={isImportConfirmOpen} onOpenChange={setIsImportConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to import?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently overwrite all your current data with the contents of the backup file. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBackupToRestore(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmImport}>
+              Yes, Overwrite and Import
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
