@@ -68,20 +68,13 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             }
 
             if (shouldMerge && nextSlot) {
-                // 4a. If merging, the total duration is a fixed 100 minutes.
-                // This is more robust than looking ahead to the next class.
+                // If merging, the total duration is a fixed 100 minutes.
                 const endTime = formatDate(addMinutes(startTimeDate, 100), 'HH:mm');
-                
                 finalSlots.push({ ...currentSlot, endTime });
                 i += 2; // Crucially, skip the next slot as it's been consumed by the merge
             } else {
-                // 4b. If not merging, create a standard 50-minute class from this slot to the next.
-                let endTime: string;
-                if (nextSlot) {
-                    endTime = nextSlot.startTime;
-                } else {
-                    endTime = formatDate(addMinutes(startTimeDate, 50), 'HH:mm');
-                }
+                // If not merging, the class is a fixed 50 minutes. No look-ahead.
+                const endTime = formatDate(addMinutes(startTimeDate, 50), 'HH:mm');
                 finalSlots.push({ ...currentSlot, endTime });
                 i += 1;
             }
