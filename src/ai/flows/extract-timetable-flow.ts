@@ -43,15 +43,16 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  prompt: `You are an AI assistant. Your only task is to look at the timetable image and extract every single class block you see.
+  prompt: `You are an AI assistant. Your only task is to look at the timetable image and extract every single time-bound block you see.
 
-For each class block, provide the following information:
+For each block, provide the following information:
 1.  **day**: The day of the week ('Mon', 'Tue', etc.).
 2.  **startTime**: The start time of that block in 24-hour HH:MM format.
-3.  **subjectName**: The name of the subject in that block.
+3.  **subjectName**: The name of the subject or activity in that block.
 
 **CRITICAL INSTRUCTIONS:**
--   You MUST extract EVERY block, even if the same subject appears multiple times. For example, if 'FLAT' is at 09:00 and also at 09:50, you must return two separate entries for it.
+-   You MUST extract EVERY block, even if the same subject appears multiple times. 
+-   This includes non-academic blocks like "LUNCH", "BREAK", "LIBRARY", "SPORTS", etc. Extract them just like any other class.
 -   Do NOT merge classes.
 -   Do NOT calculate end times.
 -   You MUST convert all times to 24-hour HH:MM format. For example, "1:30 PM" becomes "13:30".

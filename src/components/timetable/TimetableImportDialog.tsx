@@ -31,58 +31,53 @@ type RawExtractedSlot = {
     subjectName: string;
 };
 
-// Helper function to fix inconsistent time formats from the AI.
-const normalizeTime = (timeStr: string): string => {
-    try {
-        let [hourStr, minuteStr] = timeStr.split(':');
-        if (!hourStr || !minuteStr) return timeStr; // Malformed
+const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
+    // Helper function to fix inconsistent time formats from the AI.
+    const normalizeTime = (timeStr: string): string => {
+        try {
+            // Handle edge cases like "1.30"
+            timeStr = timeStr.replace('.', ':');
+            let [hourStr, minuteStr] = timeStr.split(':');
+            
+            if (!hourStr || !minuteStr) return timeStr; // Malformed
 
-        // Handle potential AM/PM suffixes if the AI provides them
-        if (minuteStr.toLowerCase().includes('pm')) {
-            minuteStr = minuteStr.toLowerCase().replace('pm', '').trim();
+            if (minuteStr.toLowerCase().includes('pm')) {
+                minuteStr = minuteStr.toLowerCase().replace('pm', '').trim();
+                let hour = parseInt(hourStr, 10);
+                if (!isNaN(hour) && hour < 12) hour += 12;
+                hourStr = String(hour);
+            } else if (minuteStr.toLowerCase().includes('am')) {
+                minuteStr = minuteStr.toLowerCase().replace('am', '').trim();
+            }
+
             let hour = parseInt(hourStr, 10);
-            if (!isNaN(hour) && hour < 12) {
+            let minute = parseInt(minuteStr, 10);
+
+            if (isNaN(hour) || isNaN(minute)) return timeStr;
+
+            // Heuristic for times like 1:30, 2:30, 3:30, 4:30 which are almost always PM
+            if (hour >= 1 && hour <= 5) {
                 hour += 12;
             }
-            hourStr = String(hour);
-        } else if (minuteStr.toLowerCase().includes('am')) {
-             minuteStr = minuteStr.toLowerCase().replace('am', '').trim();
+
+            const h = String(hour).padStart(2, '0');
+            const m = String(minute).padStart(2, '0');
+
+            return `${h}:${m}`;
+        } catch {
+            return timeStr;
         }
-
-        let hour = parseInt(hourStr, 10);
-        let minute = parseInt(minuteStr, 10);
-
-        if (isNaN(hour) || isNaN(minute)) return timeStr;
-
-        // Heuristic: If the AI returns a time like "1:30" or "3:10" (hours < 9), assume it's PM.
-        // This won't affect morning times like "09:00" or already-24h times like "13:30".
-        if (hour < 9) {
-            hour += 12;
-        }
-
-        const h = String(hour).padStart(2, '0');
-        const m = String(minute).padStart(2, '0');
-
-        return `${h}:${m}`;
-    } catch {
-        // If anything goes wrong, return the original string to avoid crashing.
-        return timeStr;
-    }
-};
-
-
-const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
-    // First, normalize all time strings to guarantee HH:mm format for reliable sorting.
-    const normalizedSlots = rawSlots.map(slot => ({
-        ...slot,
-        startTime: normalizeTime(slot.startTime),
-    })).filter(slot => slot.day && slot.startTime && slot.subjectName); // Also filter out any malformed slots
-
-
+    };
+    
+    // 1. Normalize all times and filter out any malformed slots from AI
+    const normalizedSlots = rawSlots
+        .map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }))
+        .filter(slot => slot.day && slot.startTime && slot.subjectName && slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/));
+    
     const slotsWithEndTime: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
-    // 1. Group normalized slots by day
+    // 2. Group slots by day
     for (const slot of normalizedSlots) {
         if (!slotsByDay.has(slot.day)) {
             slotsByDay.set(slot.day, []);
@@ -90,9 +85,8 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         slotsByDay.get(slot.day)!.push(slot);
     }
 
-    // Pass 1: Calculate correct end times for every block within each day
+    // 3. Pass 1: Calculate correct end times for every block within each day
     for (const day of slotsByDay.keys()) {
-        // Sort by the now-reliable HH:mm time string
         const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
         
         for (let i = 0; i < daySlots.length; i++) {
@@ -100,10 +94,9 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
 
             try {
-                // End time is the start time of the next class in the same day.
+                // End time is the start time of the next class, or a 50-minute default for the last class
                 const endTime = nextSlot
                     ? nextSlot.startTime
-                    // For the last class of the day, default to a 50-minute duration.
                     : formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), 50), 'HH:mm');
                 
                 slotsWithEndTime.push({
@@ -113,14 +106,13 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
                     subjectName: currentSlot.subjectName.trim(),
                 });
             } catch (e) {
-                console.error("Error processing slot in Pass 1:", currentSlot, e);
+                console.error("Error calculating end time:", currentSlot, e);
             }
         }
     }
 
-    // Pass 2: Merge consecutive slots with the same subject name
+    // 4. Pass 2: Merge consecutive slots that have the same subject name
     const mergedSlots: ExtractedSlot[] = [];
-    // Re-group by day to process merges cleanly on the now-timed slots
     const processedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
     for (const slot of slotsWithEndTime) {
         if (!processedSlotsByDay.has(slot.day)) {
@@ -135,15 +127,13 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         while (i < daySlots.length) {
             let currentSlot = daySlots[i];
             
-            // Check for subsequent slots to merge
             let j = i + 1;
             while (
                 j < daySlots.length &&
-                daySlots[j].subjectName === currentSlot.subjectName &&
+                daySlots[j].subjectName.toLowerCase() === currentSlot.subjectName.toLowerCase() &&
                 daySlots[j].startTime === currentSlot.endTime // Ensure they are perfectly consecutive
             ) {
-                // Extend the end time of the current slot
-                currentSlot.endTime = daySlots[j].endTime;
+                currentSlot.endTime = daySlots[j].endTime; // Extend the end time
                 j++;
             }
             
@@ -152,8 +142,14 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
     
-    // A final sort to ensure everything is in order before displaying
-    return mergedSlots.sort((a,b) => {
+    // 5. Final Pass: Filter out non-class blocks
+    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
+    const finalSlots = mergedSlots.filter(slot => 
+      !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
+    );
+
+    // Return sorted by day, then time
+    return finalSlots.sort((a,b) => {
         if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
         return a.startTime.localeCompare(b.startTime);
     });
