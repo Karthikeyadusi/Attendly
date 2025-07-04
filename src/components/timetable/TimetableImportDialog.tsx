@@ -51,7 +51,8 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             } else if (isAM && hour === 12) {
                 hour = 0;
             } else if (!isPM && !isAM) {
-                if (hour >= 1 && hour <= 6) {
+                // Heuristic: if a time is between 1-6, it's likely PM
+                if (hour >= 1 && hour <= 7) { 
                     hour += 12;
                 }
             }
@@ -68,28 +69,24 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     };
     
-    // 1. Normalize times and immediately filter out non-academic slots. This is the critical fix.
-    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
-    const academicSlots = rawSlots
-        .map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }))
-        .filter(slot => 
-          slot.day && slot.startTime && slot.subjectName && 
-          slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/) &&
-          !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
-        );
+    // 1. Normalize times for ALL slots first.
+    const allSlotsNormalized = rawSlots.map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }));
     
-    const slotsWithEndTime: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
-    // 2. Group the clean, academic slots by day
-    for (const slot of academicSlots) {
+    // 2. Group ALL normalized slots by day
+    for (const slot of allSlotsNormalized) {
+        if (!slot.day || !slot.startTime || !slot.subjectName) continue;
+        if (!slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) continue;
         if (!slotsByDay.has(slot.day)) {
             slotsByDay.set(slot.day, []);
         }
         slotsByDay.get(slot.day)!.push(slot);
     }
 
-    // 3. Pass 1: Calculate correct end times for every block within each day
+    const slotsWithEndTime: ExtractedSlot[] = [];
+
+    // 3. Calculate end times using the full schedule (including non-academic)
     for (const day of slotsByDay.keys()) {
         const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
         
@@ -100,17 +97,12 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             try {
                 let endTime;
                 
-                // Lunch Rule: If a class starts before lunch and the next one is after, cap it at 12:20.
-                if (currentSlot.startTime < '12:20' && (!nextSlot || nextSlot.startTime >= '13:30')) {
-                    endTime = '12:20';
-                } else if (nextSlot) {
-                    // Default: end time is start time of next class
+                if (nextSlot) {
                     endTime = nextSlot.startTime;
                 } else {
-                    // If it's the last class of the day, assume a standard duration.
-                    // Be smarter about labs.
+                    // If it's the last class of the day, assume a duration.
                     const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
-                    const duration = isLab ? 100 : 50;
+                    const duration = isLab ? 100 : 50; 
                     endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
                 }
                 
@@ -126,10 +118,16 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
 
-    // 4. Pass 2: Merge consecutive slots that have the same subject name
+    // 4. NOW filter out non-academic slots
+    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
+    const academicSlotsWithEndTime = slotsWithEndTime.filter(slot => 
+      !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
+    );
+
+    // 5. Merge consecutive ACADEMIC slots that have the same subject name
     const mergedSlots: ExtractedSlot[] = [];
     const processedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
-    for (const slot of slotsWithEndTime) {
+    for (const slot of academicSlotsWithEndTime) {
         if (!processedSlotsByDay.has(slot.day)) {
             processedSlotsByDay.set(slot.day, []);
         }
@@ -339,4 +337,3 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     </Dialog>
   );
 }
-
