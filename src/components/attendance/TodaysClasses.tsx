@@ -6,12 +6,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus, DayOfWeek } from "@/types";
-import { CheckCircle2, XCircle, MinusCircle, Info } from 'lucide-react';
+import { CheckCircle2, XCircle, Ban, Info } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
   { value: 'Absent', icon: XCircle, color: 'text-red-500' },
-  { value: 'Cancelled', icon: MinusCircle, color: 'text-yellow-500' },
+  { value: 'Cancelled', icon: Ban, color: 'text-gray-500' },
 ] as const;
 
 export default function TodaysClasses() {

@@ -1,8 +1,7 @@
 "use client";
 
 import { useApp } from "@/components/AppProvider";
-import type { DayOfWeek, TimeSlot } from "@/types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { DayOfWeek } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
@@ -14,9 +13,6 @@ const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function Timetable() {
   const { timetable, subjects, deleteTimetableSlot } = useApp();
   
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
-  const defaultTab = days.includes(today as DayOfWeek) ? today : 'Mon';
-
   const sortedTimetable = [...timetable].sort((a,b) => a.startTime.localeCompare(b.startTime));
 
   if (timetable.length === 0) {
@@ -32,26 +28,25 @@ export default function Timetable() {
   }
 
   return (
-    <Tabs defaultValue={defaultTab}>
-      <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
-        {days.map(day => (
-          <TabsTrigger key={day} value={day}>{day}</TabsTrigger>
-        ))}
-      </TabsList>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       {days.map(day => {
         const daySlots = sortedTimetable.filter(slot => slot.day === day);
         return (
-          <TabsContent key={day} value={day}>
-            {daySlots.length > 0 ? (
-              <div className="space-y-2">
+          <Card key={day} className="flex flex-col">
+            <CardHeader className="text-center pb-2">
+              <CardTitle>{day}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 flex-1 p-4 pt-0">
+              {daySlots.length > 0 ? (
+                <div className="space-y-2">
                 {daySlots.map(slot => {
                   const subject = subjects.find(s => s.id === slot.subjectId);
                   return (
-                    <Card key={slot.id} className="w-full">
-                      <CardHeader className="p-4">
+                    <Card key={slot.id} className="w-full bg-card-foreground/5">
+                      <CardHeader className="p-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <CardTitle className="text-lg">{subject?.name || "Unknown Subject"}</CardTitle>
+                            <CardTitle className="text-base">{subject?.name || "Unknown Subject"}</CardTitle>
                             <CardDescription>{slot.startTime} - {slot.endTime}</CardDescription>
                           </div>
                           <AlertDialog>
@@ -80,15 +75,16 @@ export default function Timetable() {
                     </Card>
                   );
                 })}
-              </div>
-            ) : (
-                <div className="text-center p-8 rounded-lg bg-muted/20">
-                    <p className="text-muted-foreground">No classes scheduled for {day}.</p>
                 </div>
-            )}
-          </TabsContent>
+              ) : (
+                <div className="text-center p-4 rounded-lg bg-muted/20 h-full flex items-center justify-center">
+                    <p className="text-sm text-muted-foreground">No classes scheduled.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         );
       })}
-    </Tabs>
+    </div>
   );
 }
