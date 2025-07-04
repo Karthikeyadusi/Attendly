@@ -52,7 +52,7 @@ Analyze the provided image and extract every class slot. For each slot, you must
 - endTime (in 24-hour HH:MM format)
 
 **SINGLE, CRITICAL RULE FOR DETERMINING END TIME:**
-To determine the \`endTime\` for any class, you MUST add exactly **100 minutes** to its \`startTime\`. This is the only rule. Do not use any other method, such as looking at the next class.
+To determine the \`endTime\` for any class, you MUST add exactly **100 minutes** to its \`startTime\`. This is the only rule. Do not use any other method.
 
 **Examples:**
 - If a class starts at \`09:00\`, its \`endTime\` MUST be \`10:40\`.
