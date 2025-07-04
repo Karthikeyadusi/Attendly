@@ -47,14 +47,13 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             let hour = parseInt(hourStr, 10);
             if (isNaN(hour)) return timeStr;
 
-            if (isPM && hour < 12) {
+            // Simple heuristic for 12-hour format without AM/PM
+            if (!isPM && !isAM && hour >= 1 && hour <= 7) { 
+                hour += 12;
+            } else if (isPM && hour < 12) {
                 hour += 12;
             } else if (isAM && hour === 12) {
-                hour = 0;
-            } else if (!isPM && !isAM) {
-                if (hour >= 1 && hour <= 7) { 
-                    hour += 12;
-                }
+                hour = 0; // Midnight case
             }
             
             let minute = parseInt(minuteStr, 10);
@@ -86,7 +85,7 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
 
     const timedSlots: ExtractedSlot[] = [];
 
-    // 3. Calculate end times using the full schedule (including non-academic blocks)
+    // 3. Calculate end times using the full schedule and hardcoded lunch rule
     for (const day of slotsByDay.keys()) {
         const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
         
@@ -96,12 +95,24 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
 
             try {
                 let endTime;
+                const lunchStartTime = "12:20"; // The hardcoded rule
+
                 if (nextSlot) {
-                    endTime = nextSlot.startTime;
+                    // If the current class is before lunch and the next one is during or after, cap the end time.
+                    if (currentSlot.startTime < lunchStartTime && nextSlot.startTime >= lunchStartTime) {
+                        endTime = lunchStartTime;
+                    } else {
+                        endTime = nextSlot.startTime;
+                    }
                 } else {
-                    const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
-                    const duration = isLab ? 100 : 50; 
-                    endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
+                    // Last class of the day. If it's before lunch, cap it. Otherwise, use standard duration.
+                    if (currentSlot.startTime < lunchStartTime) {
+                        endTime = lunchStartTime;
+                    } else {
+                        const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
+                        const duration = isLab ? 100 : 50; 
+                        endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
+                    }
                 }
                 
                 timedSlots.push({
