@@ -56,6 +56,7 @@ const AttendanceBadge = ({ status }: { status: AttendanceStatus }) => {
 export default function CalendarPage() {
     const { timetable, subjects, attendance, logAttendance, isLoaded } = useApp();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+    const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
 
     const dailyAttendanceStatus = useMemo(() => {
         if (!isLoaded) return {};
@@ -140,6 +141,13 @@ export default function CalendarPage() {
                                 const SubjectIcon = subject.type === 'Lab' ? FlaskConical : Book;
                                 const record = attendance.find(r => r.id === `${selectedDateString}-${slot.id}`);
 
+                                const handleLogAndClose = (status: AttendanceStatus) => {
+                                    if(selectedDateString) {
+                                        logAttendance(slot, selectedDateString, status);
+                                    }
+                                    setOpenPopoverId(null);
+                                };
+
                                 return (
                                     <div key={slot.id} className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-4 justify-between">
                                         <div className="flex items-center gap-4">
@@ -150,7 +158,7 @@ export default function CalendarPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            <Popover>
+                                            <Popover open={openPopoverId === slot.id} onOpenChange={(open) => setOpenPopoverId(open ? slot.id : null)}>
                                                 <PopoverTrigger asChild>
                                                     {record ? (
                                                         <Button variant="ghost" className="h-auto p-0 rounded-full">
@@ -166,7 +174,7 @@ export default function CalendarPage() {
                                                             <Button
                                                                 key={opt.value}
                                                                 variant="ghost"
-                                                                onClick={() => logAttendance(slot, selectedDateString, opt.value as AttendanceStatus)}
+                                                                onClick={() => handleLogAndClose(opt.value as AttendanceStatus)}
                                                                 className={cn(
                                                                     "flex flex-col items-center justify-center gap-1 h-14 w-14 rounded-md transition-colors",
                                                                     opt.color
