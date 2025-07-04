@@ -36,23 +36,21 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     const normalizeTime = (timeStr: string): string => {
         try {
             timeStr = timeStr.replace('.', ':').trim();
-            // Handle various AM/PM formats
             const isPM = timeStr.toLowerCase().includes('pm');
             const isAM = timeStr.toLowerCase().includes('am');
             timeStr = timeStr.replace(/am|pm/i, '').trim();
 
             let [hourStr, minuteStr] = timeStr.split(':');
-            if (!hourStr || !minuteStr) return timeStr; // Malformed
+            if (!hourStr || !minuteStr) return timeStr;
 
             let hour = parseInt(hourStr, 10);
             if (isNaN(hour)) return timeStr;
 
             if (isPM && hour < 12) {
                 hour += 12;
-            } else if (isAM && hour === 12) { // Midnight case
+            } else if (isAM && hour === 12) {
                 hour = 0;
             } else if (!isPM && !isAM) {
-                // Heuristic for times like 1:30, 2:30, 3:30, 4:30 which are almost always PM in a timetable
                 if (hour >= 1 && hour <= 6) {
                     hour += 12;
                 }
@@ -70,16 +68,21 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     };
     
-    // 1. Normalize all times and filter out any malformed slots from AI
-    const normalizedSlots = rawSlots
+    // 1. Normalize times and immediately filter out non-academic slots. This is the critical fix.
+    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
+    const academicSlots = rawSlots
         .map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }))
-        .filter(slot => slot.day && slot.startTime && slot.subjectName && slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/));
+        .filter(slot => 
+          slot.day && slot.startTime && slot.subjectName && 
+          slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/) &&
+          !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
+        );
     
     const slotsWithEndTime: ExtractedSlot[] = [];
     const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
 
-    // 2. Group slots by day
-    for (const slot of normalizedSlots) {
+    // 2. Group the clean, academic slots by day
+    for (const slot of academicSlots) {
         if (!slotsByDay.has(slot.day)) {
             slotsByDay.set(slot.day, []);
         }
@@ -97,15 +100,18 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
             try {
                 let endTime;
                 
-                // NEW: If this is the last class before the hardcoded lunch break (12:20 - 13:30)
+                // Lunch Rule: If a class starts before lunch and the next one is after, cap it at 12:20.
                 if (currentSlot.startTime < '12:20' && (!nextSlot || nextSlot.startTime >= '13:30')) {
                     endTime = '12:20';
                 } else if (nextSlot) {
                     // Default: end time is start time of next class
                     endTime = nextSlot.startTime;
                 } else {
-                    // If it's the last class of the day, assume a standard 50-minute duration.
-                     endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), 50), 'HH:mm');
+                    // If it's the last class of the day, assume a standard duration.
+                    // Be smarter about labs.
+                    const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
+                    const duration = isLab ? 100 : 50;
+                    endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
                 }
                 
                 slotsWithEndTime.push({
@@ -151,14 +157,8 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         }
     }
     
-    // 5. Final Pass: Filter out non-class blocks (as a safeguard)
-    const nonClassKeywords = ['lunch', 'break', 'library', 'self study', 'ncc', 'nss', 'swachbharat', 'peuhv'];
-    const finalSlots = mergedSlots.filter(slot => 
-      !nonClassKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
-    );
-
     // Return sorted by day, then time
-    return finalSlots.sort((a,b) => {
+    return mergedSlots.sort((a,b) => {
         if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
         return a.startTime.localeCompare(b.startTime);
     });
@@ -339,3 +339,4 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     </Dialog>
   );
 }
+
