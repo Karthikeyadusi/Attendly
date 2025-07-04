@@ -148,7 +148,7 @@ export default function AttendanceStats() {
                <StatCard title="Conducted Credits" value={stats.totalConductedCredits} icon={Library} />
                <StatCard title="Cancelled Classes" value={stats.cancelledCount} icon={CalendarOff} />
                <StatCard 
-                 title="Safe Miss (Classes)" 
+                 title="Safe to Miss (Classes)" 
                  value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} 
                  icon={Star}
                  tooltipContent={
