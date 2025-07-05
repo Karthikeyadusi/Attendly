@@ -8,10 +8,7 @@ export const metadata: Metadata = {
   title: 'Attendly',
   description: 'Your smart college attendance tracker.',
   manifest: '/manifest.json',
-  icons: {
-    icon: '/favicon.ico', // For browser tabs
-    apple: '/apple-touch-icon.png', // For "Add to Home Screen" on Apple devices
-  },
+  icons: {},
 };
 
 export default function RootLayout({
