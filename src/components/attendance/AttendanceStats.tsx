@@ -36,7 +36,7 @@ const StatCard = ({ title, value, icon: Icon, color, tooltipContent }: { title: 
 );
 
 export default function AttendanceStats() {
-    const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded } = useApp();
+    const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded, holidays } = useApp();
 
     const stats = useMemo(() => {
         if (!isLoaded) {
@@ -50,10 +50,12 @@ export default function AttendanceStats() {
         const historicalConductedCredits = historicalData?.conductedCredits ?? 0;
         const historicalAttendedCredits = historicalData?.attendedCredits ?? 0;
 
-        // Filter daily records based on start date
-        const dailyRecords = trackingStartDate
-            ? attendance.filter(r => r.date >= trackingStartDate)
-            : attendance;
+        // Filter daily records based on start date and holidays
+        const dailyRecords = attendance.filter(r => {
+            if (trackingStartDate && r.date < trackingStartDate) return false;
+            if (holidays.includes(r.date)) return false;
+            return true;
+        });
 
         let dailyAttendedCredits = 0;
         let dailyConductedCredits = 0;
@@ -112,7 +114,7 @@ export default function AttendanceStats() {
             attendancePercentage,
             safeMissValue,
         };
-    }, [attendance, subjects, timetable, historicalData, trackingStartDate, minAttendancePercentage, isLoaded]);
+    }, [attendance, subjects, timetable, historicalData, trackingStartDate, minAttendancePercentage, isLoaded, holidays]);
 
     if (!isLoaded) {
       return (

@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import type { AttendanceStatus, AttendanceRecord, TimeSlot, OneOffSlot } from '@/types';
-import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock } from 'lucide-react';
+import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RescheduleDialog from './RescheduleDialog';
 
@@ -52,11 +52,12 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded } = useApp();
+  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
   const selectedDateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
+  const isHoliday = !!selectedDateString && holidays.includes(selectedDateString);
 
   const attendanceForSelectedDateMap = useMemo(() => {
     if (!selectedDateString || !isLoaded) return new Map<string, AttendanceRecord>();
@@ -83,10 +84,22 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Schedule for {format(selectedDate, 'PPP')}</CardTitle>
+          <div className="flex justify-between items-center gap-2">
+            <CardTitle>Schedule for {format(selectedDate, 'PPP')}</CardTitle>
+            <Button onClick={() => toggleHoliday(selectedDateString)} variant="outline" size="sm" disabled={!selectedDateString}>
+                <Gift className="mr-2 h-4 w-4" />
+                {isHoliday ? 'Unmark Holiday' : 'Mark as Holiday'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {scheduleForSelectedDate.length > 0 ? (
+          {isHoliday ? (
+             <div className="text-center p-4 rounded-lg bg-muted/20 h-24 flex items-center justify-center flex-col">
+                <Gift className="w-8 h-8 text-primary mb-2" />
+                <p className="font-semibold">This day is a holiday.</p>
+                <p className="text-sm text-muted-foreground">No classes will be counted.</p>
+            </div>
+          ) : scheduleForSelectedDate.length > 0 ? (
             scheduleForSelectedDate.map(slot => {
               const subject = subjectMap.get(slot.subjectId);
               if (!subject) return null;

@@ -21,6 +21,7 @@ const getInitialData = (): AppCoreData => ({
   timetable: [],
   attendance: [],
   oneOffSlots: [],
+  holidays: [],
   minAttendancePercentage: 75,
   historicalData: null,
   trackingStartDate: null,
@@ -40,10 +41,9 @@ export function useAppData() {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
           const parsed = JSON.parse(storedData);
-          // Backwards compatibility for old data without oneOffSlots
-          if (!parsed.oneOffSlots) {
-            parsed.oneOffSlots = [];
-          }
+          // Backwards compatibility for old data
+          if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
+          if (!parsed.holidays) parsed.holidays = [];
           setData(parsed);
         }
       } catch (error) {
@@ -88,9 +88,8 @@ export function useAppData() {
       if (docSnap.exists()) {
         const cloudData = docSnap.data() as AppCoreData;
         // Backwards compatibility
-        if (!cloudData.oneOffSlots) {
-          cloudData.oneOffSlots = [];
-        }
+        if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
+        if (!cloudData.holidays) cloudData.holidays = [];
         setData(cloudData);
       }
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
@@ -142,6 +141,7 @@ export function useAppData() {
             // Existing user: onSnapshot will handle fetching the data.
             const cloudData = docSnap.data() as AppCoreData;
             if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
+            if (!cloudData.holidays) cloudData.holidays = [];
             setData(cloudData);
         }
 
@@ -208,6 +208,10 @@ export function useAppData() {
         console.warn(`Cannot log attendance for dates before ${prev.trackingStartDate}`);
         return prev;
       }
+      if (prev.holidays.includes(date)) {
+        console.warn(`Cannot log attendance on a holiday.`);
+        return prev;
+      }
 
       const subject = prev.subjects.find(s => s.id === slot.subjectId);
       if (!subject) return prev;
@@ -259,6 +263,30 @@ export function useAppData() {
       const newOneOffSlots = [...(prev.oneOffSlots || []), newOneOffSlot];
       
       return { ...prev, attendance: newAttendance, oneOffSlots: newOneOffSlots };
+    });
+  }, []);
+
+  const toggleHoliday = useCallback((dateString: string) => {
+    setData(prev => {
+        const isHoliday = prev.holidays.includes(dateString);
+        let newHolidays: string[];
+        let newAttendance = [...prev.attendance];
+
+        if (isHoliday) {
+            // It was a holiday, now it's not. Remove it.
+            newHolidays = prev.holidays.filter(h => h !== dateString);
+        } else {
+            // It was not a holiday, now it is. Add it.
+            newHolidays = [...prev.holidays, dateString];
+            // Remove any attendance records for this date as they are no longer relevant.
+            newAttendance = newAttendance.filter(r => r.date !== dateString);
+        }
+
+        return {
+            ...prev,
+            holidays: newHolidays,
+            attendance: newAttendance,
+        };
     });
   }, []);
 
@@ -339,7 +367,7 @@ export function useAppData() {
   const restoreFromBackup = useCallback((backupData: BackupData) => {
     const { version, exportedAt, ...restOfData } = backupData;
     const initialData = getInitialData();
-    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [] };
+    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [], holidays: restOfData.holidays || [] };
     setData(finalData);
   }, []);
 
@@ -361,6 +389,7 @@ export function useAppData() {
 
   const getScheduleForDate = useCallback((dateString: string): (TimeSlot | OneOffSlot)[] => {
     if (!dateString || !isClient) return [];
+    if (data.holidays.includes(dateString)) return [];
     
     const dateObj = new Date(dateString + 'T00:00:00'); // Avoid timezone issues
     const dayOfWeek = dayMap[dateObj.getDay()];
@@ -372,7 +401,7 @@ export function useAppData() {
     allSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
     
     return allSlots;
-  }, [isClient, timetableByDay, data.oneOffSlots]);
+  }, [isClient, timetableByDay, data.oneOffSlots, data.holidays]);
 
   const attendanceByDate = useMemo(() => {
     return data.attendance.reduce((acc, record) => {
@@ -399,6 +428,7 @@ export function useAppData() {
       : data.attendance;
 
     for (const record of filteredAttendance) {
+      if (data.holidays.includes(record.date)) continue;
       if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
       
       const subjectId = slotSubjectMap.get(record.slotId);
@@ -422,7 +452,7 @@ export function useAppData() {
     }
     
     return stats;
-  }, [data.subjects, data.timetable, data.oneOffSlots, data.attendance, data.trackingStartDate, isLoaded]);
+  }, [data.subjects, data.timetable, data.oneOffSlots, data.attendance, data.trackingStartDate, data.holidays, isLoaded]);
 
   return {
     ...data,
@@ -438,6 +468,7 @@ export function useAppData() {
     deleteTimetableSlot,
     logAttendance,
     rescheduleClass,
+    toggleHoliday,
     setMinAttendancePercentage,
     importTimetable,
     saveHistoricalData,

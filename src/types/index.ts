@@ -67,6 +67,7 @@ export type AppCoreData = {
   timetable: TimeSlot[];
   attendance: AttendanceRecord[];
   oneOffSlots: OneOffSlot[];
+  holidays: string[];
   minAttendancePercentage: number;
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;

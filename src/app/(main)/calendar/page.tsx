@@ -10,11 +10,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import DailySchedule from '@/components/calendar/DailySchedule';
 
 export default function CalendarPage() {
-    const { attendanceByDate, isLoaded } = useApp();
+    const { attendanceByDate, isLoaded, holidays } = useApp();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const dailyAttendanceStatus = useMemo(() => {
-        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' | 'postponed' } = {};
+        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' | 'postponed' | 'holiday' } = {};
 
         for (const [date, records] of attendanceByDate.entries()) {
             if (records.length === 0) continue;
@@ -48,13 +48,18 @@ export default function CalendarPage() {
         return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'postponed';
     }, [dailyAttendanceStatus]);
 
+    const holidayModifier = useCallback((date: Date) => {
+        return holidays.includes(format(date, 'yyyy-MM-dd'));
+    }, [holidays]);
+
 
     const modifiers = useMemo(() => ({
         attended: attendedModifier,
         absent: absentModifier,
         cancelled: cancelledModifier,
         postponed: postponedModifier,
-    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier]);
+        holiday: holidayModifier,
+    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier]);
 
     const modifierStyles = {
         attended: { 
@@ -68,6 +73,10 @@ export default function CalendarPage() {
         },
         postponed: {
             backgroundColor: 'hsla(var(--chart-4), 0.2)',
+        },
+        holiday: {
+            backgroundColor: 'hsla(var(--primary), 0.2)',
+            color: 'hsl(var(--primary))'
         },
     };
 
