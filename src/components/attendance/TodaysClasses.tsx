@@ -71,7 +71,7 @@ export default function TodaysClasses() {
                   <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-1 rounded-full">{subject.type}</span>
                 </div>
                 <div
-                  className="grid grid-cols-4 gap-2"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-2"
                 >
                   {statusOptions.map(opt => (
                     <Button

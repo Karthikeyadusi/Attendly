@@ -92,7 +92,7 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-time">Start Time</Label>
                 <Input id="start-time" type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)} />

@@ -265,7 +265,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 grid grid-cols-1 gap-6 overflow-y-auto p-4 md:grid-cols-2 md:p-6 min-h-0">
+        <div className="flex-1 grid grid-cols-1 gap-6 overflow-y-auto p-4 lg:grid-cols-2 md:p-6 min-h-0">
             {/* Left side: Upload */}
             <div className="space-y-4">
                  <Label htmlFor="timetable-upload">Timetable Image</Label>
