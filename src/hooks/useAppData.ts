@@ -417,6 +417,15 @@ export function useAppData() {
     setData(prev => ({ ...prev, userName: name.trim() }));
   }, []);
 
+  const clearAllData = useCallback(() => {
+    setData(getInitialData());
+    toast({
+        variant: "destructive",
+        title: "Data Cleared",
+        description: "All application data has been wiped.",
+    });
+  }, [toast]);
+
   // Memoized derived data for performance
   const subjectMap = useMemo(() => new Map(data.subjects.map(s => [s.id, s])), [data.subjects]);
   
@@ -518,6 +527,7 @@ export function useAppData() {
     getBackupData,
     restoreFromBackup,
     setUserName,
+    clearAllData,
     // Provide memoized data
     subjectMap,
     timetableByDay,

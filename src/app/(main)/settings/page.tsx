@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -7,7 +6,7 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
@@ -31,10 +30,12 @@ export default function SettingsPage() {
     getBackupData,
     restoreFromBackup,
     forceCloudSync,
+    clearAllData,
   } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
   const [name, setName] = useState('');
 
@@ -123,6 +124,11 @@ export default function SettingsPage() {
     }
     setIsImportConfirmOpen(false);
     setBackupToRestore(null);
+  };
+  
+  const handleConfirmClear = () => {
+    clearAllData();
+    setIsClearConfirmOpen(false);
   };
 
   return (
@@ -235,6 +241,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle>Danger Zone</CardTitle>
+           <CardDescription>
+            This action is irreversible. Please be certain.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Button variant="destructive" className="w-full" onClick={() => setIsClearConfirmOpen(true)}>
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Clear All Data
+            </Button>
+             <p className="text-xs text-center text-muted-foreground pt-4">
+                This will permanently delete all data from this device and the cloud if you are signed in.
+            </p>
+        </CardContent>
+      </Card>
+
       <AlertDialog open={isImportConfirmOpen} onOpenChange={setIsImportConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -247,6 +271,23 @@ export default function SettingsPage() {
             <AlertDialogCancel onClick={() => setBackupToRestore(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmImport}>
               Yes, Overwrite and Import
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all your data, including subjects, timetable, and attendance history. If you are signed in, this data will also be deleted from the cloud. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClear} className="bg-destructive hover:bg-destructive/90">
+              Yes, Delete Everything
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
