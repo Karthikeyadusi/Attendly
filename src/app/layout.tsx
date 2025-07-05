@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
@@ -8,7 +9,11 @@ export const metadata: Metadata = {
   title: 'Attendly',
   description: 'Your smart college attendance tracker.',
   manifest: '/manifest.json',
-  icons: {},
+  icons: {
+    icon: 'https://placehold.co/32x32.png',
+    shortcut: 'https://placehold.co/32x32.png',
+    apple: 'https://placehold.co/180x180.png',
+  },
 };
 
 export default function RootLayout({
