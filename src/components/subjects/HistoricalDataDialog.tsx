@@ -110,10 +110,10 @@ export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalD
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
-                        name="conductedCredits"
+                        name="attendedCredits"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Total Conducted Credits</FormLabel>
+                            <FormLabel>Total Attended Credits</FormLabel>
                             <FormControl>
                                 <Input type="number" {...field} />
                             </FormControl>
@@ -123,10 +123,10 @@ export default function HistoricalDataDialog({ open, onOpenChange }: HistoricalD
                     />
                     <FormField
                         control={form.control}
-                        name="attendedCredits"
+                        name="conductedCredits"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Total Attended Credits</FormLabel>
+                            <FormLabel>Total Conducted Credits</FormLabel>
                             <FormControl>
                                 <Input type="number" {...field} />
                             </FormControl>
