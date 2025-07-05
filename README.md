@@ -1,3 +1,4 @@
+<!-- Test change to verify deployment. -->
 # Attendly: Your Smart College Attendance Tracker
 
 Attendly is a modern, AI-powered web application designed to help college students effortlessly track their class attendance, manage their schedule, and stay on top of their academic requirements. Built with a focus on a seamless mobile-first experience, it leverages AI to simplify setup and provides clear, actionable insights into attendance data.
