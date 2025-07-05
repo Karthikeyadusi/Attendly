@@ -62,9 +62,16 @@ export function useAppData() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
-        // User logged out, ensure local data is loaded
+        // User logged out, ensure local data is loaded and defaults are set
         const storedData = localStorage.getItem(APP_DATA_KEY);
-        setData(storedData ? JSON.parse(storedData) : getInitialData());
+        if (storedData) {
+          const parsed = JSON.parse(storedData);
+          if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
+          if (!parsed.holidays) parsed.holidays = [];
+          setData(parsed);
+        } else {
+          setData(getInitialData());
+        }
         setIsLoaded(true);
       }
       // isLoaded will be set to true by the Firestore listener for logged-in users
@@ -208,7 +215,7 @@ export function useAppData() {
         console.warn(`Cannot log attendance for dates before ${prev.trackingStartDate}`);
         return prev;
       }
-      if (prev.holidays.includes(date)) {
+      if ((prev.holidays || []).includes(date)) {
         console.warn(`Cannot log attendance on a holiday.`);
         return prev;
       }
@@ -268,16 +275,16 @@ export function useAppData() {
 
   const toggleHoliday = useCallback((dateString: string) => {
     setData(prev => {
-        const isHoliday = prev.holidays.includes(dateString);
+        const isHoliday = (prev.holidays || []).includes(dateString);
         let newHolidays: string[];
         let newAttendance = [...prev.attendance];
 
         if (isHoliday) {
             // It was a holiday, now it's not. Remove it.
-            newHolidays = prev.holidays.filter(h => h !== dateString);
+            newHolidays = (prev.holidays || []).filter(h => h !== dateString);
         } else {
             // It was not a holiday, now it is. Add it.
-            newHolidays = [...prev.holidays, dateString];
+            newHolidays = [...(prev.holidays || []), dateString];
             // Remove any attendance records for this date as they are no longer relevant.
             newAttendance = newAttendance.filter(r => r.date !== dateString);
         }
@@ -389,7 +396,7 @@ export function useAppData() {
 
   const getScheduleForDate = useCallback((dateString: string): (TimeSlot | OneOffSlot)[] => {
     if (!dateString || !isClient) return [];
-    if (data.holidays.includes(dateString)) return [];
+    if ((data.holidays || []).includes(dateString)) return [];
     
     const dateObj = new Date(dateString + 'T00:00:00'); // Avoid timezone issues
     const dayOfWeek = dayMap[dateObj.getDay()];
@@ -428,7 +435,7 @@ export function useAppData() {
       : data.attendance;
 
     for (const record of filteredAttendance) {
-      if (data.holidays.includes(record.date)) continue;
+      if ((data.holidays || []).includes(record.date)) continue;
       if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
       
       const subjectId = slotSubjectMap.get(record.slotId);
