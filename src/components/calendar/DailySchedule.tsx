@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { format, getDay } from 'date-fns';
 import type { DayOfWeek, AttendanceStatus, AttendanceRecord } from '@/types';
-import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban } from 'lucide-react';
+import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const dayMap: { [key: number]: DayOfWeek | undefined } = {
@@ -24,6 +24,7 @@ const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
   { value: 'Absent', icon: XCircle, color: 'text-red-500' },
   { value: 'Cancelled', icon: Ban, color: 'text-gray-500' },
+  { value: 'Postponed', icon: CalendarClock, color: 'text-amber-500' },
 ] as const;
 
 const AttendanceBadge = ({ status }: { status: AttendanceStatus }) => {
@@ -39,6 +40,10 @@ const AttendanceBadge = ({ status }: { status: AttendanceStatus }) => {
         Cancelled: {
             backgroundColor: 'hsl(var(--muted))',
             color: 'hsl(var(--muted-foreground))',
+        },
+        Postponed: {
+            backgroundColor: 'hsla(var(--chart-4), 0.2)',
+            color: 'hsl(var(--chart-4))',
         },
     };
     return (

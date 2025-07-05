@@ -4,7 +4,7 @@
 import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BookCheck, Library, CalendarOff, Star, Info } from 'lucide-react';
+import { BookCheck, Library, CalendarOff, Star, Info, CalendarClock } from 'lucide-react';
 import { useMemo } from 'react';
 import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -40,7 +40,7 @@ export default function AttendanceStats() {
 
     const stats = useMemo(() => {
         if (!isLoaded) {
-          return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
+          return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, postponedCount: 0, attendancePercentage: 0, safeMissValue: 0 };
         }
 
         const subjectMap = new Map(subjects.map(s => [s.id, s]));
@@ -58,9 +58,10 @@ export default function AttendanceStats() {
         let dailyAttendedCredits = 0;
         let dailyConductedCredits = 0;
         const dailyCancelledCount = dailyRecords.filter(r => r.status === 'Cancelled').length;
+        const dailyPostponedCount = dailyRecords.filter(r => r.status === 'Postponed').length;
 
         for (const record of dailyRecords) {
-            if (record.status === 'Cancelled') continue;
+            if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
 
             const slot = slotMap.get(record.slotId);
             if (!slot) continue;
@@ -109,6 +110,7 @@ export default function AttendanceStats() {
             totalAttendedCredits,
             totalConductedCredits,
             cancelledCount: dailyCancelledCount,
+            postponedCount: dailyPostponedCount,
             attendancePercentage,
             safeMissValue,
         };
@@ -118,7 +120,8 @@ export default function AttendanceStats() {
       return (
         <div className="space-y-4">
           <Skeleton className="h-28 w-full" />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
@@ -143,10 +146,11 @@ export default function AttendanceStats() {
                     </p>
                 </CardContent>
             </Card>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                <StatCard title="Attended Credits" value={stats.totalAttendedCredits} icon={BookCheck} />
                <StatCard title="Conducted Credits" value={stats.totalConductedCredits} icon={Library} />
                <StatCard title="Cancelled Classes" value={stats.cancelledCount} icon={CalendarOff} />
+               <StatCard title="Postponed Classes" value={stats.postponedCount} icon={CalendarClock} />
                <StatCard 
                  title="Safe to Miss (Classes)" 
                  value={typeof stats.safeMissValue === 'number' ? stats.safeMissValue : 'N/A'} 

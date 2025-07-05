@@ -5,7 +5,7 @@ import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus, DayOfWeek } from "@/types";
-import { CheckCircle2, XCircle, Ban, Info } from 'lucide-react';
+import { CheckCircle2, XCircle, Ban, Info, CalendarClock } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "../ui/button";
 
@@ -13,6 +13,7 @@ const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
   { value: 'Absent', icon: XCircle, color: 'text-red-500' },
   { value: 'Cancelled', icon: Ban, color: 'text-gray-500' },
+  { value: 'Postponed', icon: CalendarClock, color: 'text-amber-500' },
 ] as const;
 
 export default function TodaysClasses() {
@@ -66,7 +67,7 @@ export default function TodaysClasses() {
                 <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-1 rounded-full">{subject.type}</span>
               </div>
               <div
-                className="grid grid-cols-3 gap-2"
+                className="grid grid-cols-4 gap-2"
               >
                 {statusOptions.map(opt => (
                   <Button

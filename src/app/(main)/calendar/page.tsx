@@ -14,20 +14,19 @@ export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const dailyAttendanceStatus = useMemo(() => {
-        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' } = {};
+        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' | 'postponed' } = {};
 
         for (const [date, records] of attendanceByDate.entries()) {
-            const allCancelled = records.every(r => r.status === 'Cancelled');
-            if (allCancelled && records.length > 0) {
-                 statusByDate[date] = 'cancelled';
-                 continue;
-            }
+            if (records.length === 0) continue;
+
             if (records.some(r => r.status === 'Absent')) {
                 statusByDate[date] = 'absent';
-            } else if (records.every(r => r.status === 'Attended' || r.status === 'Cancelled')) {
-                if (records.some(r => r.status === 'Attended')) {
-                    statusByDate[date] = 'attended';
-                }
+            } else if (records.some(r => r.status === 'Attended')) {
+                statusByDate[date] = 'attended';
+            } else if (records.some(r => r.status === 'Postponed')) {
+                statusByDate[date] = 'postponed';
+            } else if (records.every(r => r.status === 'Cancelled')) {
+                statusByDate[date] = 'cancelled';
             }
         }
         return statusByDate;
@@ -45,12 +44,17 @@ export default function CalendarPage() {
         return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'cancelled';
     }, [dailyAttendanceStatus]);
 
+    const postponedModifier = useCallback((date: Date) => {
+        return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'postponed';
+    }, [dailyAttendanceStatus]);
+
 
     const modifiers = useMemo(() => ({
         attended: attendedModifier,
         absent: absentModifier,
         cancelled: cancelledModifier,
-    }), [attendedModifier, absentModifier, cancelledModifier]);
+        postponed: postponedModifier,
+    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier]);
 
     const modifierStyles = {
         attended: { 
@@ -61,6 +65,9 @@ export default function CalendarPage() {
         },
         cancelled: {
             backgroundColor: 'hsl(var(--muted))',
+        },
+        postponed: {
+            backgroundColor: 'hsla(var(--chart-4), 0.2)',
         },
     };
 

@@ -19,7 +19,7 @@ export type TimeSlot = {
   subjectId: string;
 };
 
-export type AttendanceStatus = 'Attended' | 'Absent' | 'Cancelled';
+export type AttendanceStatus = 'Attended' | 'Absent' | 'Cancelled' | 'Postponed';
 
 export type AttendanceRecord = {
   id: string; // "YYYY-MM-DD-slotId"

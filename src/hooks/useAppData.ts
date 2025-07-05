@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -330,7 +331,7 @@ export function useAppData() {
       : data.attendance;
 
     for (const record of filteredAttendance) {
-      if (record.status === 'Cancelled') continue;
+      if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
       
       const subjectId = slotSubjectMap.get(record.slotId);
       if (subjectId) {
