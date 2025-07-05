@@ -36,6 +36,24 @@ export function useAppData() {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
+  const handleFirestoreError = useCallback((error: any) => {
+    console.error("Firestore error:", error);
+    let description = "An unknown error occurred while saving your data.";
+    if (error.code === 'permission-denied') {
+        description = "This is likely due to incorrect Firestore security rules. Please ensure they allow writes for authenticated users.";
+    } else if (error.code === 'unauthenticated') {
+        description = "You are not authenticated. Please sign in again.";
+    } else if (error.code === 'unavailable') {
+        description = "Could not connect to the cloud. Please check your internet connection.";
+    }
+    
+    toast({
+        variant: "destructive",
+        title: "Cloud Sync Failed",
+        description: description,
+    });
+  }, [toast]);
+
   // Effect to load initial data from localStorage (for signed-out users)
   useEffect(() => {
     if (isClient) {
@@ -102,10 +120,12 @@ export function useAppData() {
         setData(cloudData);
       }
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
+    }, (error) => {
+      handleFirestoreError(error)
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, handleFirestoreError]);
 
   // Effect to save data to localStorage and Firestore
   useEffect(() => {
@@ -118,11 +138,9 @@ export function useAppData() {
     if (user && firebaseEnabled && firebaseApp) {
       const db = getFirestore(firebaseApp);
       const userDocRef = doc(db, 'users', user.uid);
-      setDoc(userDocRef, data).catch(error => {
-        console.error("Error writing to Firestore:", error);
-      });
+      setDoc(userDocRef, data).catch(handleFirestoreError);
     }
-  }, [data, user, isClient, isLoaded]);
+  }, [data, user, isClient, isLoaded, handleFirestoreError]);
 
 
   const signIn = async () => {
@@ -144,7 +162,7 @@ export function useAppData() {
             // New user to Firestore: push local data to cloud
             const localDataString = localStorage.getItem(APP_DATA_KEY);
             const localData = localDataString ? JSON.parse(localDataString) : getInitialData();
-            await setDoc(userDocRef, localData);
+            await setDoc(userDocRef, localData).catch(handleFirestoreError);
             setData(localData); // Ensure local state reflects this
         } else {
             // Existing user: onSnapshot will handle fetching the data.
@@ -154,8 +172,19 @@ export function useAppData() {
             setData(cloudData);
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Google Sign-in failed:", error);
+        let description = "An unknown error occurred.";
+        if (error.code === 'auth/popup-closed-by-user') {
+            description = "The sign-in window was closed before completing."
+        } else if (error.code === 'auth/network-request-failed') {
+            description = "A network error occurred. Please check your connection."
+        }
+        toast({
+            variant: "destructive",
+            title: "Sign-in Failed",
+            description: description
+        });
     }
   };
 
@@ -190,14 +219,9 @@ export function useAppData() {
             description: "Your data is up-to-date in the cloud.",
         });
     } catch (error) {
-        console.error("Manual sync failed:", error);
-        toast({
-            variant: "destructive",
-            title: "Sync Failed",
-            description: "An error occurred while saving your data.",
-        });
+        handleFirestoreError(error);
     }
-  }, [user, data, toast]);
+  }, [user, data, toast, handleFirestoreError]);
 
   const addSubject = useCallback((subject: Omit<Subject, 'id'>) => {
     setData(prev => ({ ...prev, subjects: [...prev.subjects, { ...subject, id: crypto.randomUUID() }] }));
