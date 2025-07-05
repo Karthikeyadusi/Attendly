@@ -44,30 +44,8 @@ const withPWA = withPWAInit({
         },
       },
     },
-    // Cache JS and CSS files
-    {
-      urlPattern: /\.(?:js|css)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-resources',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 1 week
-        },
-      },
-    },
-    // Cache navigation requests (HTML pages)
-    {
-      urlPattern: ({ request }) => request.mode === 'navigate',
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'pages-cache',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 1 week
-        },
-      },
-    },
+    // Removed the problematic navigation caching rule.
+    // The PWA's default precaching handles pages for offline use automatically.
   ],
 });
 
