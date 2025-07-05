@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 import withPWAInit from '@ducanh2912/next-pwa';
 
@@ -58,10 +59,9 @@ const withPWA = withPWAInit({
     // Cache navigation requests (HTML pages)
     {
       urlPattern: ({ request }) => request.mode === 'navigate',
-      handler: 'NetworkFirst',
+      handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'pages-cache',
-        networkTimeoutSeconds: 10,
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 7 * 24 * 60 * 60, // 1 week
