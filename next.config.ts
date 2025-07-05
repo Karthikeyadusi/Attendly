@@ -8,6 +8,40 @@ const withPWA = withPWAInit({
   register: true,
   runtimeCaching: [
     {
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:js|css)$/i,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'static-resources',
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 24 * 60 * 60,
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'images',
+        expiration: {
+          maxEntries: 200,
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+        },
+      },
+    },
+    {
       urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
       handler: 'CacheFirst',
       options: {
@@ -18,31 +52,8 @@ const withPWA = withPWAInit({
         },
       },
     },
-    {
-      urlPattern: /^https:\/\/placehold\.co\/.*/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'placeholder-images',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 30 * 24 * 60 * 60,
-        },
-      },
-    },
-    {
-      urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'image-cache',
-        expiration: {
-          maxEntries: 200,
-          maxAgeSeconds: 30 * 24 * 60 * 60,
-        },
-      },
-    },
-    // ✅ No navigation rule
   ],
-});
+} as any);
 
 const nextConfig: NextConfig = {
   typescript: {
