@@ -7,7 +7,7 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ export default function SettingsPage() {
     signOutUser,
     getBackupData,
     restoreFromBackup,
+    forceCloudSync,
   } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -160,10 +161,16 @@ export default function SettingsPage() {
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              <Button onClick={signOutUser} variant="outline" size="sm">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={forceCloudSync} variant="outline" size="sm">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sync
+                </Button>
+                <Button onClick={signOutUser} variant="outline" size="sm">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
           ) : (
             <Button onClick={signIn} className="w-full h-12 text-base">

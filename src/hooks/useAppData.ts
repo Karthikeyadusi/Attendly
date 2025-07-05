@@ -8,6 +8,7 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signO
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
 import { getDay } from 'date-fns';
+import { useToast } from './use-toast';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
@@ -33,6 +34,7 @@ export function useAppData() {
   const [data, setData] = useState<AppCoreData>(getInitialData());
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const { toast } = useToast();
 
   // Effect to load initial data from localStorage (for signed-out users)
   useEffect(() => {
@@ -163,6 +165,39 @@ export function useAppData() {
       await signOut(auth);
       // The onAuthStateChanged listener will handle state reset
   };
+
+  const forceCloudSync = useCallback(async () => {
+    if (!user || !firebaseEnabled || !firebaseApp) {
+        toast({
+            variant: "destructive",
+            title: "Not Signed In",
+            description: "You must be signed in to sync with the cloud.",
+        });
+        return;
+    }
+    
+    toast({
+        title: "Syncing...",
+        description: "Forcing a sync with the cloud.",
+    });
+
+    try {
+        const db = getFirestore(firebaseApp);
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, data);
+        toast({
+            title: "Sync Complete",
+            description: "Your data is up-to-date in the cloud.",
+        });
+    } catch (error) {
+        console.error("Manual sync failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Sync Failed",
+            description: "An error occurred while saving your data.",
+        });
+    }
+  }, [user, data, toast]);
 
   const addSubject = useCallback((subject: Omit<Subject, 'id'>) => {
     setData(prev => ({ ...prev, subjects: [...prev.subjects, { ...subject, id: crypto.randomUUID() }] }));
@@ -467,6 +502,7 @@ export function useAppData() {
     user,
     signIn,
     signOutUser,
+    forceCloudSync,
     addSubject,
     updateSubject,
     deleteSubject,
