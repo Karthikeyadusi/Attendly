@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   description: 'Your smart college attendance tracker.',
   manifest: '/manifest.json',
   icons: {
-    icon: 'https://placehold.co/32x32.png',
-    shortcut: 'https://placehold.co/32x32.png',
-    apple: 'https://placehold.co/180x180.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 
