@@ -54,7 +54,7 @@ export default function SubjectForm({ open, onOpenChange, subject }: SubjectForm
     defaultValues: {
       name: "",
       type: "Lecture",
-      credits: 1,
+      credits: 2,
     },
   });
 
@@ -65,7 +65,7 @@ export default function SubjectForm({ open, onOpenChange, subject }: SubjectForm
       form.reset({
         name: "",
         type: "Lecture",
-        credits: 1,
+        credits: 2,
       });
     }
   }, [subject, open, form]);

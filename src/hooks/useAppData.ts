@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -227,7 +225,7 @@ export function useAppData() {
                     id: crypto.randomUUID(),
                     name: slot.subjectName,
                     type: 'Lecture',
-                    credits: 1,
+                    credits: 2,
                 };
                 newSubjects.push(newSubject);
                 existingSubjectNames.add(newSubject.name.toLowerCase());
