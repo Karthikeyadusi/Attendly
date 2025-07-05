@@ -230,7 +230,7 @@ export function useAppData() {
     });
   }, []);
   
-  const rescheduleClass = useCallback((slot: TimeSlot | OneOffSlot, originalDate: string, newDate: string) => {
+  const rescheduleClass = useCallback((slot: TimeSlot | OneOffSlot, originalDate: string, newDate: string, newStartTime: string, newEndTime: string) => {
     setData(prev => {
       // 1. Mark original class as Postponed
       const record: AttendanceRecord = {
@@ -247,12 +247,12 @@ export function useAppData() {
           newAttendance.push(record);
       }
 
-      // 2. Create a new one-off slot for the new date
+      // 2. Create a new one-off slot for the new date and time
       const newOneOffSlot: OneOffSlot = {
           id: crypto.randomUUID(),
           date: newDate,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
+          startTime: newStartTime,
+          endTime: newEndTime,
           subjectId: slot.subjectId,
           originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id, // Keep original ID
       };

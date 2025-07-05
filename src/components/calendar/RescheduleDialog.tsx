@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,8 @@ import type { OneOffSlot, TimeSlot } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "../ui/alert";
 import { CalendarClock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface RescheduleDialogProps {
   open: boolean;
@@ -30,15 +32,35 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
   const { rescheduleClass, subjectMap } = useApp();
   const { toast } = useToast();
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newStartTime, setNewStartTime] = useState(slot.startTime);
+  const [newEndTime, setNewEndTime] = useState(slot.endTime);
 
   const subject = subjectMap.get(slot.subjectId);
   const originalDate = 'date' in slot ? slot.date : date;
+  
+  useEffect(() => {
+    if (open) {
+      setNewDate(undefined);
+      setNewStartTime(slot.startTime);
+      setNewEndTime(slot.endTime);
+    }
+  }, [open, slot]);
 
   const handleConfirm = () => {
-    if (!newDate) return;
+    if (!newDate || !newStartTime || !newEndTime) return;
+
+    if (newStartTime >= newEndTime) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Time",
+        description: "End time must be after the start time.",
+      });
+      return;
+    }
+
     const newDateString = format(newDate, 'yyyy-MM-dd');
 
-    rescheduleClass(slot, originalDate, newDateString);
+    rescheduleClass(slot, originalDate, newDateString, newStartTime, newEndTime);
     toast({
       title: "Class Rescheduled",
       description: `${subject?.name || 'The class'} has been moved to ${format(newDate, 'PPP')}.`,
@@ -47,9 +69,6 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      setNewDate(undefined); // Reset date on close
-    }
     onOpenChange(isOpen);
   };
 
@@ -59,17 +78,31 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
         <DialogHeader>
           <DialogTitle>Reschedule Class</DialogTitle>
           <DialogDescription>
-            Select a new date for the <strong>{subject?.name}</strong> class originally on {format(new Date(originalDate + 'T00:00:00'), 'PPP')}.
+            Select a new date and time for the <strong>{subject?.name}</strong> class originally on {format(new Date(originalDate + 'T00:00:00'), 'PPP')}.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-            <p className="text-sm font-medium">Select new date</p>
-             <DatePicker 
-                date={newDate} 
-                onSelect={setNewDate}
-                disabled={(day) => isBefore(day, startOfToday())}
-             />
+            <div className="space-y-2">
+              <Label>Select new date</Label>
+              <DatePicker 
+                  date={newDate} 
+                  onSelect={setNewDate}
+                  disabled={(day) => isBefore(day, startOfToday())}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start-time">Start Time</Label>
+                <Input id="start-time" type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end-time">End Time</Label>
+                <Input id="end-time" type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)} />
+              </div>
+            </div>
+
              <Alert>
                 <CalendarClock className="h-4 w-4" />
                 <AlertDescription>
@@ -80,7 +113,7 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!newDate}>Confirm Reschedule</Button>
+          <Button onClick={handleConfirm} disabled={!newDate || !newStartTime || !newEndTime}>Confirm Reschedule</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
