@@ -19,6 +19,16 @@ export type TimeSlot = {
   subjectId: string;
 };
 
+// A rescheduled class that occurs on a specific date, not a recurring day.
+export type OneOffSlot = {
+  id: string; // new UUID
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:MM"
+  endTime: string; // "HH:MM"
+  subjectId: string;
+  originalSlotId: string; // To trace it back
+};
+
 export type AttendanceStatus = 'Attended' | 'Absent' | 'Cancelled' | 'Postponed';
 
 export type AttendanceRecord = {
@@ -56,6 +66,7 @@ export type AppCoreData = {
   subjects: Subject[];
   timetable: TimeSlot[];
   attendance: AttendanceRecord[];
+  oneOffSlots: OneOffSlot[];
   minAttendancePercentage: number;
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;

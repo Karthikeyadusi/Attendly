@@ -2,19 +2,25 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap } from '@/types';
+import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap, OneOffSlot } from '@/types';
 import { useIsClient } from './useIsClient';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
+import { getDay } from 'date-fns';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
+
+const dayMap: { [key: number]: DayOfWeek | undefined } = {
+    1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat'
+};
 
 const getInitialData = (): AppCoreData => ({
   subjects: [],
   timetable: [],
   attendance: [],
+  oneOffSlots: [],
   minAttendancePercentage: 75,
   historicalData: null,
   trackingStartDate: null,
@@ -33,7 +39,12 @@ export function useAppData() {
       try {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
-          setData(JSON.parse(storedData));
+          const parsed = JSON.parse(storedData);
+          // Backwards compatibility for old data without oneOffSlots
+          if (!parsed.oneOffSlots) {
+            parsed.oneOffSlots = [];
+          }
+          setData(parsed);
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -76,6 +87,10 @@ export function useAppData() {
       
       if (docSnap.exists()) {
         const cloudData = docSnap.data() as AppCoreData;
+        // Backwards compatibility
+        if (!cloudData.oneOffSlots) {
+          cloudData.oneOffSlots = [];
+        }
         setData(cloudData);
       }
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
@@ -125,7 +140,9 @@ export function useAppData() {
             setData(localData); // Ensure local state reflects this
         } else {
             // Existing user: onSnapshot will handle fetching the data.
-            setData(docSnap.data() as AppCoreData);
+            const cloudData = docSnap.data() as AppCoreData;
+            if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
+            setData(cloudData);
         }
 
     } catch (error) {
@@ -155,11 +172,14 @@ export function useAppData() {
     setData(prev => {
       const newTimetable = prev.timetable.filter(slot => slot.subjectId !== subjectId);
       const newAttendance = prev.attendance.filter(record => !newTimetable.find(slot => slot.id === record.slotId));
+      const newOneOffSlots = (prev.oneOffSlots || []).filter(slot => slot.subjectId !== subjectId);
+      
       return {
         ...prev,
         subjects: prev.subjects.filter(s => s.id !== subjectId),
         timetable: newTimetable,
         attendance: newAttendance,
+        oneOffSlots: newOneOffSlots,
       };
     });
   }, []);
@@ -182,7 +202,7 @@ export function useAppData() {
     }));
   }, []);
 
-  const logAttendance = useCallback((slot: TimeSlot, date: string, status: AttendanceStatus) => {
+  const logAttendance = useCallback((slot: TimeSlot | OneOffSlot, date: string, status: AttendanceStatus) => {
     setData(prev => {
       if (prev.trackingStartDate && date < prev.trackingStartDate) {
         console.warn(`Cannot log attendance for dates before ${prev.trackingStartDate}`);
@@ -199,14 +219,46 @@ export function useAppData() {
         status: status,
       };
 
-      const existingRecordIndex = prev.attendance.findIndex(r => r.id === record.id);
       const newAttendance = [...prev.attendance];
+      const existingRecordIndex = newAttendance.findIndex(r => r.id === record.id);
       if (existingRecordIndex > -1) {
         newAttendance[existingRecordIndex] = record;
       } else {
         newAttendance.push(record);
       }
       return { ...prev, attendance: newAttendance };
+    });
+  }, []);
+  
+  const rescheduleClass = useCallback((slot: TimeSlot | OneOffSlot, originalDate: string, newDate: string) => {
+    setData(prev => {
+      // 1. Mark original class as Postponed
+      const record: AttendanceRecord = {
+          id: `${originalDate}-${slot.id}`,
+          slotId: slot.id,
+          date: originalDate,
+          status: 'Postponed',
+      };
+      const newAttendance = [...prev.attendance];
+      const existingRecordIndex = newAttendance.findIndex(r => r.id === record.id);
+      if (existingRecordIndex > -1) {
+          newAttendance[existingRecordIndex] = record;
+      } else {
+          newAttendance.push(record);
+      }
+
+      // 2. Create a new one-off slot for the new date
+      const newOneOffSlot: OneOffSlot = {
+          id: crypto.randomUUID(),
+          date: newDate,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          subjectId: slot.subjectId,
+          originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id, // Keep original ID
+      };
+      const newOneOffSlots = [...(prev.oneOffSlots || []), newOneOffSlot];
+      
+      return { ...prev, attendance: newAttendance, oneOffSlots: newOneOffSlots };
     });
   }, []);
 
@@ -225,7 +277,7 @@ export function useAppData() {
                 const newSubject: Subject = {
                     id: crypto.randomUUID(),
                     name: slot.subjectName,
-                    type: 'Lecture',
+                    type: slot.subjectName.toLowerCase().includes('lab') ? 'Lab' : 'Lecture',
                     credits: 2,
                 };
                 newSubjects.push(newSubject);
@@ -287,7 +339,7 @@ export function useAppData() {
   const restoreFromBackup = useCallback((backupData: BackupData) => {
     const { version, exportedAt, ...restOfData } = backupData;
     const initialData = getInitialData();
-    const finalData = { ...initialData, ...restOfData };
+    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [] };
     setData(finalData);
   }, []);
 
@@ -307,6 +359,21 @@ export function useAppData() {
     }, new Map<DayOfWeek, TimeSlot[]>());
   }, [data.timetable]);
 
+  const getScheduleForDate = useCallback((dateString: string): (TimeSlot | OneOffSlot)[] => {
+    if (!dateString || !isClient) return [];
+    
+    const dateObj = new Date(dateString + 'T00:00:00'); // Avoid timezone issues
+    const dayOfWeek = dayMap[dateObj.getDay()];
+
+    const regularSlots = dayOfWeek ? (timetableByDay.get(dayOfWeek) || []) : [];
+    const oneOffs = (data.oneOffSlots || []).filter(s => s.date === dateString);
+
+    const allSlots = [...regularSlots, ...oneOffs];
+    allSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    
+    return allSlots;
+  }, [isClient, timetableByDay, data.oneOffSlots]);
+
   const attendanceByDate = useMemo(() => {
     return data.attendance.reduce((acc, record) => {
       const records = acc.get(record.date) || [];
@@ -320,7 +387,8 @@ export function useAppData() {
     const stats: SubjectStatsMap = new Map();
     if (!isLoaded) return stats;
 
-    const slotSubjectMap = new Map(data.timetable.map(slot => [slot.id, slot.subjectId]));
+    const allSlots = [...data.timetable, ...(data.oneOffSlots || [])];
+    const slotSubjectMap = new Map(allSlots.map(slot => [slot.id, slot.subjectId]));
 
     for (const subject of data.subjects) {
       stats.set(subject.id, { attendedClasses: 0, conductedClasses: 0, percentage: 100 });
@@ -354,7 +422,7 @@ export function useAppData() {
     }
     
     return stats;
-  }, [data.subjects, data.timetable, data.attendance, data.trackingStartDate, isLoaded]);
+  }, [data.subjects, data.timetable, data.oneOffSlots, data.attendance, data.trackingStartDate, isLoaded]);
 
   return {
     ...data,
@@ -369,6 +437,7 @@ export function useAppData() {
     updateTimetableSlot,
     deleteTimetableSlot,
     logAttendance,
+    rescheduleClass,
     setMinAttendancePercentage,
     importTimetable,
     saveHistoricalData,
@@ -380,5 +449,6 @@ export function useAppData() {
     timetableByDay,
     attendanceByDate,
     subjectStats,
+    getScheduleForDate,
   };
 }
