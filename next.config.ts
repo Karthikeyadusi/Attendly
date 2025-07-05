@@ -46,7 +46,9 @@ const withPWA = withPWAInit({
     },
     // Cache navigation requests (HTML pages)
     {
-      urlPattern: (context) => context.request.mode === 'navigate',
+      urlPattern: function(context) {
+        return context.request.mode === 'navigate';
+      },
       handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'pages-cache',
