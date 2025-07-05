@@ -150,7 +150,7 @@ export default function SettingsPage() {
               </AlertDescription>
             </Alert>
           ) : user ? (
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'}/>
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <Button onClick={forceCloudSync} variant="outline" size="sm">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Sync
