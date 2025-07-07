@@ -8,9 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import type { AttendanceStatus, AttendanceRecord, TimeSlot, OneOffSlot } from '@/types';
-import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift } from 'lucide-react';
+import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RescheduleDialog from './RescheduleDialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -52,7 +53,7 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday } = useApp();
+  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
@@ -105,8 +106,32 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
               if (!subject) return null;
 
               const isOneOff = 'date' in slot;
-              const SubjectIcon = isOneOff ? CalendarClock : (subject.type === 'Lab' ? FlaskConical : Book);
               const record = attendanceForSelectedDateMap.get(slot.id);
+              
+              if (record?.status === 'Postponed') {
+                const rescheduledTo = oneOffSlots.find(s => s.originalSlotId === slot.id);
+                return (
+                  <div key={slot.id} className="w-full bg-muted rounded-lg p-3 flex items-center gap-4 justify-between text-muted-foreground">
+                    <div className="flex items-center gap-4">
+                      <Book className="w-6 h-6 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold line-through">{subject.name}</p>
+                        <p className="text-sm">{slot.startTime} - {slot.endTime}</p>
+                      </div>
+                    </div>
+                     {rescheduledTo ? (
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-amber-600 dark:text-amber-500">Postponed</p>
+                          <p className="text-xs">to {format(new Date(rescheduledTo.date + 'T00:00:00'), 'MMM d')}</p>
+                        </div>
+                      ) : (
+                        <AttendanceBadge status="Postponed" />
+                      )}
+                  </div>
+                );
+              }
+              
+              const SubjectIcon = isOneOff ? CalendarClock : (subject.type === 'Lab' ? FlaskConical : Book);
 
               const handleLogAndClose = (status: AttendanceStatus) => {
                 if (selectedDateString) {
@@ -116,7 +141,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
               };
 
               return (
-                <div key={slot.id} className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-4 justify-between">
+                <div key={slot.id} className={cn("w-full rounded-lg p-3 flex items-center gap-4 justify-between", isOneOff ? "border border-amber-500/50 bg-amber-500/10" : "bg-card-foreground/5")}>
                   <div className="flex items-center gap-4">
                     <SubjectIcon className={cn("w-6 h-6 flex-shrink-0", isOneOff ? 'text-amber-500' : 'text-primary')} />
                     <div>
@@ -124,7 +149,19 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                       <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
                     </div>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-1">
+                    {isOneOff && (
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
+                                <Undo2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Undo Postponement</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     <Popover open={openPopoverId === slot.id} onOpenChange={(open) => setOpenPopoverId(open ? slot.id : null)}>
                       <PopoverTrigger asChild>
                         {record ? (

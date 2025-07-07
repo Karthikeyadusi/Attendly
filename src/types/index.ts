@@ -36,6 +36,7 @@ export type AttendanceRecord = {
   slotId: string;
   date: string; // "YYYY-MM-DD"
   status: AttendanceStatus;
+  previousStatus?: AttendanceStatus | null; // To handle undoing postpones
 };
 
 export type ExtractedSlot = {

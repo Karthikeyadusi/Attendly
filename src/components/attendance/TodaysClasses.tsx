@@ -5,11 +5,12 @@ import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus, TimeSlot, OneOffSlot } from "@/types";
-import { CheckCircle2, XCircle, Ban, Info, CalendarClock, Book, FlaskConical, Gift } from 'lucide-react';
+import { CheckCircle2, XCircle, Ban, Info, CalendarClock, Book, FlaskConical, Gift, Undo2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import RescheduleDialog from "../calendar/RescheduleDialog";
+import { format } from "date-fns";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -18,7 +19,7 @@ const statusOptions = [
 ] as const;
 
 export default function TodaysClasses() {
-  const { subjects, attendance, logAttendance, isLoaded, getScheduleForDate, holidays, toggleHoliday } = useApp();
+  const { subjects, attendance, logAttendance, isLoaded, getScheduleForDate, holidays, toggleHoliday, oneOffSlots, undoPostpone } = useApp();
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
   const today = new Date();
@@ -55,10 +56,38 @@ export default function TodaysClasses() {
           if (!subject) return null;
 
           const record = attendance.find(r => r.id === `${todayDateString}-${slot.id}`);
-          const isOneOff = 'date' in slot; // Check if it's a rescheduled OneOffSlot
+          const isOneOff = 'date' in slot;
+          const isPostponed = record?.status === 'Postponed';
+
+          if (isPostponed) {
+            const rescheduledTo = oneOffSlots.find(s => s.originalSlotId === slot.id);
+            return (
+              <div key={slot.id} className="p-3 rounded-lg border bg-muted text-muted-foreground">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    {subject.type === 'Lab' ? <FlaskConical className="w-5 h-5" /> : <Book className="w-5 h-5" />}
+                    <div>
+                      <p className="font-semibold text-base sm:text-lg line-through">{subject.name}</p>
+                      <p className="text-sm">{slot.startTime} - {slot.endTime}</p>
+                    </div>
+                  </div>
+                  {rescheduledTo ? (
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-500">Postponed</p>
+                      <p className="text-xs">
+                        to {format(new Date(rescheduledTo.date + 'T00:00:00'), 'MMM d')} at {rescheduledTo.startTime}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-semibold bg-amber-500/20 text-amber-500 px-2 py-1 rounded-full">Postponed</span>
+                  )}
+                </div>
+              </div>
+            );
+          }
 
           return (
-            <div key={slot.id} className="p-3 rounded-lg border bg-card-foreground/5">
+            <div key={slot.id} className={cn("p-3 rounded-lg border", isOneOff ? "border-amber-500/50 bg-amber-500/10" : "bg-card-foreground/5")}>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
                   { isOneOff ? <CalendarClock className="w-5 h-5 text-amber-500" /> : subject.type === 'Lab' ? <FlaskConical className="w-5 h-5 text-primary" /> : <Book className="w-5 h-5 text-primary" /> }
@@ -102,6 +131,14 @@ export default function TodaysClasses() {
                     <span className="text-xs font-medium">Postpone</span>
                   </Button>
               </div>
+              {isOneOff && (
+                <div className="mt-2 pt-2 border-t border-amber-500/20 text-center">
+                  <Button variant="link" size="sm" className="text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
+                    <Undo2 className="mr-2 h-4 w-4" />
+                    Undo Postponement
+                  </Button>
+                </div>
+              )}
             </div>
           );
         })}

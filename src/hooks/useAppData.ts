@@ -302,12 +302,17 @@ export function useAppData() {
   
   const rescheduleClass = useCallback((slot: TimeSlot | OneOffSlot, originalDate: string, newDate: string, newStartTime: string, newEndTime: string) => {
     setData(prev => {
-      // 1. Mark original class as Postponed
+      // Find previous status before postponing
+      const existingRecord = prev.attendance.find(r => r.id === `${originalDate}-${slot.id}`);
+      const previousStatus = existingRecord ? existingRecord.status : null;
+
+      // 1. Mark original class as Postponed, saving previous state
       const record: AttendanceRecord = {
           id: `${originalDate}-${slot.id}`,
           slotId: slot.id,
           date: originalDate,
           status: 'Postponed',
+          previousStatus: previousStatus
       };
       const newAttendance = [...prev.attendance];
       const existingRecordIndex = newAttendance.findIndex(r => r.id === record.id);
@@ -324,13 +329,50 @@ export function useAppData() {
           startTime: newStartTime,
           endTime: newEndTime,
           subjectId: slot.subjectId,
-          originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id, // Keep original ID
+          originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id,
       };
       const newOneOffSlots = [...(prev.oneOffSlots || []), newOneOffSlot];
       
       return { ...prev, attendance: newAttendance, oneOffSlots: newOneOffSlots };
     });
   }, []);
+
+  const undoPostpone = useCallback((oneOffSlotId: string) => {
+    setData(prev => {
+        const oneOffs = prev.oneOffSlots || [];
+        const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
+        if (!slotToUndo) return prev;
+
+        // Find the original 'Postponed' record
+        const originalRecord = prev.attendance.find(
+            r => r.slotId === slotToUndo.originalSlotId && r.status === 'Postponed'
+        );
+        if (!originalRecord) return prev;
+
+        // Filter out the one-off slot that is being undone
+        const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
+        
+        let newAttendance = [...prev.attendance];
+
+        // Restore or remove the original attendance record based on its previous state
+        if (originalRecord.previousStatus) {
+            // Restore to previous state (e.g., Attended, Absent)
+            const restoredRecord: AttendanceRecord = { ...originalRecord, status: originalRecord.previousStatus };
+            delete restoredRecord.previousStatus;
+            newAttendance = newAttendance.map(r => r.id === originalRecord.id ? restoredRecord : r);
+        } else {
+            // It was un-logged before, so remove the record completely
+            newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
+        }
+
+        toast({
+          title: "Postponement Undone",
+          description: "The class has been restored to its original schedule.",
+        });
+
+        return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+    });
+  }, [toast]);
 
   const toggleHoliday = useCallback((dateString: string) => {
     setData(prev => {
@@ -544,6 +586,7 @@ export function useAppData() {
     deleteTimetableSlot,
     logAttendance,
     rescheduleClass,
+    undoPostpone,
     toggleHoliday,
     setMinAttendancePercentage,
     importTimetable,
