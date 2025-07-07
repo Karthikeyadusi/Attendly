@@ -11,6 +11,7 @@ import { Button } from "../ui/button";
 import { useState } from "react";
 import RescheduleDialog from "../calendar/RescheduleDialog";
 import { format } from "date-fns";
+import WeeklyDebrief from "./WeeklyDebrief";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -24,13 +25,18 @@ export default function TodaysClasses() {
 
   const today = new Date();
   const todayDateString = today.toISOString().split('T')[0];
-  
+  const isSunday = today.getDay() === 0;
+
   const isHoliday = holidays.includes(todayDateString);
   const todaysSchedule = getScheduleForDate(todayDateString);
 
   if (!isLoaded) return <Skeleton className="h-48" />;
 
   const renderContent = () => {
+    if (isSunday && todaysSchedule.length === 0) {
+      return <WeeklyDebrief />;
+    }
+
     if (isHoliday) {
       return (
         <div className="flex flex-col items-center justify-center text-center h-32">
