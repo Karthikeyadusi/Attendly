@@ -36,7 +36,7 @@ const StatCard = ({ title, value, icon: Icon, color, tooltipContent }: { title: 
 );
 
 export default function AttendanceStats() {
-    const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded, holidays } = useApp();
+    const { attendance, subjects, timetable, minAttendancePercentage, historicalData, trackingStartDate, isLoaded, holidays, oneOffSlots } = useApp();
 
     const stats = useMemo(() => {
         if (!isLoaded) {
@@ -44,7 +44,8 @@ export default function AttendanceStats() {
         }
 
         const subjectMap = new Map(subjects.map(s => [s.id, s]));
-        const slotMap = new Map(timetable.map(s => [s.id, s]));
+        const allSlots = [...timetable, ...oneOffSlots];
+        const slotMap = new Map(allSlots.map(s => [s.id, s]));
         
         // Historical data is already in credits
         const historicalConductedCredits = historicalData?.conductedCredits ?? 0;
@@ -114,7 +115,7 @@ export default function AttendanceStats() {
             attendancePercentage,
             safeMissValue,
         };
-    }, [attendance, subjects, timetable, historicalData, trackingStartDate, minAttendancePercentage, isLoaded, holidays]);
+    }, [attendance, subjects, timetable, oneOffSlots, historicalData, trackingStartDate, minAttendancePercentage, isLoaded, holidays]);
 
     if (!isLoaded) {
       return (
