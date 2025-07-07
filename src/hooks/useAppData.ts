@@ -339,7 +339,6 @@ export function useAppData() {
   }, []);
 
   const undoPostpone = useCallback((oneOffSlotId: string) => {
-    let toastShown = false;
     setData(prev => {
         const oneOffs = prev.oneOffSlots || [];
         const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
@@ -361,16 +360,13 @@ export function useAppData() {
         } else {
             newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
         }
-
-        if (!toastShown) {
-            toast({
-                title: "Postponement Undone",
-                description: "The class has been restored to its original schedule.",
-            });
-            toastShown = true;
-        }
-
+        
         return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+    });
+
+    toast({
+        title: "Postponement Undone",
+        description: "The class has been restored to its original schedule.",
     });
   }, [toast]);
 
@@ -387,12 +383,12 @@ export function useAppData() {
       const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
       const newAttendance = prev.attendance.filter(r => r.id !== originalAttendanceId);
       
-      toast({
-          title: "Postponement Deleted",
-          description: "The rescheduled class has been removed and the original class slot is available again.",
-      });
-
       return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+    });
+
+    toast({
+        title: "Postponement Deleted",
+        description: "The rescheduled class has been removed and the original class slot is available again.",
     });
   }, [toast]);
 
