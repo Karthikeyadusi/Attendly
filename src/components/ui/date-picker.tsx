@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -14,9 +15,10 @@ import {
 } from "@/components/ui/popover"
 
 export function DatePicker({ date, onSelect, className, disabled }: { date?: Date, onSelect: (date: Date | undefined) => void, className?: string, disabled?: (date: Date) => boolean; }) {
+  const [open, setOpen] = React.useState(false)
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -34,7 +36,10 @@ export function DatePicker({ date, onSelect, className, disabled }: { date?: Dat
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onSelect}
+          onSelect={(selectedDate) => {
+            onSelect(selectedDate);
+            setOpen(false);
+          }}
           disabled={disabled}
           initialFocus
         />
