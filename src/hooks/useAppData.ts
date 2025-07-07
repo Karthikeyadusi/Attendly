@@ -365,12 +365,12 @@ export function useAppData() {
             newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
         }
 
-        toast({
-          title: "Postponement Undone",
-          description: "The class has been restored to its original schedule.",
-        });
-
         return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+    });
+
+    toast({
+      title: "Postponement Undone",
+      description: "The class has been restored to its original schedule.",
     });
   }, [toast]);
 
