@@ -5,13 +5,14 @@ import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus, TimeSlot, OneOffSlot } from "@/types";
-import { CheckCircle2, XCircle, Ban, Info, CalendarClock, Book, FlaskConical, Gift, Undo2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Ban, Info, CalendarClock, Book, FlaskConical, Gift, Undo2, Trash2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import RescheduleDialog from "../calendar/RescheduleDialog";
 import { format } from "date-fns";
 import WeeklyDebrief from "./WeeklyDebrief";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -20,7 +21,7 @@ const statusOptions = [
 ] as const;
 
 export default function TodaysClasses() {
-  const { subjects, attendance, logAttendance, isLoaded, getScheduleForDate, holidays, toggleHoliday, oneOffSlots, undoPostpone } = useApp();
+  const { subjects, attendance, logAttendance, isLoaded, getScheduleForDate, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
   const today = new Date();
@@ -137,12 +138,34 @@ export default function TodaysClasses() {
                     <span className="text-xs font-medium">Postpone</span>
                   </Button>
               </div>
-              {isOneOff && (
-                <div className="mt-2 pt-2 border-t border-amber-500/20 text-center">
+              {isOneOff && 'originalDate' in slot && (
+                <div className="mt-2 pt-2 border-t border-amber-500/20 flex justify-center items-center gap-2">
                   <Button variant="link" size="sm" className="text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
                     <Undo2 className="mr-2 h-4 w-4" />
-                    Undo Postponement
+                    Undo
                   </Button>
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant="link" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                          </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Rescheduled Class?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                  This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate + 'T00:00:00'), 'PPP')}. This action cannot be undone.
+                              </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteOneOffSlot(slot.id)} className="bg-destructive hover:bg-destructive/90">
+                                  Delete
+                              </AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               )}
             </div>

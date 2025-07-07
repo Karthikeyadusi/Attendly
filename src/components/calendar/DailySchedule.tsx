@@ -8,10 +8,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import type { AttendanceStatus, AttendanceRecord, TimeSlot, OneOffSlot } from '@/types';
-import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift, Undo2 } from 'lucide-react';
+import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift, Undo2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RescheduleDialog from './RescheduleDialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const statusOptions = [
   { value: 'Attended', icon: CheckCircle2, color: 'text-green-500' },
@@ -53,7 +54,7 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone } = useApp();
+  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
@@ -150,17 +151,41 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {isOneOff && (
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
-                                <Undo2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Undo Postponement</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                    {isOneOff && 'originalDate' in slot && (
+                      <div className="flex items-center gap-1">
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
+                                  <Undo2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Undo Postponement</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Rescheduled Class?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate + 'T00:00:00'), 'PPP')}. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteOneOffSlot(slot.id)} className="bg-destructive hover:bg-destructive/90">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     )}
                     <Popover open={openPopoverId === slot.id} onOpenChange={(open) => setOpenPopoverId(open ? slot.id : null)}>
                       <PopoverTrigger asChild>

@@ -374,6 +374,28 @@ export function useAppData() {
     });
   }, [toast]);
 
+  const deleteOneOffSlot = useCallback((oneOffSlotId: string) => {
+    setData(prev => {
+      const oneOffs = prev.oneOffSlots || [];
+      const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
+      if (!slotToDelete) return prev;
+
+      // 1. Remove the one-off slot
+      const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
+
+      // 2. Find and remove the original 'Postponed' record to reset its state
+      const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
+      const newAttendance = prev.attendance.filter(r => r.id !== originalAttendanceId);
+      
+      toast({
+          title: "Postponement Deleted",
+          description: "The rescheduled class has been removed and the original class slot is available again.",
+      });
+
+      return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+    });
+  }, [toast]);
+
   const toggleHoliday = useCallback((dateString: string) => {
     setData(prev => {
         const isHoliday = (prev.holidays || []).includes(dateString);
@@ -587,6 +609,7 @@ export function useAppData() {
     logAttendance,
     rescheduleClass,
     undoPostpone,
+    deleteOneOffSlot,
     toggleHoliday,
     setMinAttendancePercentage,
     importTimetable,
