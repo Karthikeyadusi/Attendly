@@ -330,6 +330,7 @@ export function useAppData() {
           endTime: newEndTime,
           subjectId: slot.subjectId,
           originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id,
+          originalDate: originalDate,
       };
       const newOneOffSlots = [...(prev.oneOffSlots || []), newOneOffSlot];
       
@@ -338,39 +339,38 @@ export function useAppData() {
   }, []);
 
   const undoPostpone = useCallback((oneOffSlotId: string) => {
+    let toastShown = false;
     setData(prev => {
         const oneOffs = prev.oneOffSlots || [];
         const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
         if (!slotToUndo) return prev;
 
-        // Find the original 'Postponed' record
+        const originalAttendanceId = `${slotToUndo.originalDate}-${slotToUndo.originalSlotId}`;
         const originalRecord = prev.attendance.find(
-            r => r.slotId === slotToUndo.originalSlotId && r.status === 'Postponed'
+            r => r.id === originalAttendanceId && r.status === 'Postponed'
         );
         if (!originalRecord) return prev;
 
-        // Filter out the one-off slot that is being undone
         const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
         
         let newAttendance = [...prev.attendance];
-
-        // Restore or remove the original attendance record based on its previous state
         if (originalRecord.previousStatus) {
-            // Restore to previous state (e.g., Attended, Absent)
             const restoredRecord: AttendanceRecord = { ...originalRecord, status: originalRecord.previousStatus };
             delete restoredRecord.previousStatus;
             newAttendance = newAttendance.map(r => r.id === originalRecord.id ? restoredRecord : r);
         } else {
-            // It was un-logged before, so remove the record completely
             newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
         }
 
-        return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
-    });
+        if (!toastShown) {
+            toast({
+                title: "Postponement Undone",
+                description: "The class has been restored to its original schedule.",
+            });
+            toastShown = true;
+        }
 
-    toast({
-      title: "Postponement Undone",
-      description: "The class has been restored to its original schedule.",
+        return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
     });
   }, [toast]);
 
