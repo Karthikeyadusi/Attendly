@@ -21,7 +21,7 @@ const statusOptions = [
 ] as const;
 
 export default function TodaysClasses() {
-  const { subjects, attendance, logAttendance, isLoaded, getScheduleForDate, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
+  const { subjects, attendance, logAttendance, clearAttendanceRecord, isLoaded, getScheduleForDate, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
   const today = new Date();
@@ -138,6 +138,14 @@ export default function TodaysClasses() {
                     <span className="text-xs font-medium">Postpone</span>
                   </Button>
               </div>
+              {record && record.status !== 'Postponed' && (
+                <div className="mt-2 pt-2 border-t flex justify-center">
+                  <Button variant="link" size="sm" onClick={() => clearAttendanceRecord(slot.id, todayDateString)}>
+                    <Undo2 className="mr-2 h-4 w-4" />
+                    Undo Log
+                  </Button>
+                </div>
+              )}
               {isOneOff && 'originalDate' in slot && (
                 <div className="mt-2 pt-2 border-t border-amber-500/20 flex justify-center items-center gap-2">
                   <Button variant="link" size="sm" className="text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>

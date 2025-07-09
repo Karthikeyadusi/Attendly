@@ -300,6 +300,14 @@ export function useAppData() {
     });
   }, []);
   
+  const clearAttendanceRecord = useCallback((slotId: string, date: string) => {
+    setData(prev => {
+      const recordId = `${date}-${slotId}`;
+      const newAttendance = prev.attendance.filter(r => r.id !== recordId);
+      return { ...prev, attendance: newAttendance };
+    });
+  }, []);
+
   const rescheduleClass = useCallback((slot: TimeSlot | OneOffSlot, originalDate: string, newDate: string, newStartTime: string, newEndTime: string) => {
     setData(prev => {
       // Find previous status before postponing
@@ -371,26 +379,25 @@ export function useAppData() {
   }, [toast]);
 
   const deleteOneOffSlot = useCallback((oneOffSlotId: string) => {
-    setData(prev => {
-      const oneOffs = prev.oneOffSlots || [];
-      const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
-      if (!slotToDelete) return prev;
+    const newData = { ...data };
+    const oneOffs = newData.oneOffSlots || [];
+    const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
+    if (!slotToDelete) return;
 
-      // 1. Remove the one-off slot
-      const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
+    // 1. Remove the one-off slot
+    newData.oneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
 
-      // 2. Find and remove the original 'Postponed' record to reset its state
-      const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
-      const newAttendance = prev.attendance.filter(r => r.id !== originalAttendanceId);
-      
-      return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
-    });
+    // 2. Find and remove the original 'Postponed' record to reset its state
+    const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
+    newData.attendance = newData.attendance.filter(r => r.id !== originalAttendanceId);
+    
+    setData(newData);
 
     toast({
         title: "Postponement Deleted",
         description: "The rescheduled class has been removed and the original class slot is available again.",
     });
-  }, [toast]);
+  }, [data, toast]);
 
   const toggleHoliday = useCallback((dateString: string) => {
     setData(prev => {
@@ -603,6 +610,7 @@ export function useAppData() {
     updateTimetableSlot,
     deleteTimetableSlot,
     logAttendance,
+    clearAttendanceRecord,
     rescheduleClass,
     undoPostpone,
     deleteOneOffSlot,

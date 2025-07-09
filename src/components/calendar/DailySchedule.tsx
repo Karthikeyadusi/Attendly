@@ -54,7 +54,7 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { subjectMap, attendanceByDate, logAttendance, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
+  const { subjectMap, attendanceByDate, logAttendance, clearAttendanceRecord, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
@@ -141,6 +141,13 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                 setOpenPopoverId(null);
               };
 
+              const handleClearAndClose = () => {
+                if (selectedDateString) {
+                  clearAttendanceRecord(slot.id, selectedDateString);
+                }
+                setOpenPopoverId(null);
+              };
+
               return (
                 <div key={slot.id} className={cn("w-full rounded-lg p-3 flex items-center gap-4 justify-between", isOneOff ? "border border-amber-500/50 bg-amber-500/10" : "bg-card-foreground/5")}>
                   <div className="flex items-center gap-4">
@@ -198,7 +205,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                         )}
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="end">
-                        <div className="flex gap-1 p-1">
+                        <div className="grid grid-cols-3 gap-1 p-1">
                           {statusOptions.map(opt => (
                             <Button
                               key={opt.value}
@@ -220,6 +227,15 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                             >
                               <CalendarClock className="h-5 w-5" />
                               <span className="text-xs font-medium">Postpone</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={handleClearAndClose}
+                              disabled={!record}
+                              className="flex flex-col items-center justify-center gap-1 h-14 w-14 rounded-md transition-colors text-muted-foreground"
+                            >
+                              <Undo2 className="h-5 w-5" />
+                              <span className="text-xs font-medium">Clear</span>
                             </Button>
                         </div>
                       </PopoverContent>
