@@ -13,7 +13,7 @@ export function Logo({ className }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Class Compass Logo"
+      aria-label="Class Compass App Logo"
     >
       <circle cx="12" cy="12" r="10" className="text-primary/50" />
       <polygon points="12 2, 14 12, 12 22, 10 12" className="text-primary fill-current" />
