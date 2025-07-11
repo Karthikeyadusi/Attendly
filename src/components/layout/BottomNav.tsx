@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookCopy, Calendar, CalendarDays, Home, Settings, BrainCircuit } from "lucide-react";
+import { BookCopy, Calendar, CalendarDays, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/timetable", label: "Timetable", icon: CalendarDays },
   { href: "/calendar", label: "Calendar", icon: Calendar },
-  { href: "/solver", label: "Solver", icon: BrainCircuit },
   { href: "/subjects", label: "Subjects", icon: BookCopy },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
