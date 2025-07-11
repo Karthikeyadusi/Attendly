@@ -3,7 +3,7 @@
 
 import { useApp } from "@/components/AppProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, isSunday as checkIsSunday } from "@/lib/utils";
 import type { AttendanceStatus, TimeSlot, OneOffSlot } from "@/types";
 import { CheckCircle2, XCircle, Ban, Info, CalendarClock, Book, FlaskConical, Gift, Undo2, Trash2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,8 +25,8 @@ export default function TodaysClasses() {
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
   const today = new Date();
-  const todayDateString = today.toISOString().split('T')[0];
-  const isSunday = today.getDay() === 0;
+  const todayDateString = format(today, 'yyyy-MM-dd');
+  const isSunday = checkIsSunday(todayDateString);
 
   const isHoliday = holidays.includes(todayDateString);
   const todaysSchedule = getScheduleForDate(todayDateString);
@@ -190,9 +190,9 @@ export default function TodaysClasses() {
           <div className="flex justify-between items-start gap-2">
             <div>
               <CardTitle>Today's Schedule</CardTitle>
-              <CardDescription>{today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</CardDescription>
+              <CardDescription>{format(today, 'EEEE, MMMM d, yyyy')}</CardDescription>
             </div>
-            <Button onClick={() => toggleHoliday(todayDateString)} variant="outline" size="sm" className="flex-shrink-0">
+            <Button onClick={() => toggleHoliday(todayDateString)} variant="outline" size="sm" className="flex-shrink-0" disabled={isSunday}>
               <Gift className="mr-2 h-4 w-4" />
               {isHoliday ? 'Unmark Holiday' : 'Mark as Holiday'}
             </Button>

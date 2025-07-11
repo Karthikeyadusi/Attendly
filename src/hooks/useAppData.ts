@@ -7,7 +7,6 @@ import { useIsClient } from './useIsClient';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
-import { getDay } from 'date-fns';
 import { useToast } from './use-toast';
 import { isSunday } from '@/lib/utils';
 
@@ -15,7 +14,13 @@ const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
 
 const dayMap: { [key: number]: DayOfWeek | undefined } = {
-    1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat'
+    0: undefined, // Sunday
+    1: 'Mon', 
+    2: 'Tue', 
+    3: 'Wed', 
+    4: 'Thu', 
+    5: 'Fri', 
+    6: 'Sat'
 };
 
 const getInitialData = (): AppCoreData => ({
@@ -276,7 +281,7 @@ export function useAppData() {
         return prev;
       }
       if ((prev.holidays || []).includes(date) || isSunday(date)) {
-        console.warn(`Cannot log attendance on a holiday.`);
+        console.warn(`Cannot log attendance on a holiday or Sunday.`);
         return prev;
       }
 
@@ -543,7 +548,8 @@ export function useAppData() {
     if (!dateString || !isClient) return [];
     if ((data.holidays || []).includes(dateString) || isSunday(dateString)) return [];
     
-    const dateObj = new Date(dateString + 'T00:00:00'); // Avoid timezone issues
+    // Add T00:00:00 to avoid timezone issues.
+    const dateObj = new Date(dateString + 'T00:00:00'); 
     const dayOfWeek = dayMap[dateObj.getDay()];
 
     const regularSlots = dayOfWeek ? (timetableByDay.get(dayOfWeek) || []) : [];
@@ -640,5 +646,3 @@ export function useAppData() {
     getScheduleForDate,
   };
 }
-
-    
