@@ -3,12 +3,18 @@
 
 Attendly is a modern, AI-powered web application designed to help college students effortlessly track their class attendance, manage their schedule, and stay on top of their academic requirements. Built with a focus on a seamless mobile-first experience, it leverages AI to simplify setup and provides clear, actionable insights into attendance data.
 
+## 💡 Our Collaborative Journey
+
+This project has been a dynamic and iterative collaboration. Our workflow is a tight loop of ideation, implementation, and refinement: the project lead identifies a new feature or a critical bug, and the AI coding partner translates that vision into concrete code changes across the Next.js and Genkit stack. Together, we've implemented the "Weekly Debrief," a motivational, AI-powered summary that cleverly uses the empty dashboard space on Sundays to provide users with personalized feedback. More importantly, we've diligently hunted down and squashed several complex bugs, from critical React rendering errors caused by misplaced state updates to subtle timezone-related issues that incorrectly marked days as holidays. We also enhanced the user experience by adding crucial features like the ability to undo logged attendance and a fail-safe mechanism to delete accidentally duplicated postponed classes, making the app not just more powerful, but significantly more reliable and user-friendly.
+
 ## ✨ Core Features
 
 - **Dashboard**: An at-a-glance overview of your day, showing today's classes and key attendance statistics.
 - **AI-Powered Timetable Import**: Simply upload a picture of your timetable, and our AI will analyze it, extract your schedule, and set it up for you automatically.
+- **AI Weekly Debrief**: Every Sunday, receive a personalized, AI-generated summary of your weekly attendance with a motivational message to keep you on track.
 - **Manual Schedule Management**: Easily add, edit, and delete subjects and individual class slots in your weekly timetable.
-- **Intuitive Attendance Logging**: Log attendance for each class with a single tap using clear, color-coded statuses (✅ Attended, ❌ Absent, 🚫 Cancelled).
+- **Intuitive Attendance Logging**: Log attendance for each class with a single tap using clear, color-coded statuses (✅ Attended, ❌ Absent, 🚫 Cancelled), and easily undo any mistakes.
+- **Class Rescheduling**: Postpone a class to a different day, which creates a one-off entry in your schedule and can be deleted if needed.
 - **Swipeable Timetable UI**: A beautiful, mobile-first card stack layout lets you swipe through your weekly schedule, with today's date automatically highlighted.
 - **Insightful Statistics**: Track your overall attendance percentage for each subject and see how many classes you can "safely" miss based on your college's requirements.
 - **Client-Side Storage**: All your data is stored securely in your browser's `localStorage`, making the app fast, responsive, and available offline.
@@ -34,7 +40,8 @@ The project follows a standard Next.js App Router structure, organized for clari
 /src
 ├── ai/
 │   ├── flows/
-│   │   └── extract-timetable-flow.ts  # Genkit flow for AI timetable parsing
+│   │   ├── extract-timetable-flow.ts  # Genkit flow for AI timetable parsing
+│   │   └── weekly-debrief-flow.ts     # Genkit flow for the weekly summary
 │   └── genkit.ts                      # Genkit configuration
 ├── app/
 │   ├── (main)/                        # Main authenticated app routes
@@ -84,7 +91,7 @@ This is the most complex and powerful feature of Attendly.
         - It is an intelligent timetable parser.
         - To identify the subject, day, start time, and end time.
         - The expected output format (JSON).
-        - **Critical Inference Logic**: "To determine the end time, you must look ahead to the next scheduled class on the SAME DAY. The end time for one class is the start time of the next class... If a class is the last one of the day, assume a standard duration of 50 minutes." This allows the AI to correctly parse timetables where end times aren't explicitly written.
+        - **Critical Inference Logic**: A client-side processing function (`processRawSlots`) intelligently calculates end times by looking ahead to the next class and handling special cases like lunch breaks, ensuring a robust and accurate schedule is generated even from incomplete timetable images.
     - The `{{media url=photoDataUri}}` Handlebars syntax in the prompt tells Genkit to embed the image for the model to "see".
 
 3.  **Processing and Confirmation**:
