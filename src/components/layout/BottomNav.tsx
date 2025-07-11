@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookCopy, Calendar, CalendarDays, Home, Settings, Wand2 } from "lucide-react";
+import { BookCopy, Calendar, CalendarDays, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,7 +11,6 @@ const navItems = [
   { href: "/timetable", label: "Timetable", icon: CalendarDays },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/subjects", label: "Subjects", icon: BookCopy },
-  { href: "/solver", label: "Solver", icon: Wand2 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
