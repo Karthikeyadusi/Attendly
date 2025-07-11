@@ -50,12 +50,9 @@ export default function CalendarPage() {
     }, [dailyAttendanceStatus]);
 
     const holidayModifier = useCallback((date: Date) => {
-        return holidays.includes(format(date, 'yyyy-MM-dd'));
+        const dateString = format(date, 'yyyy-MM-dd');
+        return holidays.includes(dateString) || checkIsSunday(dateString);
     }, [holidays]);
-
-    const isSunday = useCallback((date: Date) => {
-        return checkIsSunday(format(date, 'yyyy-MM-dd'));
-    }, []);
 
 
     const modifiers = useMemo(() => ({
@@ -64,8 +61,7 @@ export default function CalendarPage() {
         cancelled: cancelledModifier,
         postponed: postponedModifier,
         holiday: holidayModifier,
-        sunday: isSunday
-    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier, isSunday]);
+    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier]);
 
     const modifierStyles = {
         attended: { 
@@ -83,10 +79,6 @@ export default function CalendarPage() {
         holiday: {
             backgroundColor: 'hsla(var(--primary), 0.2)',
             color: 'hsl(var(--primary))'
-        },
-        sunday: {
-            backgroundColor: 'hsla(var(--destructive), 0.1)',
-            color: 'hsl(var(--destructive))'
         },
     };
 
