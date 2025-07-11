@@ -14,10 +14,13 @@ export function Logo({ className }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Class Compass App Logo"
+      aria-label="Attendly Logo"
     >
-      <circle cx="12" cy="12" r="10" className="text-primary/50" />
-      <polygon points="12 2, 14 12, 12 22, 10 12" className="text-primary fill-current" />
+      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" className="text-primary/50" />
+      <line x1="16" y1="2" x2="16" y2="6" className="text-primary/50" />
+      <line x1="8" y1="2" x2="8" y2="6" className="text-primary/50" />
+      <line x1="3" y1="10" x2="21" y2="10" className="text-primary/50" />
+      <path d="m9 16 2 2 4-4" className="text-primary" />
     </svg>
   );
 }
