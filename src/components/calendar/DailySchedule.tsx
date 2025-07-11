@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import type { AttendanceStatus, AttendanceRecord, TimeSlot, OneOffSlot } from '@/types';
 import { Info, Book, FlaskConical, CheckCircle2, XCircle, Ban, CalendarClock, Gift, Undo2, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, isSunday as checkIsSunday } from '@/lib/utils';
 import RescheduleDialog from './RescheduleDialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -60,6 +60,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
 
   const selectedDateString = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
   const isHoliday = !!selectedDateString && holidays.includes(selectedDateString);
+  const isSunday = !!selectedDateString && checkIsSunday(selectedDateString);
 
   const attendanceForSelectedDateMap = useMemo(() => {
     if (!selectedDateString || !isLoaded) return new Map<string, AttendanceRecord>();
@@ -88,17 +89,17 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
         <CardHeader>
           <div className="flex justify-between items-center gap-2">
             <CardTitle>Schedule for {format(selectedDate, 'PPP')}</CardTitle>
-            <Button onClick={() => toggleHoliday(selectedDateString)} variant="outline" size="sm" disabled={!selectedDateString}>
+            <Button onClick={() => toggleHoliday(selectedDateString)} variant="outline" size="sm" disabled={!selectedDateString || isSunday}>
                 <Gift className="mr-2 h-4 w-4" />
                 {isHoliday ? 'Unmark Holiday' : 'Mark as Holiday'}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {isHoliday ? (
+          {isHoliday || isSunday ? (
              <div className="text-center p-4 rounded-lg bg-muted/20 h-24 flex items-center justify-center flex-col">
                 <Gift className="w-8 h-8 text-primary mb-2" />
-                <p className="font-semibold">This day is a holiday.</p>
+                <p className="font-semibold">{isSunday ? "It's Sunday!" : "This day is a holiday."}</p>
                 <p className="text-sm text-muted-foreground">No classes will be counted.</p>
             </div>
           ) : scheduleForSelectedDate.length > 0 ? (
@@ -265,3 +266,5 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
 }
 
 export default React.memo(DailySchedule);
+
+    

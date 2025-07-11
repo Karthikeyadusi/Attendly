@@ -8,6 +8,7 @@ import { BookCheck, Library, CalendarOff, Star, Info } from 'lucide-react';
 import { useMemo } from 'react';
 import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { isSunday } from "@/lib/utils";
 
 const StatCard = ({ title, value, icon: Icon, color, tooltipContent }: { title: string, value: string | number, icon: React.ElementType, color?: string, tooltipContent?: React.ReactNode }) => (
     <Card>
@@ -54,7 +55,7 @@ export default function AttendanceStats() {
         // Filter daily records based on start date and holidays
         const dailyRecords = attendance.filter(r => {
             if (trackingStartDate && r.date < trackingStartDate) return false;
-            if (holidays.includes(r.date)) return false;
+            if (holidays.includes(r.date) || isSunday(r.date)) return false;
             return true;
         });
 
@@ -167,3 +168,5 @@ export default function AttendanceStats() {
         </div>
     );
 }
+
+    

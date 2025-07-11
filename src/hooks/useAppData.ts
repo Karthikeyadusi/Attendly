@@ -9,6 +9,7 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestor
 import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
 import { getDay } from 'date-fns';
 import { useToast } from './use-toast';
+import { isSunday } from '@/lib/utils';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
@@ -274,7 +275,7 @@ export function useAppData() {
         console.warn(`Cannot log attendance for dates before ${prev.trackingStartDate}`);
         return prev;
       }
-      if ((prev.holidays || []).includes(date)) {
+      if ((prev.holidays || []).includes(date) || isSunday(date)) {
         console.warn(`Cannot log attendance on a holiday.`);
         return prev;
       }
@@ -347,6 +348,7 @@ export function useAppData() {
   }, []);
 
   const undoPostpone = useCallback((oneOffSlotId: string) => {
+    let success = false;
     setData(prev => {
         const oneOffs = prev.oneOffSlots || [];
         const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
@@ -369,35 +371,43 @@ export function useAppData() {
             newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
         }
         
+        success = true;
         return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
     });
 
-    toast({
-        title: "Postponement Undone",
-        description: "The class has been restored to its original schedule.",
-    });
+    if (success) {
+        toast({
+            title: "Postponement Undone",
+            description: "The class has been restored to its original schedule.",
+        });
+    }
   }, [toast]);
 
   const deleteOneOffSlot = useCallback((oneOffSlotId: string) => {
-    const newData = { ...data };
-    const oneOffs = newData.oneOffSlots || [];
-    const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
-    if (!slotToDelete) return;
+    let success = false;
+    setData(prev => {
+      const oneOffs = prev.oneOffSlots || [];
+      const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
+      if (!slotToDelete) return prev;
 
-    // 1. Remove the one-off slot
-    newData.oneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
+      // 1. Remove the one-off slot
+      const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
 
-    // 2. Find and remove the original 'Postponed' record to reset its state
-    const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
-    newData.attendance = newData.attendance.filter(r => r.id !== originalAttendanceId);
-    
-    setData(newData);
-
-    toast({
-        title: "Postponement Deleted",
-        description: "The rescheduled class has been removed and the original class slot is available again.",
+      // 2. Find and remove the original 'Postponed' record to reset its state
+      const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
+      const newAttendance = prev.attendance.filter(r => r.id !== originalAttendanceId);
+      
+      success = true;
+      return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
     });
-  }, [data, toast]);
+
+    if (success) {
+      toast({
+          title: "Postponement Deleted",
+          description: "The rescheduled class has been removed and the original class slot is available again.",
+      });
+    }
+  }, [toast]);
 
   const toggleHoliday = useCallback((dateString: string) => {
     setData(prev => {
@@ -531,7 +541,7 @@ export function useAppData() {
 
   const getScheduleForDate = useCallback((dateString: string): (TimeSlot | OneOffSlot)[] => {
     if (!dateString || !isClient) return [];
-    if ((data.holidays || []).includes(dateString)) return [];
+    if ((data.holidays || []).includes(dateString) || isSunday(dateString)) return [];
     
     const dateObj = new Date(dateString + 'T00:00:00'); // Avoid timezone issues
     const dayOfWeek = dayMap[dateObj.getDay()];
@@ -570,7 +580,7 @@ export function useAppData() {
       : data.attendance;
 
     for (const record of filteredAttendance) {
-      if ((data.holidays || []).includes(record.date)) continue;
+      if ((data.holidays || []).includes(record.date) || isSunday(record.date)) continue;
       if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
       
       const subjectId = slotSubjectMap.get(record.slotId);
@@ -630,3 +640,5 @@ export function useAppData() {
     getScheduleForDate,
   };
 }
+
+    

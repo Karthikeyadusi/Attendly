@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import DailySchedule from '@/components/calendar/DailySchedule';
+import { isSunday as checkIsSunday } from '@/lib/utils';
 
 export default function CalendarPage() {
     const { attendanceByDate, isLoaded, holidays } = useApp();
@@ -52,6 +53,10 @@ export default function CalendarPage() {
         return holidays.includes(format(date, 'yyyy-MM-dd'));
     }, [holidays]);
 
+    const isSunday = useCallback((date: Date) => {
+        return checkIsSunday(format(date, 'yyyy-MM-dd'));
+    }, []);
+
 
     const modifiers = useMemo(() => ({
         attended: attendedModifier,
@@ -59,7 +64,8 @@ export default function CalendarPage() {
         cancelled: cancelledModifier,
         postponed: postponedModifier,
         holiday: holidayModifier,
-    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier]);
+        sunday: isSunday
+    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier, isSunday]);
 
     const modifierStyles = {
         attended: { 
@@ -76,6 +82,10 @@ export default function CalendarPage() {
         },
         holiday: {
             backgroundColor: 'hsla(var(--primary), 0.2)',
+            color: 'hsl(var(--primary))'
+        },
+        sunday: {
+            backgroundColor: 'hsla(var(--primary), 0.1)',
             color: 'hsl(var(--primary))'
         },
     };
@@ -107,3 +117,5 @@ export default function CalendarPage() {
         </div>
     );
 }
+
+    
