@@ -85,8 +85,8 @@ export default function CalendarPage() {
             color: 'hsl(var(--primary))'
         },
         sunday: {
-            backgroundColor: 'hsla(var(--primary), 0.1)',
-            color: 'hsl(var(--primary))'
+            backgroundColor: 'hsla(var(--destructive), 0.1)',
+            color: 'hsl(var(--destructive))'
         },
     };
 
@@ -117,5 +117,3 @@ export default function CalendarPage() {
         </div>
     );
 }
-
-    

@@ -389,7 +389,6 @@ export function useAppData() {
   }, [toast]);
 
   const deleteOneOffSlot = useCallback((oneOffSlotId: string) => {
-    let success = false;
     setData(prev => {
       const oneOffs = prev.oneOffSlots || [];
       const slotToDelete = oneOffs.find(s => s.id === oneOffSlotId);
@@ -402,16 +401,12 @@ export function useAppData() {
       const originalAttendanceId = `${slotToDelete.originalDate}-${slotToDelete.originalSlotId}`;
       const newAttendance = prev.attendance.filter(r => r.id !== originalAttendanceId);
       
-      success = true;
       return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
     });
-
-    if (success) {
-      toast({
-          title: "Postponement Deleted",
-          description: "The rescheduled class has been removed and the original class slot is available again.",
-      });
-    }
+    toast({
+        title: "Postponement Deleted",
+        description: "The rescheduled class has been removed and the original class slot is available again.",
+    });
   }, [toast]);
 
   const toggleHoliday = useCallback((dateString: string) => {
@@ -548,8 +543,9 @@ export function useAppData() {
     if (!dateString || !isClient) return [];
     if ((data.holidays || []).includes(dateString) || isSunday(dateString)) return [];
     
-    // Add T00:00:00 to avoid timezone issues.
-    const dateObj = new Date(dateString + 'T00:00:00'); 
+    // Create date object in a way that respects local timezone
+    const [year, month, day] = dateString.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
     const dayOfWeek = dayMap[dateObj.getDay()];
 
     const regularSlots = dayOfWeek ? (timetableByDay.get(dayOfWeek) || []) : [];

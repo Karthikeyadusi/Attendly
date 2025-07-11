@@ -36,7 +36,9 @@ export default function WeeklyDebrief() {
                 .map(r => {
                     const slot = slotMap.get(r.slotId);
                     const subject = subjectMap.get(slot?.subjectId || '');
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[new Date(r.date + 'T00:00:00').getDay()] };
+                    const [year, month, day] = r.date.split('-').map(Number);
+                    const localDate = new Date(year, month - 1, day);
+                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
                 }).filter(r => r.subjectName !== 'Unknown');
 
             const missedClasses = weeklyRecords
@@ -44,7 +46,9 @@ export default function WeeklyDebrief() {
                 .map(r => {
                     const slot = slotMap.get(r.slotId);
                     const subject = subjectMap.get(slot?.subjectId || '');
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[new Date(r.date + 'T00:00:00').getDay()] };
+                    const [year, month, day] = r.date.split('-').map(Number);
+                    const localDate = new Date(year, month - 1, day);
+                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
                 }).filter(r => r.subjectName !== 'Unknown');
 
             const cancelledClasses = weeklyRecords
@@ -52,7 +56,9 @@ export default function WeeklyDebrief() {
                 .map(r => {
                     const slot = slotMap.get(r.slotId);
                     const subject = subjectMap.get(slot?.subjectId || '');
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[new Date(r.date + 'T00:00:00').getDay()] };
+                    const [year, month, day] = r.date.split('-').map(Number);
+                    const localDate = new Date(year, month - 1, day);
+                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
                 }).filter(r => r.subjectName !== 'Unknown');
 
             if (attendedClasses.length === 0 && missedClasses.length === 0) {

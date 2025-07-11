@@ -78,7 +78,7 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
         <DialogHeader>
           <DialogTitle>Reschedule Class</DialogTitle>
           <DialogDescription>
-            Select a new date and time for the <strong>{subject?.name}</strong> class originally on {format(new Date(originalDate + 'T00:00:00'), 'PPP')}.
+            Select a new date and time for the <strong>{subject?.name}</strong> class originally on {format(new Date(originalDate.replace(/-/g, '/')), 'PPP')}.
           </DialogDescription>
         </DialogHeader>
         

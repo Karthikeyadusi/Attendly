@@ -7,15 +7,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Checks if a given date string (YYYY-MM-DD) is a Sunday.
+ * Checks if a given date string (YYYY-MM-DD) is a Sunday in the user's local timezone.
  * @param dateString The date string to check.
  * @returns True if the date is a Sunday, false otherwise.
  */
 export function isSunday(dateString: string): boolean {
-  // Add T00:00:00 to avoid timezone issues where the date might shift
-  // depending on the user's local timezone.
-  const date = new Date(dateString + 'T00:00:00');
-  return date.getUTCDay() === 0;
+  // Use getDay() which is based on the local time zone. 
+  // getUTCDay() was causing issues where a Monday in one timezone could be a Sunday in UTC.
+  const date = new Date(dateString);
+  // We split and reconstruct the date to ensure the browser interprets it in the local timezone,
+  // avoiding any automatic UTC conversion from the YYYY-MM-DD format.
+  const [year, month, day] = dateString.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day);
+  return localDate.getDay() === 0;
 }
-
-    

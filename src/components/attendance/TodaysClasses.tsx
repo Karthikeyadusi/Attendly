@@ -52,7 +52,7 @@ export default function TodaysClasses() {
         <div className="flex flex-col items-center justify-center text-center h-32">
           <Info className="w-8 h-8 text-muted-foreground mb-2" />
           <p className="text-muted-foreground">No classes scheduled for today.</p>
-          <p className="text-xs text-muted-foreground">Enjoy your day off!</p>
+          <p className="text-xs text-muted-foreground">{isSunday ? "Enjoy your Sunday!" : "Enjoy your day off!"}</p>
         </div>
       );
     }
@@ -82,7 +82,7 @@ export default function TodaysClasses() {
                     <div className="text-right">
                       <p className="text-xs font-semibold text-amber-600 dark:text-amber-500">Postponed</p>
                       <p className="text-xs">
-                        to {format(new Date(rescheduledTo.date + 'T00:00:00'), 'MMM d')} at {rescheduledTo.startTime}
+                        to {format(new Date(rescheduledTo.date.replace(/-/g, '/')), 'MMM d')} at {rescheduledTo.startTime}
                       </p>
                     </div>
                   ) : (
@@ -163,7 +163,7 @@ export default function TodaysClasses() {
                           <AlertDialogHeader>
                               <AlertDialogTitle>Delete Rescheduled Class?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                  This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate + 'T00:00:00'), 'PPP')}. This action cannot be undone.
+                                  This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate.replace(/-/g, '/')), 'PPP')}. This action cannot be undone.
                               </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

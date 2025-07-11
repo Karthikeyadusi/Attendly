@@ -100,7 +100,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
              <div className="text-center p-4 rounded-lg bg-muted/20 h-24 flex items-center justify-center flex-col">
                 <Gift className="w-8 h-8 text-primary mb-2" />
                 <p className="font-semibold">{isSunday ? "It's Sunday!" : "This day is a holiday."}</p>
-                <p className="text-sm text-muted-foreground">No classes will be counted.</p>
+                <p className="text-sm text-muted-foreground">{isSunday ? "Enjoy your day off!" : "No classes will be counted."}</p>
             </div>
           ) : scheduleForSelectedDate.length > 0 ? (
             scheduleForSelectedDate.map(slot => {
@@ -124,7 +124,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                      {rescheduledTo ? (
                         <div className="text-right">
                           <p className="text-xs font-semibold text-amber-600 dark:text-amber-500">Postponed</p>
-                          <p className="text-xs">to {format(new Date(rescheduledTo.date + 'T00:00:00'), 'MMM d')}</p>
+                          <p className="text-xs">to {format(new Date(rescheduledTo.date.replace(/-/g, '/')), 'MMM d')}</p>
                         </div>
                       ) : (
                         <AttendanceBadge status="Postponed" />
@@ -182,7 +182,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Delete Rescheduled Class?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate + 'T00:00:00'), 'PPP')}. This action cannot be undone.
+                                        This will permanently delete this one-off class and restore the original class on {format(new Date(slot.originalDate.replace(/-/g, '/')), 'PPP')}. This action cannot be undone.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -266,5 +266,3 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
 }
 
 export default React.memo(DailySchedule);
-
-    
