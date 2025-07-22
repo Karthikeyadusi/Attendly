@@ -143,4 +143,4 @@ To run this project locally, follow these steps:
       ```
       The Genkit UI will be available at `http://localhost:4000`.
 
-Now you can open your browser and start using Attendly!
+Now you can open your browser and start using our Attendly!
