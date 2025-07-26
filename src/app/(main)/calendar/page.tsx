@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import DailySchedule from '@/components/calendar/DailySchedule';
+import SemesterView from '@/components/calendar/SemesterView';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isSunday as checkIsSunday } from '@/lib/utils';
 
 export default function CalendarPage() {
@@ -15,14 +17,19 @@ export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
     const dailyAttendanceStatus = useMemo(() => {
-        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' | 'postponed' | 'holiday' } = {};
+        const statusByDate: { [key: string]: 'attended' | 'absent' | 'cancelled' | 'postponed' | 'holiday' | 'mixed' } = {};
 
         for (const [date, records] of attendanceByDate.entries()) {
             if (records.length === 0) continue;
 
-            if (records.some(r => r.status === 'Absent')) {
+            const hasAbsent = records.some(r => r.status === 'Absent');
+            const hasAttended = records.some(r => r.status === 'Attended');
+
+            if (hasAbsent && hasAttended) {
+                statusByDate[date] = 'mixed';
+            } else if (hasAbsent) {
                 statusByDate[date] = 'absent';
-            } else if (records.some(r => r.status === 'Attended')) {
+            } else if (hasAttended) {
                 statusByDate[date] = 'attended';
             } else if (records.some(r => r.status === 'Postponed')) {
                 statusByDate[date] = 'postponed';
@@ -48,6 +55,10 @@ export default function CalendarPage() {
     const postponedModifier = useCallback((date: Date) => {
         return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'postponed';
     }, [dailyAttendanceStatus]);
+    
+    const mixedModifier = useCallback((date: Date) => {
+        return dailyAttendanceStatus[format(date, 'yyyy-MM-dd')] === 'mixed';
+    }, [dailyAttendanceStatus]);
 
     const holidayModifier = useCallback((date: Date) => {
         const dateString = format(date, 'yyyy-MM-dd');
@@ -60,15 +71,19 @@ export default function CalendarPage() {
         absent: absentModifier,
         cancelled: cancelledModifier,
         postponed: postponedModifier,
+        mixed: mixedModifier,
         holiday: holidayModifier,
-    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, holidayModifier]);
+    }), [attendedModifier, absentModifier, cancelledModifier, postponedModifier, mixedModifier, holidayModifier]);
 
     const modifierStyles = {
         attended: { 
-            backgroundColor: 'hsla(var(--chart-2), 0.2)',
+            backgroundColor: 'hsla(var(--chart-2), 0.3)',
         },
         absent: {
             backgroundColor: 'hsla(var(--destructive), 0.2)',
+        },
+        mixed: {
+            background: 'linear-gradient(135deg, hsla(var(--chart-2), 0.3) 50%, hsla(var(--destructive), 0.2) 50%)',
         },
         cancelled: {
             backgroundColor: 'hsl(var(--muted))',
@@ -85,7 +100,10 @@ export default function CalendarPage() {
     if (!isLoaded) {
         return (
             <div className="space-y-6">
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
+                    <Skeleton className="h-10 w-40" />
+                </div>
                 <Skeleton className="h-[365px] w-full" />
                 <Skeleton className="h-40 w-full" />
             </div>
@@ -94,18 +112,31 @@ export default function CalendarPage() {
     
     return (
         <div className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
-            <Card className="flex justify-center p-0 sm:p-4">
-                <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    modifiers={modifiers}
-                    modifiersStyles={modifierStyles}
-                />
-            </Card>
+            <Tabs defaultValue="monthly" className="w-full space-y-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Calendar</h2>
+                    <TabsList>
+                        <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                        <TabsTrigger value="semester">Semester</TabsTrigger>
+                    </TabsList>
+                </div>
 
-            <DailySchedule selectedDate={selectedDate} />
+                <TabsContent value="monthly" className="space-y-6">
+                    <Card className="flex justify-center p-0 sm:p-4">
+                        <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            modifiers={modifiers}
+                            modifiersStyles={modifierStyles}
+                        />
+                    </Card>
+                    <DailySchedule selectedDate={selectedDate} />
+                </TabsContent>
+                <TabsContent value="semester">
+                    <SemesterView />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
