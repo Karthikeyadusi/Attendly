@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, getDay, isSameDay } from 'date-fns';
 import { cn, isSunday as checkIsSunday } from '@/lib/utils';
 import { Book, FlaskConical } from 'lucide-react';
+import type { ArchivedSemester, SubjectMap } from '@/types';
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -32,33 +33,65 @@ const AttendanceBadge = ({ status }: { status: string }) => {
     );
 };
 
-export default function SemesterView() {
-    const { attendance, holidays, trackingStartDate, subjectMap, getScheduleForDate } = useApp();
+interface SemesterViewProps {
+    isArchived?: boolean;
+    archivedData?: ArchivedSemester;
+    subjectMap?: SubjectMap;
+}
+
+export default function SemesterView({ isArchived = false, archivedData, subjectMap: propSubjectMap }: SemesterViewProps) {
+    const app = useApp();
     const [selectedDay, setSelectedDay] = useState<{ date: Date, details: any[] } | null>(null);
+
+    const {
+        attendance,
+        holidays,
+        trackingStartDate,
+        subjectMap: liveSubjectMap,
+        getScheduleForDate: getLiveScheduleForDate,
+    } = isArchived && archivedData
+        ? {
+            attendance: archivedData.attendance,
+            holidays: archivedData.holidays,
+            trackingStartDate: archivedData.trackingStartDate,
+            subjectMap: propSubjectMap!,
+            getScheduleForDate: () => [], // Not needed for archived view's simple map
+        }
+        : app;
+    
+    const subjectMap = isArchived ? propSubjectMap! : liveSubjectMap;
+
 
     const dateRange = useMemo(() => {
         const today = new Date();
-        if (!attendance.length && !trackingStartDate) {
-            return { start: startOfMonth(today), end: endOfMonth(today) };
+        const dates: Date[] = [];
+
+        if (attendance && attendance.length > 0) {
+            dates.push(...attendance.map(a => new Date(a.date.replace(/-/g, '/'))));
         }
-        
-        const dates = attendance.map(a => new Date(a.date.replace(/-/g, '/')));
         if (trackingStartDate) {
             dates.push(new Date(trackingStartDate.replace(/-/g, '/')));
         }
+        
         if (dates.length === 0) {
              return { start: startOfMonth(today), end: endOfMonth(today) };
         }
         
         const start = dates.reduce((a, b) => a < b ? a : b);
-        const end = dates.reduce((a, b) => a > b ? a : b, new Date(0));
+        let end = dates.reduce((a, b) => a > b ? a : b, new Date(0));
+        if (isSameDay(end, new Date(0))) end = start;
+
+        // If 'end' is still in the past, use today as the end date for live view
+        if (!isArchived && end < today) {
+            end = today;
+        }
         
-        return { start, end: isSameDay(end, new Date(0)) ? start : end };
-    }, [attendance, trackingStartDate]);
+        return { start, end };
+    }, [attendance, trackingStartDate, isArchived]);
 
     const monthsInView = useMemo(() => {
         const months = new Map<string, Date[]>();
-        if (!dateRange.start) return months;
+        if (!dateRange.start || !dateRange.end) return months;
 
         const interval = eachDayOfInterval({
             start: startOfMonth(dateRange.start),
@@ -78,13 +111,12 @@ export default function SemesterView() {
 
     const attendanceStatusByDate = useMemo(() => {
         const statusMap = new Map<string, { status: string, schedule: any[] }>();
-        
         const allDates = Array.from(monthsInView.values()).flat();
 
         for (const date of allDates) {
             const dateString = format(date, 'yyyy-MM-dd');
 
-            if (holidays.includes(dateString)) {
+            if ((holidays || []).includes(dateString)) {
                 statusMap.set(dateString, { status: 'holiday', schedule: [] });
                 continue;
             }
@@ -93,27 +125,30 @@ export default function SemesterView() {
                  continue;
             }
 
-            const scheduleForDay = getScheduleForDate(dateString);
-            const attendanceRecords = attendance.filter(a => a.date === dateString);
+            const scheduleForDay = isArchived
+              ? (archivedData?.oneOffSlots || []).filter(s => s.date === dateString) // Simplified for archive
+              : getLiveScheduleForDate(dateString);
             
-            const scheduleWithStatus = scheduleForDay.map(slot => {
-                const record = attendanceRecords.find(r => r.slotId === slot.id);
-                const subject = subjectMap.get(slot.subjectId);
+            const attendanceRecords = (attendance || []).filter(a => a.date === dateString);
+            
+            const allSlotsInArchive = [...(archivedData?.timetable || []), ...(archivedData?.oneOffSlots || [])];
+            const slotMap = isArchived ? new Map(allSlotsInArchive.map(s => [s.id, s])) : new Map();
+
+            const scheduleWithStatus = attendanceRecords.map(record => {
+                const slot = isArchived ? slotMap.get(record.slotId) : app.getScheduleForDate(dateString).find(s => s.id === record.slotId);
+                const subject = subjectMap.get(slot?.subjectId || '');
                 return {
-                    ...slot,
+                    id: slot?.id,
                     subjectName: subject?.name || "Unknown",
                     subjectType: subject?.type,
-                    status: record?.status || "Not Logged"
+                    startTime: slot?.startTime,
+                    endTime: slot?.endTime,
+                    status: record.status || "Not Logged"
                 };
             });
             
-            if (scheduleForDay.length === 0) {
-                 statusMap.set(dateString, { status: 'no-class', schedule: [] });
-                 continue;
-            }
-            
             if (attendanceRecords.length === 0) {
-                 statusMap.set(dateString, { status: 'no-data', schedule: scheduleWithStatus });
+                 statusMap.set(dateString, { status: 'no-data', schedule: [] });
                  continue;
             }
             
@@ -134,7 +169,7 @@ export default function SemesterView() {
             }
         }
         return statusMap;
-    }, [monthsInView, attendance, holidays, subjectMap, getScheduleForDate]);
+    }, [monthsInView, attendance, holidays, subjectMap, getLiveScheduleForDate, isArchived, archivedData, app]);
     
     if (monthsInView.size === 0) {
         return (
@@ -184,7 +219,7 @@ export default function SemesterView() {
                                         'no-data': 'bg-muted border border-dashed hover:ring-2 hover:ring-primary'
                                     }[dayStatus?.status || 'no-data'];
 
-                                    const isClickable = dayStatus && dayStatus.status !== 'holiday' && dayStatus.status !== 'weekend' && dayStatus.status !== 'no-class';
+                                    const isClickable = dayStatus && dayStatus.schedule && dayStatus.schedule.length > 0;
 
                                     return (
                                         <div 

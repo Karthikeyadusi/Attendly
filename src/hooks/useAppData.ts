@@ -523,20 +523,19 @@ export function useAppData() {
     setData(prev => ({ ...prev, userName: name.trim() }));
   }, []);
 
-  const archiveAndReset = useCallback((keepSubjects: boolean, keepTimetable: boolean) => {
+  const archiveAndReset = useCallback((name: string, keepSubjects: boolean, keepTimetable: boolean) => {
     setData(prev => {
-      const semesterSummary = {
+      const archiveEntry: ArchivedSemester = {
+        name,
+        archivedAt: new Date().toISOString(),
         attendance: prev.attendance,
         oneOffSlots: prev.oneOffSlots,
         holidays: prev.holidays,
         historicalData: prev.historicalData,
         trackingStartDate: prev.trackingStartDate,
         minAttendancePercentage: prev.minAttendancePercentage,
-      };
-
-      const archiveEntry: ArchivedSemester = {
-        archivedAt: new Date().toISOString(),
-        ...semesterSummary,
+        subjects: prev.subjects, // Save a snapshot of subjects at time of archive
+        timetable: prev.timetable, // Save a snapshot of timetable
       };
       
       const newArchives = [...(prev.archives || []), archiveEntry];

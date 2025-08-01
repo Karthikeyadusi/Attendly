@@ -6,15 +6,13 @@ import SubjectForm from "@/components/subjects/SubjectForm";
 import SubjectList from "@/components/subjects/SubjectList";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlusCircle, History } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { useState } from "react";
-import HistoricalDataDialog from "@/components/subjects/HistoricalDataDialog";
 import type { Subject } from "@/types";
 
 export default function SubjectsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const { isLoaded } = useApp();
 
     const handleAddSubject = () => {
@@ -51,10 +49,6 @@ export default function SubjectsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Your Subjects</h2>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Button onClick={() => setIsHistoryOpen(true)} variant="outline">
-                        <History className="mr-2 h-4 w-4" />
-                        Import History
-                    </Button>
                     <Button onClick={handleAddSubject} className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Subject
@@ -69,7 +63,6 @@ export default function SubjectsPage() {
               onOpenChange={handleFormOpenChange}
               subject={editingSubject}
             />
-            <HistoricalDataDialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
         </div>
     );
 }

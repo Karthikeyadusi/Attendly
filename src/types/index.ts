@@ -71,9 +71,12 @@ export type SemesterSummary = {
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;
   minAttendancePercentage: number;
+  subjects: Subject[]; // Snapshot of subjects at time of archive
+  timetable: TimeSlot[]; // Snapshot of timetable
 };
 
 export type ArchivedSemester = SemesterSummary & {
+  name: string;
   archivedAt: string; // ISO timestamp
 };
 

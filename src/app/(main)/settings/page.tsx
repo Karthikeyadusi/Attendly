@@ -6,9 +6,9 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import type { BackupData } from "@/types";
+import type { BackupData, ArchivedSemester } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { firebaseEnabled } from "@/lib/firebase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import SemesterViewDialog from "@/components/calendar/SemesterViewDialog";
 
 
 const BACKUP_VERSION = 1;
@@ -33,6 +34,7 @@ export default function SettingsPage() {
     forceCloudSync,
     archiveAndReset,
     clearAllData,
+    archives,
   } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +44,8 @@ export default function SettingsPage() {
   
   const [keepSubjects, setKeepSubjects] = useState(true);
   const [keepTimetable, setKeepTimetable] = useState(true);
+  const [semesterName, setSemesterName] = useState("");
+  const [viewingArchive, setViewingArchive] = useState<ArchivedSemester | null>(null);
 
   const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
   const [name, setName] = useState('');
@@ -134,8 +138,17 @@ export default function SettingsPage() {
   };
   
   const handleConfirmArchive = () => {
-    archiveAndReset(keepSubjects, keepTimetable);
+    if (!semesterName.trim()) {
+        toast({
+            variant: "destructive",
+            title: "Semester Name Required",
+            description: "Please enter a name for the semester you are archiving.",
+        });
+        return;
+    }
+    archiveAndReset(semesterName, keepSubjects, keepTimetable);
     setIsArchiveConfirmOpen(false);
+    setSemesterName("");
     toast({
       title: "Semester Archived!",
       description: "The app is ready for a fresh start.",
@@ -225,6 +238,29 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Semester History</CardTitle>
+            <CardDescription>
+                View your attendance from previous semesters.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {archives.length > 0 ? (
+                <div className="space-y-2">
+                    {archives.map((archive) => (
+                        <Button key={archive.archivedAt} variant="outline" className="w-full justify-start" onClick={() => setViewingArchive(archive)}>
+                            <History className="mr-2 h-4 w-4" />
+                            {archive.name}
+                        </Button>
+                    ))}
+                </div>
+            ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No archived semesters yet.</p>
+            )}
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>
@@ -301,10 +337,19 @@ export default function SettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Archive and Start New Semester?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will save a summary of this semester's attendance and reset the app for a fresh start. This action cannot be undone.
+              This will save your current semester's data and reset the app. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4 py-4">
+             <div className="space-y-2">
+              <Label htmlFor="semester-name">Semester Name</Label>
+              <Input
+                id="semester-name"
+                value={semesterName}
+                onChange={(e) => setSemesterName(e.target.value)}
+                placeholder="e.g., Fall 2024"
+              />
+            </div>
             <p className="text-sm font-medium">Select what to keep for the new semester:</p>
             <div className="flex items-center space-x-2">
               <Checkbox id="keep-subjects" checked={keepSubjects} onCheckedChange={(checked) => setKeepSubjects(!!checked)} />
@@ -345,6 +390,14 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {viewingArchive && (
+        <SemesterViewDialog 
+            archive={viewingArchive}
+            open={!!viewingArchive}
+            onOpenChange={(open) => !open && setViewingArchive(null)}
+        />
+      )}
     </div>
   );
 }
