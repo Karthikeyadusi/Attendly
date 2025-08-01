@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap, OneOffSlot } from '@/types';
+import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap, OneOffSlot, ArchivedSemester } from '@/types';
 import { useIsClient } from './useIsClient';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
@@ -33,6 +33,7 @@ const getInitialData = (): AppCoreData => ({
   historicalData: null,
   trackingStartDate: null,
   userName: null,
+  archives: [],
 });
 
 export function useAppData() {
@@ -70,6 +71,7 @@ export function useAppData() {
           // Backwards compatibility for old data
           if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
           if (!parsed.holidays) parsed.holidays = [];
+          if (!parsed.archives) parsed.archives = [];
           setData(parsed);
         }
       } catch (error) {
@@ -94,6 +96,7 @@ export function useAppData() {
           const parsed = JSON.parse(storedData);
           if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
           if (!parsed.holidays) parsed.holidays = [];
+          if (!parsed.archives) parsed.archives = [];
           setData(parsed);
         } else {
           setData(getInitialData());
@@ -123,6 +126,7 @@ export function useAppData() {
         // Backwards compatibility
         if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
         if (!cloudData.holidays) cloudData.holidays = [];
+        if (!cloudData.archives) cloudData.archives = [];
         setData(cloudData);
       }
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
@@ -175,6 +179,7 @@ export function useAppData() {
             const cloudData = docSnap.data() as AppCoreData;
             if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
             if (!cloudData.holidays) cloudData.holidays = [];
+            if (!cloudData.archives) cloudData.archives = [];
             setData(cloudData);
         }
 
@@ -510,12 +515,47 @@ export function useAppData() {
   const restoreFromBackup = useCallback((backupData: BackupData) => {
     const { version, exportedAt, ...restOfData } = backupData;
     const initialData = getInitialData();
-    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [], holidays: restOfData.holidays || [] };
+    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [], holidays: restOfData.holidays || [], archives: restOfData.archives || [] };
     setData(finalData);
   }, []);
 
   const setUserName = useCallback((name: string) => {
     setData(prev => ({ ...prev, userName: name.trim() }));
+  }, []);
+
+  const archiveAndReset = useCallback((keepSubjects: boolean, keepTimetable: boolean) => {
+    setData(prev => {
+      const semesterSummary = {
+        attendance: prev.attendance,
+        oneOffSlots: prev.oneOffSlots,
+        holidays: prev.holidays,
+        historicalData: prev.historicalData,
+        trackingStartDate: prev.trackingStartDate,
+        minAttendancePercentage: prev.minAttendancePercentage,
+      };
+
+      const archiveEntry: ArchivedSemester = {
+        archivedAt: new Date().toISOString(),
+        ...semesterSummary,
+      };
+      
+      const newArchives = [...(prev.archives || []), archiveEntry];
+
+      const initial = getInitialData();
+      return {
+        ...prev,
+        archives: newArchives,
+        // Reset current semester data
+        attendance: initial.attendance,
+        oneOffSlots: initial.oneOffSlots,
+        holidays: initial.holidays,
+        historicalData: initial.historicalData,
+        trackingStartDate: initial.trackingStartDate,
+        // Conditionally keep subjects and timetable
+        subjects: keepSubjects ? prev.subjects : initial.subjects,
+        timetable: keepTimetable ? prev.timetable : initial.timetable,
+      }
+    });
   }, []);
 
   const clearAllData = useCallback(() => {
@@ -633,6 +673,7 @@ export function useAppData() {
     getBackupData,
     restoreFromBackup,
     setUserName,
+    archiveAndReset,
     clearAllData,
     // Provide memoized data
     subjectMap,

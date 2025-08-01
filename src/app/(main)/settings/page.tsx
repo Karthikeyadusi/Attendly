@@ -6,7 +6,7 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData } from "@/types";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { firebaseEnabled } from "@/lib/firebase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 const BACKUP_VERSION = 1;
@@ -30,12 +31,18 @@ export default function SettingsPage() {
     getBackupData,
     restoreFromBackup,
     forceCloudSync,
+    archiveAndReset,
     clearAllData,
   } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImportConfirmOpen, setIsImportConfirmOpen] = useState(false);
+  const [isArchiveConfirmOpen, setIsArchiveConfirmOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  
+  const [keepSubjects, setKeepSubjects] = useState(true);
+  const [keepTimetable, setKeepTimetable] = useState(true);
+
   const [backupToRestore, setBackupToRestore] = useState<BackupData | null>(null);
   const [name, setName] = useState('');
 
@@ -126,6 +133,15 @@ export default function SettingsPage() {
     setBackupToRestore(null);
   };
   
+  const handleConfirmArchive = () => {
+    archiveAndReset(keepSubjects, keepTimetable);
+    setIsArchiveConfirmOpen(false);
+    toast({
+      title: "Semester Archived!",
+      description: "The app is ready for a fresh start.",
+    });
+  };
+
   const handleConfirmClear = () => {
     clearAllData();
     setIsClearConfirmOpen(false);
@@ -241,20 +257,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-destructive">
+      <Card className="border-destructive/50">
         <CardHeader>
           <CardTitle>Danger Zone</CardTitle>
            <CardDescription>
-            This action is irreversible. Please be certain.
+            These actions are irreversible. Please be certain.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
+            <Button variant="outline" className="w-full border-amber-500/50 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700" onClick={() => setIsArchiveConfirmOpen(true)}>
+              <Archive className="mr-2 h-4 w-4" />
+              Archive & Reset for New Semester
+            </Button>
             <Button variant="destructive" className="w-full" onClick={() => setIsClearConfirmOpen(true)}>
               <AlertTriangle className="mr-2 h-4 w-4" />
               Clear All Data
             </Button>
-             <p className="text-xs text-center text-muted-foreground pt-4">
-                This will permanently delete all data from this device and the cloud if you are signed in.
+             <p className="text-xs text-center text-muted-foreground pt-2">
+                "Clear All Data" permanently deletes everything, including archives.
             </p>
         </CardContent>
       </Card>
@@ -276,12 +296,45 @@ export default function SettingsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={isArchiveConfirmOpen} onOpenChange={setIsArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive and Start New Semester?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will save a summary of this semester's attendance and reset the app for a fresh start. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm font-medium">Select what to keep for the new semester:</p>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="keep-subjects" checked={keepSubjects} onCheckedChange={(checked) => setKeepSubjects(!!checked)} />
+              <label htmlFor="keep-subjects" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Keep my subjects list
+              </label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Checkbox id="keep-timetable" checked={keepTimetable} onCheckedChange={(checked) => setKeepTimetable(!!checked)} />
+              <label htmlFor="keep-timetable" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Keep my weekly timetable
+              </label>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmArchive} className="bg-amber-600 hover:bg-amber-600/90">
+              <ArchiveRestore className="mr-2 h-4 w-4"/>
+              Yes, Archive and Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all your data, including subjects, timetable, and attendance history. If you are signed in, this data will also be deleted from the cloud. This action cannot be undone.
+              This will permanently delete ALL data, including subjects, timetable, attendance history, and all semester archives. If you are signed in, this data will also be deleted from the cloud. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

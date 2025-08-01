@@ -63,6 +63,20 @@ export type TimetableByDayMap = Map<DayOfWeek, TimeSlot[]>;
 export type AttendanceByDateMap = Map<string, AttendanceRecord[]>;
 export type SubjectStatsMap = Map<string, SubjectStats>;
 
+// Data that gets archived
+export type SemesterSummary = {
+  attendance: AttendanceRecord[];
+  oneOffSlots: OneOffSlot[];
+  holidays: string[];
+  historicalData: HistoricalData | null;
+  trackingStartDate: string | null;
+  minAttendancePercentage: number;
+};
+
+export type ArchivedSemester = SemesterSummary & {
+  archivedAt: string; // ISO timestamp
+};
+
 // The core data that gets stored and restored.
 export type AppCoreData = {
   subjects: Subject[];
@@ -74,6 +88,7 @@ export type AppCoreData = {
   historicalData: HistoricalData | null;
   trackingStartDate: string | null;
   userName: string | null;
+  archives: ArchivedSemester[];
 }
 
 // The complete app state including derived data and auth state.
