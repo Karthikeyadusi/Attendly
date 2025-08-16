@@ -72,7 +72,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
     }
     onOpenChange(false);
   };
-
+  
   const handleMove = (newDay: DayOfWeek) => {
     if (slot) {
       moveTimetableSlot(slot.id, newDay, 0); // index doesn't matter for this logic
