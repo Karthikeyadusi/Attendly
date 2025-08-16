@@ -1,22 +1,17 @@
 
 "use client";
 
+import React, { useState, useMemo } from "react";
 import { useApp } from "@/components/AppProvider";
 import type { DayOfWeek, TimeSlot } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
-import { Trash2, Book, FlaskConical, CalendarX, Pencil } from "lucide-react";
+import { Trash2, Book, FlaskConical, CalendarX, Pencil, GripVertical } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel"
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay, type DragStartEvent, type DragEndEvent, type DragOverEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const dayNames: { [key in DayOfWeek]: string } = {
@@ -28,29 +23,151 @@ const dayNames: { [key in DayOfWeek]: string } = {
   Sat: 'Saturday',
 };
 
+// Draggable Slot Component
+const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: TimeSlot) => void }) => {
+    const { subjects, deleteTimetableSlot } = useApp();
+    const subject = subjects.find(s => s.id === slot.subjectId);
+    const SubjectIcon = subject?.type === 'Lab' ? FlaskConical : Book;
+
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slot.id, data: { day: slot.day }});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="w-full touch-none">
+            <div className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-2">
+                <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground p-1">
+                    <GripVertical className="w-5 h-5" />
+                </button>
+                <div className="flex-shrink-0">
+                    <SubjectIcon className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-grow">
+                    <p className="font-semibold">{subject?.name || "Unknown Subject"}</p>
+                    <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 flex-shrink-0" onClick={() => onEdit(slot)}>
+                    <Pencil className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8 flex-shrink-0">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this class slot?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to remove the {subject?.name} class on {dayNames[slot.day]} at {slot.startTime}?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteTimetableSlot(slot.id)} className="bg-destructive hover:bg-destructive/90">
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
+    );
+};
+
+// Day Column Component
+const DayColumn = ({ day, slots, onEdit }: { day: DayOfWeek; slots: TimeSlot[]; onEdit: (slot: TimeSlot) => void }) => {
+    const { setNodeRef } = useSortable({ id: day, disabled: true });
+
+    return (
+        <div ref={setNodeRef} className="flex-1 min-w-[280px] h-full">
+            <Card className="flex flex-col h-full">
+                <CardHeader className="text-center pb-2">
+                    <CardTitle>{dayNames[day]}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 flex-1 p-2 overflow-y-auto">
+                    <SortableContext items={slots.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                        {slots.length > 0 ? (
+                            slots.map(slot => (
+                                <DraggableTimeSlot key={slot.id} slot={slot} onEdit={onEdit} />
+                            ))
+                        ) : (
+                            <div className="text-center p-4 rounded-lg bg-muted/20 h-full flex items-center justify-center min-h-[100px]">
+                                <p className="text-sm text-muted-foreground">Drop classes here</p>
+                            </div>
+                        )}
+                    </SortableContext>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+
 export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void }) {
-  const { timetable, subjects, deleteTimetableSlot } = useApp();
-  const [api, setApi] = useState<CarouselApi>()
-  const [todayIndex, setTodayIndex] = useState(-1);
+  const { timetable, moveTimetableSlot } = useApp();
+  const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
 
-  useEffect(() => {
-    // Sunday - 0, Monday - 1, etc.
-    const today = new Date().getDay();
-    // Map to our days array which is Mon-Sat (0-5)
-    const dayMap = [-1, 0, 1, 2, 3, 4, 5];
-    setTodayIndex(dayMap[today]);
-  }, []);
+  const timetableByDay = useMemo(() => {
+    const map = new Map<DayOfWeek, TimeSlot[]>();
+    days.forEach(day => map.set(day, []));
+    timetable.forEach(slot => {
+      const daySlots = map.get(slot.day) || [];
+      daySlots.push(slot);
+    });
+    // Sort slots within each day
+    map.forEach((daySlots) => {
+        daySlots.sort((a,b) => a.startTime.localeCompare(b.startTime));
+    });
+    return map;
+  }, [timetable]);
 
-  useEffect(() => {
-    if (!api) return;
-    
-    // On load, scroll to today's card if it's a weekday, otherwise default to Monday
-    const initialIndex = todayIndex !== -1 ? todayIndex : 0;
-    api.scrollTo(initialIndex, true);
-
-  }, [api, todayIndex]);
+  const sensors = useSensors(useSensor(PointerSensor, {
+      activationConstraint: {
+          distance: 8,
+      },
+  }));
   
-  const sortedTimetable = [...timetable].sort((a,b) => a.startTime.localeCompare(b.startTime));
+  const handleDragStart = (event: DragStartEvent) => {
+      const { active } = event;
+      const slot = timetable.find(s => s.id === active.id);
+      if (slot) {
+          setActiveSlot(slot);
+      }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const activeDay = active.data.current?.day as DayOfWeek;
+      // Over a column (day) or a slot within a column
+      const overDay = over.data.current?.day as DayOfWeek || over.id as DayOfWeek;
+
+      if (activeDay !== overDay && days.includes(overDay)) {
+          moveTimetableSlot(active.id as string, overDay, 0);
+      }
+  };
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+      setActiveSlot(null);
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      
+      const activeDay = active.data.current?.day as DayOfWeek;
+      const overDay = over.data.current?.day as DayOfWeek;
+
+      if (activeDay !== overDay) {
+          // The move is already handled by dragOver, this just finalizes it.
+          // Could add sorting logic here if needed.
+      }
+  };
+
 
   if (timetable.length === 0) {
     return (
@@ -67,74 +184,28 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   }
 
   return (
-    <Carousel setApi={setApi} opts={{ align: "start", loop: false }} className="w-full">
-        <CarouselContent className="-ml-4">
-            {days.map((day, index) => {
-                const daySlots = sortedTimetable.filter(slot => slot.day === day);
-                const isToday = index === todayIndex;
-
-                return (
-                    <CarouselItem key={day} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                        <Card className={cn("flex flex-col h-full min-h-[350px]", isToday && "ring-2 ring-primary shadow-lg shadow-primary/20")}>
-                            <CardHeader className="text-center pb-2">
-                              <CardTitle>{dayNames[day]}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 flex-1 p-4 pt-0 overflow-y-auto">
-                            {daySlots.length > 0 ? (
-                                <div className="space-y-3">
-                                {daySlots.map(slot => {
-                                  const subject = subjects.find(s => s.id === slot.subjectId);
-                                  const SubjectIcon = subject?.type === 'Lab' ? FlaskConical : Book;
-                                  return (
-                                    <div key={slot.id} className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-4">
-                                        <div className="flex-shrink-0">
-                                            <SubjectIcon className="w-6 h-6 text-primary" />
-                                        </div>
-                                        <div className="flex-grow">
-                                            <p className="font-semibold">{subject?.name || "Unknown Subject"}</p>
-                                            <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 flex-shrink-0" onClick={() => onEdit(slot)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8 flex-shrink-0">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Delete this class slot?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        Are you sure you want to remove the {subject?.name} class on {dayNames[day]} at {slot.startTime}?
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => deleteTimetableSlot(slot.id)} className="bg-destructive hover:bg-destructive/90">
-                                                        Delete
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
-                                  );
-                                })}
-                                </div>
-                            ) : (
-                                <div className="text-center p-4 rounded-lg bg-muted/20 h-full flex items-center justify-center">
-                                    <p className="text-sm text-muted-foreground">No classes scheduled.</p>
-                                </div>
-                            )}
-                            </CardContent>
-                        </Card>
-                    </CarouselItem>
-                );
-            })}
-        </CarouselContent>
-        <CarouselPrevious className="absolute left-0 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
-        <CarouselNext className="absolute right-0 translate-x-1/2 top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
-    </Carousel>
+    <div className="w-full overflow-x-auto">
+        <DndContext 
+            sensors={sensors} 
+            collisionDetection={closestCenter} 
+            onDragStart={handleDragStart} 
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+        >
+            <div className="flex gap-4 p-1 min-h-[500px]">
+                {days.map((day) => (
+                    <DayColumn 
+                        key={day} 
+                        day={day} 
+                        slots={timetableByDay.get(day) || []}
+                        onEdit={onEdit}
+                    />
+                ))}
+            </div>
+            <DragOverlay>
+                {activeSlot ? <DraggableTimeSlot slot={activeSlot} onEdit={onEdit} /> : null}
+            </DragOverlay>
+        </DndContext>
+    </div>
   );
 }

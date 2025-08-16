@@ -263,6 +263,22 @@ export function useAppData() {
       timetable: prev.timetable.map(s => s.id === updatedSlot.id ? updatedSlot : s),
     }));
   }, []);
+
+  const moveTimetableSlot = useCallback((slotId: string, newDay: DayOfWeek, newIndex: number) => {
+      setData(prev => {
+          const slot = prev.timetable.find(s => s.id === slotId);
+          if (!slot) return prev;
+
+          const newTimetable = prev.timetable.map(s => {
+              if (s.id === slotId) {
+                  return { ...s, day: newDay };
+              }
+              return s;
+          });
+
+          return { ...prev, timetable: newTimetable };
+      });
+  }, []);
   
   const deleteTimetableSlot = useCallback((slotId: string) => {
     setData(prev => ({
@@ -652,6 +668,7 @@ export function useAppData() {
     deleteSubject,
     addTimetableSlot,
     updateTimetableSlot,
+    moveTimetableSlot,
     deleteTimetableSlot,
     logAttendance,
     clearAttendanceRecord,
