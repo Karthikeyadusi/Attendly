@@ -9,6 +9,7 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestor
 import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { isSunday } from '@/lib/utils';
+import { parse } from 'date-fns';
 
 const APP_DATA_KEY = 'attdendlyData';
 const BACKUP_VERSION = 1;
@@ -34,6 +35,7 @@ const getInitialData = (): AppCoreData => ({
   trackingStartDate: null,
   userName: null,
   archives: [],
+  timetableStartDate: null,
 });
 
 export function useAppData() {
@@ -69,10 +71,8 @@ export function useAppData() {
         if (storedData) {
           const parsed = JSON.parse(storedData);
           // Backwards compatibility for old data
-          if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
-          if (!parsed.holidays) parsed.holidays = [];
-          if (!parsed.archives) parsed.archives = [];
-          setData(parsed);
+          const initial = getInitialData();
+          setData({ ...initial, ...parsed });
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -94,10 +94,8 @@ export function useAppData() {
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
           const parsed = JSON.parse(storedData);
-          if (!parsed.oneOffSlots) parsed.oneOffSlots = [];
-          if (!parsed.holidays) parsed.holidays = [];
-          if (!parsed.archives) parsed.archives = [];
-          setData(parsed);
+          const initial = getInitialData();
+          setData({ ...initial, ...parsed });
         } else {
           setData(getInitialData());
         }
@@ -123,11 +121,8 @@ export function useAppData() {
       
       if (docSnap.exists()) {
         const cloudData = docSnap.data() as AppCoreData;
-        // Backwards compatibility
-        if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
-        if (!cloudData.holidays) cloudData.holidays = [];
-        if (!cloudData.archives) cloudData.archives = [];
-        setData(cloudData);
+        const initial = getInitialData();
+        setData({ ...initial, ...cloudData });
       }
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
     }, (error) => {
@@ -177,10 +172,8 @@ export function useAppData() {
         } else {
             // Existing user: onSnapshot will handle fetching the data.
             const cloudData = docSnap.data() as AppCoreData;
-            if (!cloudData.oneOffSlots) cloudData.oneOffSlots = [];
-            if (!cloudData.holidays) cloudData.holidays = [];
-            if (!cloudData.archives) cloudData.archives = [];
-            setData(cloudData);
+            const initial = getInitialData();
+            setData({ ...initial, ...cloudData });
         }
 
     } catch (error: any) {
@@ -515,7 +508,7 @@ export function useAppData() {
   const restoreFromBackup = useCallback((backupData: BackupData) => {
     const { version, exportedAt, ...restOfData } = backupData;
     const initialData = getInitialData();
-    const finalData = { ...initialData, ...restOfData, oneOffSlots: restOfData.oneOffSlots || [], holidays: restOfData.holidays || [], archives: restOfData.archives || [] };
+    const finalData = { ...initialData, ...restOfData };
     setData(finalData);
   }, []);
 
@@ -536,6 +529,7 @@ export function useAppData() {
         minAttendancePercentage: prev.minAttendancePercentage,
         subjects: prev.subjects, // Save a snapshot of subjects at time of archive
         timetable: prev.timetable, // Save a snapshot of timetable
+        timetableStartDate: prev.timetableStartDate,
       };
       
       const newArchives = [...(prev.archives || []), archiveEntry];
@@ -550,6 +544,7 @@ export function useAppData() {
         holidays: initial.holidays,
         historicalData: initial.historicalData,
         trackingStartDate: initial.trackingStartDate,
+        timetableStartDate: initial.timetableStartDate,
         // Conditionally keep subjects and timetable
         subjects: keepSubjects ? prev.subjects : initial.subjects,
         timetable: keepTimetable ? prev.timetable : initial.timetable,
@@ -565,6 +560,63 @@ export function useAppData() {
         description: "All application data has been wiped.",
     });
   }, [toast]);
+  
+  const setNewTimetable = useCallback((newStartDate: string) => {
+    setData(prev => {
+      const { attendance, timetable, oneOffSlots } = prev;
+      
+      const newOneOffSlots = [...(oneOffSlots || [])];
+      const newAttendance = [...attendance];
+      const oldTimetableSlotMap = new Map(timetable.map(s => [s.id, s]));
+
+      // Get all unique dates from attendance records before the new start date
+      const pastDates = new Set(
+          attendance
+            .map(a => a.date)
+            .filter(d => d < newStartDate)
+      );
+
+      // "Lock-in" past attendance from the old recurring timetable
+      for (const date of pastDates) {
+        const recordsForDate = attendance.filter(a => a.date === date);
+
+        for (const record of recordsForDate) {
+          const originalSlot = oldTimetableSlotMap.get(record.slotId);
+          // If the slot was from the old RECURRING timetable...
+          if (originalSlot) {
+            // ...create a new one-off slot to make it a permanent historical record
+            const historicalOneOff: OneOffSlot = {
+              id: crypto.randomUUID(),
+              date: date,
+              startTime: originalSlot.startTime,
+              endTime: originalSlot.endTime,
+              subjectId: originalSlot.subjectId,
+              originalSlotId: originalSlot.id,
+              originalDate: date,
+            };
+            newOneOffSlots.push(historicalOneOff);
+
+            // Re-link the attendance record to this new historical slot
+            const recordIndex = newAttendance.findIndex(a => a.id === record.id);
+            if (recordIndex !== -1) {
+              newAttendance[recordIndex] = {
+                ...newAttendance[recordIndex],
+                slotId: historicalOneOff.id,
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        timetable: [], // Clear the old recurring timetable
+        oneOffSlots: newOneOffSlots, // Add the newly created historical slots
+        attendance: newAttendance, // Update attendance records with new links
+        timetableStartDate: newStartDate,
+      };
+    });
+  }, []);
 
   // Memoized derived data for performance
   const subjectMap = useMemo(() => new Map(data.subjects.map(s => [s.id, s])), [data.subjects]);
@@ -587,14 +639,20 @@ export function useAppData() {
     const dateObj = new Date(year, month - 1, day);
     const dayOfWeek = dayMap[dateObj.getDay()];
 
-    const regularSlots = dayOfWeek ? (timetableByDay.get(dayOfWeek) || []) : [];
     const oneOffs = (data.oneOffSlots || []).filter(s => s.date === dateString);
+    
+    // Only include recurring timetable slots if the date is on or after the timetable start date
+    let regularSlots: TimeSlot[] = [];
+    if (dayOfWeek && (!data.timetableStartDate || dateString >= data.timetableStartDate)) {
+       regularSlots = timetableByDay.get(dayOfWeek) || [];
+    }
+    
 
     const allSlots = [...regularSlots, ...oneOffs];
     allSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
     
     return allSlots;
-  }, [isClient, timetableByDay, data.oneOffSlots, data.holidays]);
+  }, [isClient, timetableByDay, data.oneOffSlots, data.holidays, data.timetableStartDate]);
 
   const attendanceByDate = useMemo(() => {
     return data.attendance.reduce((acc, record) => {
@@ -674,6 +732,7 @@ export function useAppData() {
     setUserName,
     archiveAndReset,
     clearAllData,
+    setNewTimetable,
     // Provide memoized data
     subjectMap,
     timetableByDay,

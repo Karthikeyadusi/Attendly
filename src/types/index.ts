@@ -73,6 +73,7 @@ export type SemesterSummary = {
   minAttendancePercentage: number;
   subjects: Subject[]; // Snapshot of subjects at time of archive
   timetable: TimeSlot[]; // Snapshot of timetable
+  timetableStartDate: string | null;
 };
 
 export type ArchivedSemester = SemesterSummary & {
@@ -92,6 +93,7 @@ export type AppCoreData = {
   trackingStartDate: string | null;
   userName: string | null;
   archives: ArchivedSemester[];
+  timetableStartDate: string | null;
 }
 
 // The complete app state including derived data and auth state.
