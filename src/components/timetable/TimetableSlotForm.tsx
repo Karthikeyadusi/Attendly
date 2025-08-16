@@ -11,9 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DayOfWeek, TimeSlot } from "@/types";
 import { useEffect } from "react";
-import { Separator } from "../ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Label } from "../ui/label";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -66,16 +64,16 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
 
   const onSubmit = (values: TimeSlotFormValues) => {
     if (slot) {
-        updateTimetableSlot({ ...values, id: slot.id });
+      updateTimetableSlot({ ...values, id: slot.id });
     } else {
-        addTimetableSlot(values);
+      addTimetableSlot(values);
     }
     onOpenChange(false);
   };
   
   const handleMove = (newDay: DayOfWeek) => {
     if (slot) {
-      moveTimetableSlot(slot.id, newDay, 0); // index doesn't matter for this logic
+      moveTimetableSlot(slot.id, newDay, 0);
       onOpenChange(false);
     }
   };
@@ -160,19 +158,12 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
               />
             </div>
 
-            {slot && isMobile && (
-              <div className="space-y-3 pt-2">
-                <Separator />
-                <Label>Move to...</Label>
-                <div className="grid grid-cols-3 gap-2">
+            {isMobile && slot && (
+              <div className="space-y-2">
+                <FormLabel>Move to...</FormLabel>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {days.map(day => (
-                    <Button 
-                      key={day} 
-                      type="button" 
-                      variant={slot.day === day ? "default" : "outline"}
-                      onClick={() => handleMove(day)}
-                      disabled={slot.day === day}
-                    >
+                    <Button key={day} type="button" variant={form.getValues("day") === day ? "default" : "outline"} onClick={() => handleMove(day)} disabled={form.getValues("day") === day}>
                       {day}
                     </Button>
                   ))}
