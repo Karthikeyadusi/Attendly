@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -13,7 +14,7 @@ import type { DayOfWeek, TimeSlot } from "@/types";
 import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const days: [DayOfWeek, ...DayOfWeek[]] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const timeSlotSchema = z.object({
   day: z.enum(days),
@@ -34,7 +35,7 @@ interface TimeSlotFormProps {
 }
 
 export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlotFormProps) {
-  const { subjects, addTimetableSlot, updateTimetableSlot, moveTimetableSlot } = useApp();
+  const { subjects, addTimetableSlot, updateTimetableSlot } = useApp();
   const isMobile = useIsMobile();
 
   const form = useForm<TimeSlotFormValues>({
@@ -69,13 +70,6 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
       addTimetableSlot(values);
     }
     onOpenChange(false);
-  };
-  
-  const handleMove = (newDay: DayOfWeek) => {
-    if (slot) {
-      moveTimetableSlot(slot.id, newDay, 0);
-      onOpenChange(false);
-    }
   };
 
   return (
@@ -119,7 +113,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a day" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -157,19 +151,6 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
                 )}
               />
             </div>
-
-            {isMobile && slot && (
-              <div className="space-y-2">
-                <FormLabel>Move to...</FormLabel>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {days.map(day => (
-                    <Button key={day} type="button" variant={form.getValues("day") === day ? "default" : "outline"} onClick={() => handleMove(day)} disabled={form.getValues("day") === day}>
-                      {day}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <DialogFooter>
               <Button type="submit">{slot ? "Save Changes" : "Add Class"}</Button>
