@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useCallback } from "react";
 import { useApp } from "@/components/AppProvider";
 import type { DayOfWeek, TimeSlot } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Trash2, Book, FlaskConical, CalendarX, Pencil, GripVertical } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay, type DragStartEvent, type DragEndEvent, type DragOverEvent } from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay, type DragStartEvent, type DragEndEvent, type DragOverEvent, type DragMoveEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -38,6 +38,8 @@ const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: Ti
         zIndex: isDragging ? 10 : 'auto',
     };
 
+    if (!subject) return null;
+
     return (
         <div ref={setNodeRef} style={style} className="w-full touch-none">
             <div className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-2">
@@ -48,7 +50,7 @@ const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: Ti
                     <SubjectIcon className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-grow">
-                    <p className="font-semibold">{subject?.name || "Unknown Subject"}</p>
+                    <p className="font-semibold">{subject.name || "Unknown Subject"}</p>
                     <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
                 </div>
                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 flex-shrink-0" onClick={() => onEdit(slot)}>
@@ -64,7 +66,7 @@ const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: Ti
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete this class slot?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Are you sure you want to remove the {subject?.name} class on {dayNames[slot.day]} at {slot.startTime}?
+                                Are you sure you want to remove the {subject.name} class on {dayNames[slot.day]} at {slot.startTime}?
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -112,6 +114,8 @@ const DayColumn = ({ day, slots, onEdit }: { day: DayOfWeek; slots: TimeSlot[]; 
 export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void }) {
   const { timetable, moveTimetableSlot } = useApp();
   const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollInterval = useRef<number | null>(null);
 
   const timetableByDay = useMemo(() => {
     const map = new Map<DayOfWeek, TimeSlot[]>();
@@ -146,15 +150,46 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
       if (!over || active.id === over.id) return;
 
       const activeDay = active.data.current?.day as DayOfWeek;
-      // Over a column (day) or a slot within a column
       const overDay = over.data.current?.day as DayOfWeek || over.id as DayOfWeek;
 
       if (activeDay !== overDay && days.includes(overDay)) {
           moveTimetableSlot(active.id as string, overDay, 0);
       }
   };
+
+  const stopAutoScroll = () => {
+    if (autoScrollInterval.current) {
+      clearInterval(autoScrollInterval.current);
+      autoScrollInterval.current = null;
+    }
+  };
+
+  const handleDragMove = useCallback((event: DragMoveEvent) => {
+    const { delta } = event;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { x } = delta;
+    const { left, right, width } = container.getBoundingClientRect();
+    const cursorX = left + x;
+    const scrollAmount = 15;
+    const edgeSize = 50;
+
+    stopAutoScroll();
+
+    if (cursorX < left + edgeSize) {
+      autoScrollInterval.current = window.setInterval(() => {
+        container.scrollLeft -= scrollAmount;
+      }, 50);
+    } else if (cursorX > right - edgeSize) {
+      autoScrollInterval.current = window.setInterval(() => {
+        container.scrollLeft += scrollAmount;
+      }, 50);
+    }
+  }, []);
   
   const handleDragEnd = (event: DragEndEvent) => {
+      stopAutoScroll();
       setActiveSlot(null);
       const { active, over } = event;
       if (!over || active.id === over.id) return;
@@ -164,7 +199,6 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
 
       if (activeDay !== overDay) {
           // The move is already handled by dragOver, this just finalizes it.
-          // Could add sorting logic here if needed.
       }
   };
 
@@ -184,13 +218,15 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   }
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div ref={scrollContainerRef} className="w-full overflow-x-auto">
         <DndContext 
             sensors={sensors} 
             collisionDetection={closestCenter} 
             onDragStart={handleDragStart} 
             onDragOver={handleDragOver}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
+            onDragCancel={stopAutoScroll}
         >
             <div className="flex gap-4 p-1 min-h-[500px]">
                 {days.map((day) => (
