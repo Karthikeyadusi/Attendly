@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -14,6 +13,7 @@ import type { DayOfWeek, TimeSlot } from "@/types";
 import { useEffect } from "react";
 import { Separator } from "../ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Label } from "../ui/label";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -78,7 +78,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
       moveTimetableSlot(slot.id, newDay, 0); // index doesn't matter for this logic
       onOpenChange(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
