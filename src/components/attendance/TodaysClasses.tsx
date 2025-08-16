@@ -65,13 +65,7 @@ export default function TodaysClasses() {
           const record = attendance.find(r => r.id === `${todayDateString}-${slot.id}`);
           const isOneOff = 'date' in slot;
           
-          const originalRecordForPostponeCheck = 'originalSlotId' in slot 
-            ? attendance.find(r => r.date === slot.originalDate && r.slotId === slot.originalSlotId)
-            : record;
-
-          const isVisuallyPostponed = originalRecordForPostponeCheck?.status === 'Postponed';
-
-          if (isVisuallyPostponed && !isOneOff) {
+          if (record?.status === 'Postponed' && !isOneOff) {
             const rescheduledTo = oneOffSlots.find(s => s.originalSlotId === slot.id);
             return (
               <div key={slot.id} className="p-3 rounded-lg border bg-muted text-muted-foreground">

@@ -7,15 +7,13 @@ import TimetableSlotForm from "@/components/timetable/TimetableSlotForm";
 import TimetableImportDialog from "@/components/timetable/TimetableImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlusCircle, Sparkles, History } from "lucide-react";
+import { PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { TimeSlot } from "@/types";
-import NewTimetableDialog from "@/components/timetable/NewTimetableDialog";
 
 export default function TimetablePage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isImportOpen, setIsImportOpen] = useState(false);
-    const [isNewTimetableOpen, setIsNewTimetableOpen] = useState(false);
     const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
     const { subjects, isLoaded } = useApp();
 
@@ -51,10 +49,6 @@ export default function TimetablePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Weekly Timetable</h2>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Button onClick={() => setIsNewTimetableOpen(true)} variant="outline">
-                        <History className="mr-2 h-4 w-4" />
-                        Set New Timetable
-                    </Button>
                     <Button onClick={() => setIsImportOpen(true)} variant="outline">
                         <Sparkles className="mr-2 h-4 w-4" />
                         Import with AI
@@ -74,7 +68,6 @@ export default function TimetablePage() {
               slot={editingSlot}
             />
             <TimetableImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
-            <NewTimetableDialog open={isNewTimetableOpen} onOpenChange={setIsNewTimetableOpen} />
         </div>
     );
 }

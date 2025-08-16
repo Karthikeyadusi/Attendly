@@ -54,7 +54,7 @@ interface DailyScheduleProps {
 }
 
 function DailySchedule({ selectedDate }: DailyScheduleProps) {
-  const { subjectMap, attendance, attendanceByDate, logAttendance, clearAttendanceRecord, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
+  const { subjectMap, attendanceByDate, logAttendance, clearAttendanceRecord, getScheduleForDate, isLoaded, holidays, toggleHoliday, oneOffSlots, undoPostpone, deleteOneOffSlot } = useApp();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<TimeSlot | OneOffSlot | null>(null);
 
@@ -109,14 +109,8 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
 
               const isOneOff = 'date' in slot;
               const record = attendanceForSelectedDateMap.get(slot.id);
-              
-              const originalRecordForPostponeCheck = 'originalSlotId' in slot
-                ? attendance.find(r => r.date === slot.originalDate && r.slotId === slot.originalSlotId)
-                : record;
-              
-              const isVisuallyPostponed = originalRecordForPostponeCheck?.status === 'Postponed';
 
-              if (isVisuallyPostponed && !isOneOff) {
+              if (record?.status === 'Postponed' && !isOneOff) {
                 const rescheduledTo = oneOffSlots.find(s => s.originalSlotId === slot.id);
                 return (
                   <div key={slot.id} className="w-full bg-muted rounded-lg p-3 flex items-center gap-4 justify-between text-muted-foreground">
