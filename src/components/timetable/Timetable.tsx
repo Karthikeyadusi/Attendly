@@ -31,7 +31,7 @@ const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: Ti
     const subject = subjects.find(s => s.id === slot.subjectId);
     const SubjectIcon = subject?.type === 'Lab' ? FlaskConical : Book;
 
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slot.id, data: { day: slot.day }, disabled: isMobile });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slot.id, data: { day: slot.day } });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -45,11 +45,9 @@ const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: Ti
     return (
         <div ref={setNodeRef} style={style} className="w-full touch-none">
             <div className="w-full bg-card-foreground/5 rounded-lg p-3 flex items-center gap-2">
-                {!isMobile && (
-                    <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground p-1">
-                        <GripVertical className="w-5 h-5" />
-                    </button>
-                )}
+                <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground p-1">
+                    <GripVertical className="w-5 h-5" />
+                </button>
                 <div className="flex-shrink-0">
                     <SubjectIcon className="w-6 h-6 text-primary" />
                 </div>
@@ -120,7 +118,6 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollInterval = useRef<number | null>(null);
-  const isMobile = useIsMobile();
 
   const timetableByDay = useMemo(() => {
     const map = new Map<DayOfWeek, TimeSlot[]>();
@@ -143,7 +140,6 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   }));
   
   const handleDragStart = (event: DragStartEvent) => {
-      if (isMobile) return;
       const { active } = event;
       const slot = timetable.find(s => s.id === active.id);
       if (slot) {
@@ -152,7 +148,6 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-      if (isMobile) return;
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
@@ -172,7 +167,6 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   };
 
   const handleDragMove = useCallback((event: DragMoveEvent) => {
-    if (isMobile) return;
     const { delta } = event;
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -194,10 +188,9 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
         container.scrollLeft += scrollAmount;
       }, 50);
     }
-  }, [isMobile]);
+  }, []);
   
   const handleDragEnd = (event: DragEndEvent) => {
-      if (isMobile) return;
       stopAutoScroll();
       setActiveSlot(null);
       const { active, over } = event;
@@ -248,7 +241,7 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
                 ))}
             </div>
             <DragOverlay>
-                {activeSlot && !isMobile ? <DraggableTimeSlot slot={activeSlot} onEdit={onEdit} /> : null}
+                {activeSlot ? <DraggableTimeSlot slot={activeSlot} onEdit={onEdit} /> : null}
             </DragOverlay>
         </DndContext>
     </div>
