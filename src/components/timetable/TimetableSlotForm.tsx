@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DayOfWeek, TimeSlot } from "@/types";
 import { useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const days: [DayOfWeek, ...DayOfWeek[]] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -21,6 +20,7 @@ const timeSlotSchema = z.object({
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
   subjectId: z.string().min(1, "Please select a subject"),
+  credits: z.coerce.number().min(0, "Credits must be 0 or more."),
 }).refine(data => data.startTime < data.endTime, {
     message: "End time must be after start time",
     path: ["endTime"],
@@ -36,7 +36,6 @@ interface TimeSlotFormProps {
 
 export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlotFormProps) {
   const { subjects, addTimetableSlot, updateTimetableSlot } = useApp();
-  const isMobile = useIsMobile();
 
   const form = useForm<TimeSlotFormValues>({
     resolver: zodResolver(timeSlotSchema),
@@ -45,6 +44,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
       startTime: "09:00",
       endTime: "10:00",
       subjectId: "",
+      credits: 2,
     },
   });
 
@@ -58,6 +58,7 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
           startTime: "09:00",
           endTime: "10:00",
           subjectId: "",
+          credits: 2,
         });
       }
     }
@@ -103,26 +104,41 @@ export default function TimetableSlotForm({ open, onOpenChange, slot }: TimeSlot
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="day"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Day of the Week</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="day"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Day of the Week</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a day" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="credits"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credits</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a day" />
-                      </SelectTrigger>
+                      <Input type="number" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}

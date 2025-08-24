@@ -356,6 +356,7 @@ export function useAppData() {
           startTime: newStartTime,
           endTime: newEndTime,
           subjectId: slot.subjectId,
+          credits: slot.credits,
           originalSlotId: 'originalSlotId' in slot ? slot.originalSlotId : slot.id,
           originalDate: originalDate,
       };
@@ -462,7 +463,6 @@ export function useAppData() {
                     id: crypto.randomUUID(),
                     name: slot.subjectName,
                     type: slot.subjectName.toLowerCase().includes('lab') ? 'Lab' : 'Lecture',
-                    credits: 2,
                 };
                 newSubjects.push(newSubject);
                 existingSubjectNames.add(newSubject.name.toLowerCase());
@@ -487,6 +487,7 @@ export function useAppData() {
                         startTime: slot.startTime,
                         endTime: slot.endTime,
                         subjectId: subjectId,
+                        credits: slot.credits,
                     };
                     newTimetable.push(newSlot);
                 }
@@ -617,29 +618,29 @@ export function useAppData() {
   const subjectStats: SubjectStatsMap = useMemo(() => {
     const stats: SubjectStatsMap = new Map();
     if (!isLoaded) return stats;
-
+  
     const allSlots = [...data.timetable, ...(data.oneOffSlots || [])];
-    const slotSubjectMap = new Map(allSlots.map(slot => [slot.id, slot.subjectId]));
-
+    const slotMap = new Map(allSlots.map(slot => [slot.id, slot]));
+  
     for (const subject of data.subjects) {
       stats.set(subject.id, { attendedClasses: 0, conductedClasses: 0, percentage: 100 });
     }
-
+  
     const filteredAttendance = data.trackingStartDate
       ? data.attendance.filter(r => r.date >= data.trackingStartDate!)
       : data.attendance;
-
+  
     for (const record of filteredAttendance) {
       if ((data.holidays || []).includes(record.date) || isSunday(record.date)) continue;
       if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
       
-      const subjectId = slotSubjectMap.get(record.slotId);
-      if (subjectId) {
-        const subjectStat = stats.get(subjectId);
+      const slot = slotMap.get(record.slotId);
+      if (slot) {
+        const subjectStat = stats.get(slot.subjectId);
         if (subjectStat) {
-          subjectStat.conductedClasses += 1;
+          subjectStat.conductedClasses += slot.credits;
           if (record.status === 'Attended') {
-            subjectStat.attendedClasses += 1;
+            subjectStat.attendedClasses += slot.credits;
           }
         }
       }

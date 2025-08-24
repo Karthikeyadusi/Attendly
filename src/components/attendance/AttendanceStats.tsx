@@ -44,7 +44,6 @@ export default function AttendanceStats() {
           return { totalAttendedCredits: 0, totalConductedCredits: 0, cancelledCount: 0, attendancePercentage: 0, safeMissValue: 0 };
         }
 
-        const subjectMap = new Map(subjects.map(s => [s.id, s]));
         const allSlots = [...timetable, ...oneOffSlots];
         const slotMap = new Map(allSlots.map(s => [s.id, s]));
         
@@ -69,10 +68,7 @@ export default function AttendanceStats() {
             const slot = slotMap.get(record.slotId);
             if (!slot) continue;
             
-            const subject = subjectMap.get(slot.subjectId);
-            if (!subject) continue;
-
-            const credits = subject.credits;
+            const credits = slot.credits;
             dailyConductedCredits += credits;
             if (record.status === 'Attended') {
                 dailyAttendedCredits += credits;
@@ -87,10 +83,7 @@ export default function AttendanceStats() {
         const safeToMiss = () => {
           // Average credits per class is needed to convert the final number back to classes for the message.
           const uniqueSlotsInTimetable = [...new Map(timetable.map(item => [item.id, item])).values()];
-          const totalCreditsInTimetable = uniqueSlotsInTimetable.reduce((acc, slot) => {
-              const subject = subjectMap.get(slot.subjectId);
-              return acc + (subject?.credits || 0);
-          }, 0);
+          const totalCreditsInTimetable = uniqueSlotsInTimetable.reduce((acc, slot) => acc + slot.credits, 0);
           const avgCreditsPerClass = totalCreditsInTimetable > 0 ? totalCreditsInTimetable / uniqueSlotsInTimetable.length : 1;
           
           const minRatio = minAttendancePercentage / 100;
@@ -116,7 +109,7 @@ export default function AttendanceStats() {
             attendancePercentage,
             safeMissValue,
         };
-    }, [attendance, subjects, timetable, oneOffSlots, historicalData, trackingStartDate, minAttendancePercentage, isLoaded, holidays]);
+    }, [attendance, timetable, oneOffSlots, historicalData, trackingStartDate, minAttendancePercentage, isLoaded, holidays]);
 
     if (!isLoaded) {
       return (
@@ -168,5 +161,3 @@ export default function AttendanceStats() {
         </div>
     );
 }
-
-    

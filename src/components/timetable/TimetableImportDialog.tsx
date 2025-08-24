@@ -83,7 +83,7 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
         slotsByDay.get(slot.day)!.push(slot);
     }
 
-    const timedSlots: ExtractedSlot[] = [];
+    const timedSlots: (RawExtractedSlot & { endTime: string })[] = [];
 
     // 3. Calculate end times using the full schedule and hardcoded lunch rule
     for (const day of slotsByDay.keys()) {
@@ -115,12 +115,7 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
                     }
                 }
                 
-                timedSlots.push({
-                    day: currentSlot.day,
-                    startTime: currentSlot.startTime,
-                    endTime: endTime,
-                    subjectName: currentSlot.subjectName.trim(),
-                });
+                timedSlots.push({ ...currentSlot, endTime });
             } catch (e) {
                 console.error("Error calculating end time:", currentSlot, e);
             }
@@ -128,8 +123,8 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     }
 
     // 4. Merge consecutive slots that have the same subject name
-    const mergedSlots: ExtractedSlot[] = [];
-    const timedSlotsByDay = new Map<DayOfWeek, ExtractedSlot[]>();
+    const mergedSlots: (RawExtractedSlot & { endTime: string })[] = [];
+    const timedSlotsByDay = new Map<DayOfWeek, (RawExtractedSlot & { endTime: string })[]>();
     for (const slot of timedSlots) {
         if (!timedSlotsByDay.has(slot.day)) {
             timedSlotsByDay.set(slot.day, []);
@@ -160,12 +155,18 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     
     // 5. NOW filter out purely structural slots like 'LUNCH' or 'BREAK'
     const structuralKeywords = ['lunch', 'break'];
-    const finalSchedule = mergedSlots.filter(slot => 
-      !structuralKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword))
-    );
+    const finalScheduleWithCredits = mergedSlots
+        .filter(slot => !structuralKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword)))
+        .map(slot => ({
+            day: slot.day,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            subjectName: slot.subjectName.trim(),
+            credits: slot.subjectName.toLowerCase().includes('lab') ? 3 : 2, // Default credits
+        }));
 
     // Return sorted by day, then time
-    return finalSchedule.sort((a,b) => {
+    return finalScheduleWithCredits.sort((a,b) => {
         if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
         return a.startTime.localeCompare(b.startTime);
     });
@@ -236,9 +237,11 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     }
   };
   
-  const handleSlotChange = (index: number, field: keyof ExtractedSlot, value: string) => {
+  const handleSlotChange = (index: number, field: keyof ExtractedSlot, value: string | number) => {
       const newSlots = [...extractedSlots];
-      newSlots[index] = { ...newSlots[index], [field]: value };
+      const slot = { ...newSlots[index] };
+      (slot as any)[field] = value;
+      newSlots[index] = slot;
       setExtractedSlots(newSlots);
   };
 
@@ -257,7 +260,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl p-0 max-h-[90dvh] flex flex-col">
+      <DialogContent className="max-w-4xl p-0 max-h-[90dvh] flex flex-col">
         <DialogHeader className="p-4 md:p-6 pb-4 border-b">
           <DialogTitle>Import Timetable with AI</DialogTitle>
           <DialogDescription>
@@ -312,13 +315,14 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                                              <Trash2 className="h-4 w-4 text-destructive" />
                                          </Button>
                                      </div>
-                                     <div className="grid grid-cols-3 gap-2">
+                                     <div className="grid grid-cols-4 gap-2">
                                          <Select value={slot.day} onValueChange={value => handleSlotChange(index, 'day', value)}>
                                              <SelectTrigger><SelectValue/></SelectTrigger>
                                              <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                                          </Select>
                                          <Input type="time" value={slot.startTime} onChange={e => handleSlotChange(index, 'startTime', e.target.value)} />
                                          <Input type="time" value={slot.endTime} onChange={e => handleSlotChange(index, 'endTime', e.target.value)} />
+                                         <Input type="number" value={slot.credits} onChange={e => handleSlotChange(index, 'credits', parseInt(e.target.value, 10) || 0)} />
                                      </div>
                                  </div>
                              ))}

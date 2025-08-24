@@ -106,7 +106,7 @@ export default function RescheduleDialog({ open, onOpenChange, slot, date }: Res
              <Alert>
                 <CalendarClock className="h-4 w-4" />
                 <AlertDescription>
-                    The original class will be marked as "Postponed", and a new one-time class will be added to the selected date.
+                    The original class will be marked as "Postponed", and a new one-time class will be added to the selected date. This will carry over the original credits.
                 </AlertDescription>
              </Alert>
         </div>

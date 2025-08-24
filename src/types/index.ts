@@ -6,7 +6,6 @@ export type Subject = {
   id: string;
   name: string;
   type: 'Lecture' | 'Lab';
-  credits: number;
 };
 
 export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
@@ -17,6 +16,7 @@ export type TimeSlot = {
   startTime: string; // "HH:MM"
   endTime: string; // "HH:MM"
   subjectId: string;
+  credits: number;
 };
 
 // A rescheduled class that occurs on a specific date, not a recurring day.
@@ -26,6 +26,7 @@ export type OneOffSlot = {
   startTime: string; // "HH:MM"
   endTime: string; // "HH:MM"
   subjectId: string;
+  credits: number;
   originalSlotId: string; // To trace it back
   originalDate: string; // The date this class was moved FROM
 };
@@ -43,8 +44,9 @@ export type AttendanceRecord = {
 export type ExtractedSlot = {
   day: DayOfWeek;
   startTime: string; // "HH:MM"
-  endTime: string; // "HH:MM"
+  endTime:string; // "HH:MM"
   subjectName: string;
+  credits: number;
 };
 
 export type HistoricalData = {
