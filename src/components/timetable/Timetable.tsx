@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay, type DragStartEvent, type DragEndEvent, type DragOverEvent, type DragMoveEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const dayNames: { [key in DayOfWeek]: string } = {
@@ -27,7 +26,6 @@ const dayNames: { [key in DayOfWeek]: string } = {
 // Draggable Slot Component
 const DraggableTimeSlot = ({ slot, onEdit }: { slot: TimeSlot; onEdit: (slot: TimeSlot) => void }) => {
     const { subjects, deleteTimetableSlot } = useApp();
-    const isMobile = useIsMobile();
     const subject = subjects.find(s => s.id === slot.subjectId);
     const SubjectIcon = subject?.type === 'Lab' ? FlaskConical : Book;
 
@@ -89,7 +87,7 @@ const DayColumn = ({ day, slots, onEdit }: { day: DayOfWeek; slots: TimeSlot[]; 
     const { setNodeRef } = useSortable({ id: day, disabled: true });
 
     return (
-        <div ref={setNodeRef} className="flex-1 min-w-[280px] h-full">
+        <div ref={setNodeRef} className="w-full h-full min-h-[400px]">
             <Card className="flex flex-col h-full">
                 <CardHeader className="text-center pb-2">
                     <CardTitle>{dayNames[day]}</CardTitle>
@@ -116,8 +114,6 @@ const DayColumn = ({ day, slots, onEdit }: { day: DayOfWeek; slots: TimeSlot[]; 
 export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void }) {
   const { timetable, moveTimetableSlot } = useApp();
   const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const autoScrollInterval = useRef<number | null>(null);
 
   const timetableByDay = useMemo(() => {
     const map = new Map<DayOfWeek, TimeSlot[]>();
@@ -158,40 +154,8 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
           moveTimetableSlot(active.id as string, overDay, 0);
       }
   };
-
-  const stopAutoScroll = () => {
-    if (autoScrollInterval.current) {
-      clearInterval(autoScrollInterval.current);
-      autoScrollInterval.current = null;
-    }
-  };
-
-  const handleDragMove = useCallback((event: DragMoveEvent) => {
-    const { delta } = event;
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const { x } = delta;
-    const { left, right, width } = container.getBoundingClientRect();
-    const cursorX = left + x;
-    const scrollAmount = 15;
-    const edgeSize = 50;
-
-    stopAutoScroll();
-
-    if (cursorX < left + edgeSize) {
-      autoScrollInterval.current = window.setInterval(() => {
-        container.scrollLeft -= scrollAmount;
-      }, 50);
-    } else if (cursorX > right - edgeSize) {
-      autoScrollInterval.current = window.setInterval(() => {
-        container.scrollLeft += scrollAmount;
-      }, 50);
-    }
-  }, []);
   
   const handleDragEnd = (event: DragEndEvent) => {
-      stopAutoScroll();
       setActiveSlot(null);
       const { active, over } = event;
       if (!over || active.id === over.id) return;
@@ -220,17 +184,15 @@ export default function Timetable({ onEdit }: { onEdit: (slot: TimeSlot) => void
   }
 
   return (
-    <div ref={scrollContainerRef} className="w-full overflow-x-auto">
+    <div className="w-full">
         <DndContext 
             sensors={sensors} 
             collisionDetection={closestCenter} 
             onDragStart={handleDragStart} 
             onDragOver={handleDragOver}
-            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
-            onDragCancel={stopAutoScroll}
         >
-            <div className="flex gap-4 p-1 min-h-[500px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {days.map((day) => (
                     <DayColumn 
                         key={day} 
