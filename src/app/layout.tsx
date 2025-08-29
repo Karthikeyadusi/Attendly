@@ -38,10 +38,8 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased")}>
         <ThemeProvider>
-            <div className="bg-muted flex justify-center items-start min-h-screen">
-                <div className="w-full max-w-lg bg-background shadow-lg min-h-screen">
+            <div className="bg-muted/40 flex justify-center items-start min-h-screen">
                 {children}
-                </div>
             </div>
             <Toaster />
         </ThemeProvider>
