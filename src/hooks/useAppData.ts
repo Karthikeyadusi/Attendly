@@ -253,7 +253,7 @@ export function useAppData() {
     });
   }, []);
 
-  const addTimetableSlot = useCallback((slot: Omit<TimeSlot, 'id' | 'credits'> & { credits: number }) => {
+  const addTimetableSlot = useCallback((slot: Omit<TimeSlot, 'id'>) => {
     setData(prev => ({ ...prev, timetable: [...prev.timetable, { ...slot, id: crypto.randomUUID() }] }));
   }, []);
 

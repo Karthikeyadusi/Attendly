@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,19 +17,26 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractTimetable } from "@/ai/flows/extract-timetable-flow";
 import { useApp } from "../AppProvider";
-import { Loader2, Upload, Trash2, Sparkles } from "lucide-react";
-import type { ExtractedSlot, DayOfWeek } from "@/types";
+import { Loader2, Upload, Trash2, Sparkles, AlertCircle } from "lucide-react";
+import type { ExtractedSlot, DayOfWeek, Subject } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { addMinutes, parse, format as formatDate } from 'date-fns';
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+const NEW_SUBJECT_ID_PREFIX = 'new-subject_';
+
 type RawExtractedSlot = {
     day: DayOfWeek;
     startTime: string;
     subjectName: string;
 };
+
+type MappedExtractedSlot = ExtractedSlot & {
+    subjectIdOrName: string; // Will hold either an existing subject ID or a new subject name
+};
+
 
 const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
     // Helper function to fix inconsistent time formats from the AI.
@@ -174,12 +181,12 @@ const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
 
 
 export default function TimetableImportDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { importTimetable } = useApp();
+  const { importTimetable, subjects } = useApp();
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [extractedSlots, setExtractedSlots] = useState<ExtractedSlot[]>([]);
+  const [extractedSlots, setExtractedSlots] = useState<MappedExtractedSlot[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
@@ -217,7 +224,14 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
       const result = await extractTimetable({ photoDataUri: imageData });
       if (result && result.slots.length > 0) {
         const processed = processRawSlots(result.slots);
-        setExtractedSlots(processed);
+        const mapped: MappedExtractedSlot[] = processed.map(p => {
+          const existingSubject = subjects.find(s => s.name.toLowerCase() === p.subjectName.toLowerCase());
+          return {
+            ...p,
+            subjectIdOrName: existingSubject ? existingSubject.id : `${NEW_SUBJECT_ID_PREFIX}${p.subjectName}`
+          }
+        });
+        setExtractedSlots(mapped);
       } else {
         toast({
             variant: "destructive",
@@ -237,7 +251,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     }
   };
   
-  const handleSlotChange = (index: number, field: keyof ExtractedSlot, value: string | number) => {
+  const handleSlotChange = (index: number, field: keyof MappedExtractedSlot, value: string | number) => {
       const newSlots = [...extractedSlots];
       const slot = { ...newSlots[index] };
       (slot as any)[field] = value;
@@ -245,12 +259,38 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
       setExtractedSlots(newSlots);
   };
 
+  const handleSubjectMappingChange = (index: number, value: string) => {
+    if (value.startsWith(NEW_SUBJECT_ID_PREFIX)) {
+      const newSubjectName = value.substring(NEW_SUBJECT_ID_PREFIX.length);
+      handleSlotChange(index, 'subjectName', newSubjectName);
+    }
+    handleSlotChange(index, 'subjectIdOrName', value);
+  };
+
   const removeSlot = (index: number) => {
       setExtractedSlots(extractedSlots.filter((_, i) => i !== index));
   };
 
   const handleSave = () => {
-    importTimetable(extractedSlots);
+    // We need to convert MappedExtractedSlot back to ExtractedSlot for the import function
+    const slotsToImport: ExtractedSlot[] = extractedSlots.map(s => {
+        let subjectName: string;
+        if (s.subjectIdOrName.startsWith(NEW_SUBJECT_ID_PREFIX)) {
+            subjectName = s.subjectName;
+        } else {
+            const existingSubject = subjects.find(sub => sub.id === s.subjectIdOrName);
+            subjectName = existingSubject?.name || s.subjectName;
+        }
+        return {
+            day: s.day,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            credits: s.credits,
+            subjectName: subjectName,
+        };
+    });
+
+    importTimetable(slotsToImport);
     toast({
         title: "Timetable Imported!",
         description: "Your schedule has been updated with the new classes.",
@@ -264,7 +304,7 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
         <DialogHeader className="p-4 md:p-6 pb-4 border-b">
           <DialogTitle>Import Timetable with AI</DialogTitle>
           <DialogDescription>
-            Upload a picture of your timetable, and we'll automatically add it to your schedule.
+            Upload a picture of your timetable. You can map new subjects to existing ones to preserve history.
           </DialogDescription>
         </DialogHeader>
 
@@ -303,14 +343,35 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                     ) : !isLoading && extractedSlots.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
                             <p>Analysis results will appear here.</p>
-                            <p className="text-xs">Subjects not already in your list will be created automatically.</p>
+                            <p className="text-xs">You can map AI-detected subjects to your existing ones.</p>
                         </div>
                     ) : (
                          <div className="space-y-2 p-2">
                              {extractedSlots.map((slot, index) => (
                                  <div key={index} className="p-2 border rounded-lg space-y-2">
-                                     <div className="flex justify-between items-center">
-                                         <Input value={slot.subjectName} onChange={e => handleSlotChange(index, 'subjectName', e.target.value)} placeholder="Subject Name" className="font-semibold text-base" />
+                                     <div className="flex justify-between items-start gap-2">
+                                        <div className="flex-grow space-y-2">
+                                          <Select value={slot.subjectIdOrName} onValueChange={value => handleSubjectMappingChange(index, value)}>
+                                              <SelectTrigger className="font-semibold text-base">
+                                                  <SelectValue placeholder="Select or create subject..." />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                  <SelectItem value={`${NEW_SUBJECT_ID_PREFIX}${slot.subjectName}`}>
+                                                      Create new: "{slot.subjectName}"
+                                                  </SelectItem>
+                                                  {subjects.map(s => (
+                                                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                                  ))}
+                                              </SelectContent>
+                                          </Select>
+                                          {slot.subjectIdOrName.startsWith(NEW_SUBJECT_ID_PREFIX) && (
+                                              <Input 
+                                                value={slot.subjectName} 
+                                                onChange={e => handleSlotChange(index, 'subjectName', e.target.value)} 
+                                                placeholder="Subject Name" 
+                                              />
+                                          )}
+                                        </div>
                                          <Button variant="ghost" size="icon" onClick={() => removeSlot(index)}>
                                              <Trash2 className="h-4 w-4 text-destructive" />
                                          </Button>
@@ -331,9 +392,10 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                 </div>
                 {extractedSlots.length > 0 && (
                     <Alert>
+                        <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Review Carefully</AlertTitle>
                         <AlertDescription>
-                            Please check the extracted data for accuracy. Subjects not already in your list will be created automatically.
+                            For each class, either create a new subject or map it to an existing one to keep your history.
                         </AlertDescription>
                     </Alert>
                 )}
