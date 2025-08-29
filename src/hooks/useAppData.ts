@@ -253,7 +253,7 @@ export function useAppData() {
     });
   }, []);
 
-  const addTimetableSlot = useCallback((slot: Omit<TimeSlot, 'id'>) => {
+  const addTimetableSlot = useCallback((slot: Omit<TimeSlot, 'id' | 'credits'> & { credits: number }) => {
     setData(prev => ({ ...prev, timetable: [...prev.timetable, { ...slot, id: crypto.randomUUID() }] }));
   }, []);
 
@@ -454,7 +454,7 @@ export function useAppData() {
   const importTimetable = useCallback((extractedSlots: ExtractedSlot[]) => {
     setData(prev => {
         const newSubjects = [...prev.subjects];
-        const newTimetable = [...prev.timetable];
+        const newTimetable: TimeSlot[] = []; // Start with a fresh timetable
         const existingSubjectNames = new Set(prev.subjects.map(s => s.name.toLowerCase()));
 
         extractedSlots.forEach(slot => {
@@ -476,21 +476,15 @@ export function useAppData() {
             
             const subjectId = subjectNameToIdMap.get(slot.subjectName.toLowerCase());
             if (subjectId) {
-                const slotExists = newTimetable.some(
-                    ts => ts.day === slot.day && ts.startTime === slot.startTime && ts.subjectId === subjectId
-                );
-
-                if (!slotExists) {
-                    const newSlot: TimeSlot = {
-                        id: crypto.randomUUID(),
-                        day: slot.day,
-                        startTime: slot.startTime,
-                        endTime: slot.endTime,
-                        subjectId: subjectId,
-                        credits: slot.credits,
-                    };
-                    newTimetable.push(newSlot);
-                }
+                const newSlot: TimeSlot = {
+                    id: crypto.randomUUID(),
+                    day: slot.day,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime,
+                    subjectId: subjectId,
+                    credits: slot.credits,
+                };
+                newTimetable.push(newSlot);
             }
         });
         
@@ -498,6 +492,7 @@ export function useAppData() {
             ...prev,
             subjects: newSubjects,
             timetable: newTimetable,
+            // Keep existing attendance records
         };
     });
   }, []);
