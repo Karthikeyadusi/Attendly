@@ -1,3 +1,4 @@
+
 <!-- Test change to verify deployment. -->
 # Attendly: Your Smart College Attendance Tracker
 
@@ -24,13 +25,13 @@ This project has been a dynamic and iterative collaboration. Our workflow is a t
 
 Attendly is built with a modern, robust, and scalable tech stack.
 
-- **Framework**: **Next.js 15** (with App Router) for a high-performance React application with server-side rendering capabilities.
-- **Language**: **TypeScript** for type safety and improved developer experience.
-- **Styling**: **Tailwind CSS** for utility-first styling, combined with **ShadCN UI** for a set of beautifully designed, accessible, and customizable components.
-- **Generative AI**: **Google Genkit** serves as the backend-for-frontend to orchestrate AI flows, using the **Gemini 2.0 Flash** model for its powerful vision and reasoning capabilities.
-- **State Management**: **React Hooks** (`useState`, `useEffect`, `useContext`) provide simple and effective local and global state management. The core logic is centralized in the `useAppData` custom hook.
-- **Data Persistence**: **`localStorage`** is used for all client-side data storage, ensuring the app is fast and works offline. There is no traditional backend database required.
-- **Icons**: **Lucide React** for a comprehensive and consistent set of icons.
+- **UI Library**: **React 18**. The core of our application is built using React, leveraging functional components and hooks for a declarative and efficient user interface.
+- **Framework**: **Next.js 15**. Built on top of React, Next.js provides the structure for our application, including the App Router, Server Components, and a seamless development experience.
+- **Language**: **TypeScript**. We use TypeScript across the entire project for robust type safety, better autocompletion, and improved code quality.
+- **Generative AI**: **Google Genkit** serves as our backend-for-frontend, orchestrating powerful AI flows that use the **Gemini 2.0 Flash** model for vision and reasoning tasks.
+- **Styling**: **Tailwind CSS** is used for its utility-first styling approach, combined with **ShadCN UI** for our library of beautifully designed, accessible, and customizable components.
+- **Data & State Management**: State is managed with **React Hooks** and the Context API, centralized in our `useAppData` hook. For persistence, we use **`localStorage`** for an offline-first approach and **Firebase (Firestore)** for optional cloud backup and sync.
+- **Icons**: **Lucide React** provides a comprehensive and consistent set of icons.
 
 ### Project Structure
 
