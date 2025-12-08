@@ -39,11 +39,11 @@ export async function extractTimetable(input: ExtractTimetableInput): Promise<Ex
   // Return a mocked response instead of calling the AI
   return {
     slots: [
-      { day: 'Mon', startTime: '09:00', subjectName: 'Quantum Physics' },
-      { day: 'Mon', startTime: '10:00', subjectName: 'Quantum Physics Lab' },
+      { day: 'Mon', startTime: '09:00', subjectName: 'OOSE' },
+      { day: 'Mon', startTime: '10:00', subjectName: 'CC' },
       { day: 'Tue', startTime: '11:00', subjectName: 'Advanced Thermodynamics' },
       { day: 'Tue', startTime: '14:00', subjectName: 'LUNCH' },
-      { day: 'Wed', startTime: '09:30', subjectName: 'Quantum Physics' },
+      { day: 'Wed', startTime: '09:30', subjectName: 'OOSE' },
       { day: 'Thu', startTime: '10:30', subjectName: 'Advanced Thermodynamics' },
       { day: 'Fri', startTime: '13:00', subjectName: 'History of Science' },
       { day: 'Fri', startTime: '14:00', subjectName: 'History of Science Lab' },
