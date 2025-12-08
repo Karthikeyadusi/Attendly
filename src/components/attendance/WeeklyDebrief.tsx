@@ -116,6 +116,9 @@ export default function WeeklyDebrief() {
 
     return (
         <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-br from-card to-secondary">
+            <div className="text-center mb-2">
+              <h4 className="font-semibold text-sm text-primary tracking-wider uppercase">Weekly AI Debrief</h4>
+            </div>
             <div className="flex items-center gap-3 text-primary">
                 <Sparkles className="w-6 h-6" />
                 <h3 className="font-bold text-lg">{debrief.headline}</h3>
