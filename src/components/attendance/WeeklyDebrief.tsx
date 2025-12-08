@@ -31,35 +31,33 @@ export default function WeeklyDebrief() {
 
             const weeklyRecords = attendance.filter(r => r.date >= weekStartDate && r.date <= weekEndDate);
 
+            const mapRecordToClassInfo = (r: (typeof weeklyRecords)[0]) => {
+                const slot = slotMap.get(r.slotId);
+                const subject = subjectMap.get(slot?.subjectId || '');
+                // Robust date parsing to avoid timezone issues.
+                // Reconstruct date from parts to ensure it's interpreted in the local timezone.
+                const [year, month, day] = r.date.split('-').map(Number);
+                const localDate = new Date(year, month - 1, day);
+                return { 
+                    subjectName: subject?.name || 'Unknown', 
+                    day: dayNames[localDate.getDay()] 
+                };
+            };
+
             const attendedClasses = weeklyRecords
                 .filter(r => r.status === 'Attended')
-                .map(r => {
-                    const slot = slotMap.get(r.slotId);
-                    const subject = subjectMap.get(slot?.subjectId || '');
-                    const [year, month, day] = r.date.split('-').map(Number);
-                    const localDate = new Date(year, month - 1, day);
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
-                }).filter(r => r.subjectName !== 'Unknown');
+                .map(mapRecordToClassInfo)
+                .filter(r => r.subjectName !== 'Unknown');
 
             const missedClasses = weeklyRecords
                 .filter(r => r.status === 'Absent')
-                .map(r => {
-                    const slot = slotMap.get(r.slotId);
-                    const subject = subjectMap.get(slot?.subjectId || '');
-                    const [year, month, day] = r.date.split('-').map(Number);
-                    const localDate = new Date(year, month - 1, day);
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
-                }).filter(r => r.subjectName !== 'Unknown');
+                .map(mapRecordToClassInfo)
+                .filter(r => r.subjectName !== 'Unknown');
 
             const cancelledClasses = weeklyRecords
                 .filter(r => r.status === 'Cancelled')
-                .map(r => {
-                    const slot = slotMap.get(r.slotId);
-                    const subject = subjectMap.get(slot?.subjectId || '');
-                    const [year, month, day] = r.date.split('-').map(Number);
-                    const localDate = new Date(year, month - 1, day);
-                    return { subjectName: subject?.name || 'Unknown', day: dayNames[localDate.getDay()] };
-                }).filter(r => r.subjectName !== 'Unknown');
+                .map(mapRecordToClassInfo)
+                .filter(r => r.subjectName !== 'Unknown');
 
             if (attendedClasses.length === 0 && missedClasses.length === 0) {
                  setError("No attendance was logged this past week, so there's nothing to report. Let's get tracking this week!");
