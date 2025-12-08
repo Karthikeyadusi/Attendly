@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate a weekly attendance summary.
@@ -35,7 +36,15 @@ export type WeeklyDebriefOutput = z.infer<typeof WeeklyDebriefOutputSchema>;
 export async function generateWeeklyDebrief(input: WeeklyDebriefInput): Promise<WeeklyDebriefOutput> {
   const totalConducted = input.attendedClasses.length + input.missedClasses.length;
   const attendancePercentage = totalConducted > 0 ? (input.attendedClasses.length / totalConducted) * 100 : 100;
+  
+  // Return a mocked response instead of calling the AI
+  return {
+    headline: "Solid Week!",
+    summary: "You're doing great. Keep up the consistent effort and you'll finish the semester strong. Let's aim to catch that one class next week!",
+    attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
+  };
 
+  /*
   const aiInput = {
     ...input,
     attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
@@ -45,9 +54,10 @@ export async function generateWeeklyDebrief(input: WeeklyDebriefInput): Promise<
   
   // Ensure the output from the AI has the correct percentage we calculated.
   return { ...output!, attendancePercentage };
+  */
 }
 
-
+/*
 const weeklyDebriefPrompt = ai.definePrompt({
   name: 'weeklyDebriefPrompt',
   input: { schema: WeeklyDebriefInputSchema.extend({ attendancePercentage: z.number() }) },
@@ -86,3 +96,4 @@ Based on this data, generate a response in the specified JSON format.
 3.  **attendancePercentage**: You MUST return the exact percentage value provided in the input: {{attendancePercentage}}. Do not recalculate it.
 `,
 });
+*/
