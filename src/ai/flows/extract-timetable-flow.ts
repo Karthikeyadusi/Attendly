@@ -36,9 +36,26 @@ const ExtractTimetableOutputSchema = z.object({
 export type ExtractTimetableOutput = z.infer<typeof ExtractTimetableOutputSchema>;
 
 export async function extractTimetable(input: ExtractTimetableInput): Promise<ExtractTimetableOutput> {
+  // Return a mocked response instead of calling the AI
+  return {
+    slots: [
+      { day: 'Mon', startTime: '09:00', subjectName: 'Quantum Physics' },
+      { day: 'Mon', startTime: '10:00', subjectName: 'Quantum Physics Lab' },
+      { day: 'Tue', startTime: '11:00', subjectName: 'Advanced Thermodynamics' },
+      { day: 'Tue', startTime: '14:00', subjectName: 'LUNCH' },
+      { day: 'Wed', startTime: '09:30', subjectName: 'Quantum Physics' },
+      { day: 'Thu', startTime: '10:30', subjectName: 'Advanced Thermodynamics' },
+      { day: 'Fri', startTime: '13:00', subjectName: 'History of Science' },
+      { day: 'Fri', startTime: '14:00', subjectName: 'History of Science Lab' },
+    ]
+  };
+
+  /*
   return extractTimetableFlow(input);
+  */
 }
 
+/*
 const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
@@ -71,4 +88,4 @@ const extractTimetableFlow = ai.defineFlow(
     return output!;
   }
 );
-
+*/
