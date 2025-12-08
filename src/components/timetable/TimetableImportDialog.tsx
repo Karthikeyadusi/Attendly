@@ -184,7 +184,6 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
   const { importTimetable, subjects } = useApp();
   const { toast } = useToast();
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [extractedSlots, setExtractedSlots] = useState<MappedExtractedSlot[]>([]);
@@ -192,7 +191,6 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
 
   const resetState = () => {
     setFilePreview(null);
-    setFileType(null);
     setImageData(null);
     setIsLoading(false);
     setExtractedSlots([]);
@@ -208,27 +206,22 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      if (!file.type.startsWith('image/')) {
         toast({
             variant: "destructive",
             title: "Unsupported File Type",
-            description: "Please upload a valid image or PDF file.",
+            description: "Please upload a valid image file.",
         });
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
         return;
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        
-        if (file.type.startsWith('image/')) {
-            setFilePreview(URL.createObjectURL(file));
-            setFileType('image');
-        } else {
-            setFilePreview(null); // No preview for PDF
-            setFileType('pdf');
-        }
-        
+        setFilePreview(URL.createObjectURL(file));
         setImageData(dataUrl);
       };
       reader.readAsDataURL(file);
@@ -237,15 +230,6 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
 
   const handleAnalyze = async () => {
     if (!imageData) return;
-
-    if (fileType === 'pdf') {
-      toast({
-        variant: "destructive",
-        title: "PDF Processing Not Ready",
-        description: "PDF analysis is not yet supported. Please upload an image instead.",
-      });
-      return;
-    }
 
     setIsLoading(true);
     setExtractedSlots([]);
@@ -332,22 +316,13 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
   };
   
   const renderFilePreview = () => {
-    if (fileType === 'image' && filePreview) {
+    if (filePreview) {
         return <Image src={filePreview} alt="Timetable preview" fill={true} className="rounded-lg object-contain" />;
-    }
-    if (fileType === 'pdf') {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-                <FileText className="mx-auto h-12 w-12 text-primary" />
-                <p className="mt-2 font-semibold">PDF file selected</p>
-                <p className="text-xs text-muted-foreground">Ready to be analyzed</p>
-            </div>
-        );
     }
     return (
         <div className="text-center">
             <Upload className="mx-auto h-12 w-12" />
-            <p>Click to upload an image or PDF</p>
+            <p>Click to upload an image</p>
         </div>
     );
   };
@@ -358,14 +333,14 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
         <DialogHeader className="p-4 md:p-6 pb-4 border-b">
           <DialogTitle>Import Timetable with AI</DialogTitle>
           <DialogDescription>
-            Upload a picture or PDF of your timetable. You can map new subjects to existing ones to preserve history.
+            Upload a picture of your timetable. You can map new subjects to existing ones to preserve history.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 grid grid-cols-1 gap-6 overflow-y-auto p-4 lg:grid-cols-2 md:p-6 min-h-0">
             {/* Left side: Upload */}
             <div className="space-y-4">
-                 <Label htmlFor="timetable-upload">Timetable File</Label>
+                 <Label htmlFor="timetable-upload">Timetable Image</Label>
                  <div 
                     className="relative w-full h-64 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
