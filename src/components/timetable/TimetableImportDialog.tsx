@@ -237,6 +237,16 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
 
   const handleAnalyze = async () => {
     if (!imageData) return;
+
+    if (fileType === 'pdf') {
+      toast({
+        variant: "destructive",
+        title: "PDF Processing Not Ready",
+        description: "PDF analysis is not yet supported. Please upload an image instead.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setExtractedSlots([]);
     try {
@@ -251,6 +261,10 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
           }
         });
         setExtractedSlots(mapped);
+        toast({
+            title: "Analysis Complete",
+            description: "Review the extracted classes below.",
+        });
       } else {
         toast({
             variant: "destructive",
@@ -445,5 +459,3 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     </Dialog>
   );
 }
-
-    
