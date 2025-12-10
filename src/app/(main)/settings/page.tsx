@@ -6,9 +6,9 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History, Cloud, CloudSync, AlertCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import type { BackupData, ArchivedSemester } from "@/types";
+import type { BackupData, ArchivedSemester, SyncStatus } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,9 +17,35 @@ import { firebaseEnabled } from "@/lib/firebase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import SemesterViewDialog from "@/components/calendar/SemesterViewDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const BACKUP_VERSION = 1;
+
+const SyncIndicator = ({ status }: { status: SyncStatus }) => {
+    const config = {
+        idle: { Icon: Cloud, color: 'text-muted-foreground', label: 'Sync Idle' },
+        syncing: { Icon: CloudSync, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
+        synced: { Icon: Cloud, color: 'text-green-500', label: 'Up to Date' },
+        offline: { Icon: CloudOff, color: 'text-muted-foreground', label: 'Offline' },
+        error: { Icon: AlertCircle, color: 'text-destructive', label: 'Sync Error' },
+    };
+    const { Icon, color, label } = config[status];
+
+    return (
+        <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Icon className={`h-5 w-5 ${color}`} />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{label}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
+
 
 export default function SettingsPage() {
   const { 
@@ -35,6 +61,7 @@ export default function SettingsPage() {
     archiveAndReset,
     clearAllData,
     archives,
+    syncStatus,
   } = useApp();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -196,7 +223,8 @@ export default function SettingsPage() {
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <div className="flex w-full flex-col items-center gap-2 sm:w-auto sm:flex-row">
+                 <SyncIndicator status={syncStatus} />
                 <Button onClick={forceCloudSync} variant="outline" size="sm">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Sync

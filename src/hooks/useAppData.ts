@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap, OneOffSlot, ArchivedSemester } from '@/types';
+import type { AppCoreData, BackupData, ExtractedSlot, Subject, TimeSlot, AttendanceStatus, AttendanceRecord, DayOfWeek, SubjectStatsMap, OneOffSlot, ArchivedSemester, SyncStatus } from '@/types';
 import { useIsClient } from './useIsClient';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
@@ -43,9 +43,34 @@ export function useAppData() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const [isOnline, setIsOnline] = useState(isClient ? navigator.onLine : true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+
+  // Effect to handle browser online/offline status
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setSyncStatus('idle'); // When back online, reset sync status
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setSyncStatus('offline');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+    };
+  }, [isClient]);
 
   const handleFirestoreError = useCallback((error: any) => {
     console.error("Firestore error:", error);
+    setSyncStatus('error');
     let description = "An unknown error occurred while saving your data.";
     if (error.code === 'permission-denied') {
         description = "This is likely due to incorrect Firestore security rules. Please ensure they allow writes for authenticated users.";
@@ -83,6 +108,7 @@ export function useAppData() {
   useEffect(() => {
     if (!firebaseEnabled || !firebaseApp) {
       setIsLoaded(true); // If firebase is disabled, we are "loaded" with local data
+      setSyncStatus('offline');
       return;
     }
     const auth = getAuth(firebaseApp);
@@ -98,6 +124,7 @@ export function useAppData() {
         } else {
           setData(getInitialData());
         }
+        setSyncStatus('offline');
         setIsLoaded(true);
       }
       // isLoaded will be set to true by the Firestore listener for logged-in users
@@ -108,7 +135,8 @@ export function useAppData() {
   // Firestore real-time listener for logged-in users
   useEffect(() => {
     if (!user || !firebaseEnabled || !firebaseApp) return; // Only run for logged-in users
-
+    
+    setSyncStatus('syncing');
     const db = getFirestore(firebaseApp);
     const userDocRef = doc(db, 'users', user.uid);
 
@@ -123,6 +151,7 @@ export function useAppData() {
         const initial = getInitialData();
         setData({ ...initial, ...cloudData });
       }
+      setSyncStatus('synced');
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
     }, (error) => {
       handleFirestoreError(error)
@@ -139,12 +168,19 @@ export function useAppData() {
     localStorage.setItem(APP_DATA_KEY, JSON.stringify(data));
 
     // If user is logged in, save to Firestore
-    if (user && firebaseEnabled && firebaseApp) {
+    if (user && firebaseEnabled && firebaseApp && isOnline) {
+      setSyncStatus('syncing');
       const db = getFirestore(firebaseApp);
       const userDocRef = doc(db, 'users', user.uid);
-      setDoc(userDocRef, data).catch(handleFirestoreError);
+      setDoc(userDocRef, data)
+        .then(() => {
+          setSyncStatus('synced');
+        })
+        .catch(handleFirestoreError);
+    } else if (user && !isOnline) {
+      setSyncStatus('offline');
     }
-  }, [data, user, isClient, isLoaded, handleFirestoreError]);
+  }, [data, user, isClient, isLoaded, handleFirestoreError, isOnline]);
 
 
   const signIn = async () => {
@@ -157,7 +193,8 @@ export function useAppData() {
     try {
         const result = await signInWithPopup(auth, provider);
         const loggedInUser = result.user;
-
+        
+        setSyncStatus('syncing');
         const db = getFirestore(firebaseApp);
         const userDocRef = doc(db, 'users', loggedInUser.uid);
         const docSnap = await getDoc(userDocRef);
@@ -174,8 +211,9 @@ export function useAppData() {
             const initial = getInitialData();
             setData({ ...initial, ...cloudData });
         }
-
+        setSyncStatus('synced');
     } catch (error: any) {
+        setSyncStatus('error');
         console.error("Google Sign-in failed:", error);
         let description = "An unknown error occurred.";
         if (error.code === 'auth/popup-closed-by-user') {
@@ -195,6 +233,7 @@ export function useAppData() {
       if (!firebaseEnabled || !firebaseApp) return;
       const auth = getAuth(firebaseApp);
       await signOut(auth);
+      setSyncStatus('offline');
       // The onAuthStateChanged listener will handle state reset
   };
 
@@ -207,16 +246,26 @@ export function useAppData() {
         });
         return;
     }
+    if (!isOnline) {
+      toast({
+            variant: "destructive",
+            title: "You are Offline",
+            description: "Please check your internet connection to sync.",
+        });
+        return;
+    }
     
     toast({
         title: "Syncing...",
         description: "Forcing a sync with the cloud.",
     });
 
+    setSyncStatus('syncing');
     try {
         const db = getFirestore(firebaseApp);
         const userDocRef = doc(db, 'users', user.uid);
         await setDoc(userDocRef, data);
+        setSyncStatus('synced');
         toast({
             title: "Sync Complete",
             description: "Your data is up-to-date in the cloud.",
@@ -224,7 +273,7 @@ export function useAppData() {
     } catch (error) {
         handleFirestoreError(error);
     }
-  }, [user, data, toast, handleFirestoreError]);
+  }, [user, data, toast, handleFirestoreError, isOnline]);
 
   const addSubject = useCallback((subject: Omit<Subject, 'id'>) => {
     setData(prev => ({ ...prev, subjects: [...prev.subjects, { ...subject, id: crypto.randomUUID() }] }));
@@ -655,6 +704,8 @@ export function useAppData() {
   return {
     ...data,
     isLoaded,
+    isOnline,
+    syncStatus,
     user,
     signIn,
     signOutUser,

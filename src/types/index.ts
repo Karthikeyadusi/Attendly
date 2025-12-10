@@ -60,6 +60,8 @@ export type SubjectStats = {
   percentage: number;
 };
 
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error';
+
 export type SubjectMap = Map<string, Subject>;
 export type TimetableByDayMap = Map<DayOfWeek, TimeSlot[]>;
 export type AttendanceByDateMap = Map<string, AttendanceRecord[]>;
@@ -99,6 +101,8 @@ export type AppCoreData = {
 // The complete app state including derived data and auth state.
 export interface AppData extends AppCoreData {
   user: User | null;
+  isOnline: boolean;
+  syncStatus: SyncStatus;
   
   // Derived, memoized data for performance
   subjectMap: SubjectMap;
