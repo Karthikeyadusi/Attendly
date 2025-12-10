@@ -44,7 +44,6 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `You are an AI assistant. Your only task is to look at the timetable image and extract EVERY SINGLE block you see, including academic classes and other activities.
 
 For each block, provide the following information:
