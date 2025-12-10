@@ -100,7 +100,7 @@ This is the most complex and powerful feature of Attendly.
     - The `TimetableImportDialog` component receives this data and displays it in a preview list, allowing the user to review and edit any details.
 
 4.  **Saving the Data (`useAppData.ts`)**:
-    - When the user clicks "Save," the extracted slots are passed to the `importTimetable` function in `useAppData`.
+    - When  user clicks "Save," the extracted slots are passed to the `importTimetable` function in `useAppData`.
     - This function intelligently merges the data:
         - It checks if the subjects already exist. If not, it creates them.
         - It iterates through the slots and adds them to the existing timetable, checking for duplicates.
