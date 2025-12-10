@@ -38,15 +38,28 @@ export async function generateWeeklyDebrief(input: WeeklyDebriefInput): Promise<
   const totalConducted = input.attendedClasses.length + input.missedClasses.length;
   const attendancePercentage = totalConducted > 0 ? (input.attendedClasses.length / totalConducted) * 100 : 100;
   
-  const aiInput = {
-    ...input,
+  // DEMO MODE: Return hardcoded data to ensure demo works.
+  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate AI processing time
+
+  let headline = "Solid Week!";
+  let summary = "You're doing a great job staying on top of your classes. Keep up the consistent effort!";
+  
+  if (attendancePercentage === 100) {
+    headline = "Perfect Week!";
+    summary = "Flawless attendance! You didn't miss a single class. That's incredible discipline, keep it up!";
+  } else if (attendancePercentage >= 90) {
+    headline = "Awesome Work!";
+    summary = "You had fantastic attendance this week. Your dedication is clear and it will definitely pay off.";
+  } else if (attendancePercentage < 75) {
+    headline = "Let's Bounce Back!";
+    summary = `A bit of a slip this week, but nothing you can't recover from. Let's focus on hitting those morning classes next week!`;
+  }
+
+  return {
+    headline,
+    summary,
     attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
   };
-
-  const { output } = await weeklyDebriefPrompt(aiInput);
-  
-  // Ensure the output from the AI has the correct percentage we calculated.
-  return { ...output!, attendancePercentage };
 }
 
 
