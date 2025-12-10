@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { DayOfWeek } from '@/types';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const days: [DayOfWeek, ...DayOfWeek[]] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -44,7 +45,7 @@ const prompt = ai.definePrompt({
   name: 'extractTimetablePrompt',
   input: {schema: ExtractTimetableInputSchema},
   output: {schema: ExtractTimetableOutputSchema},
-  model: 'gemini-pro-vision',
+  model: googleAI.model('gemini-pro-vision'),
   prompt: `You are an AI assistant. Your only task is to look at the timetable image and extract EVERY SINGLE block you see, including academic classes and other activities.
 
 For each block, provide the following information:

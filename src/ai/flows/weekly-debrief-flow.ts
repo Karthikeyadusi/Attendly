@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const ClassInfoSchema = z.object({
   subjectName: z.string(),
@@ -53,7 +54,7 @@ const weeklyDebriefPrompt = ai.definePrompt({
   name: 'weeklyDebriefPrompt',
   input: { schema: WeeklyDebriefInputSchema.extend({ attendancePercentage: z.number() }) },
   output: { schema: WeeklyDebriefOutputSchema },
-  model: 'gemini-1.5-flash',
+  model: googleAI.model('gemini-1.5-flash'),
   prompt: `You are an AI assistant in an attendance tracking app called Attendly. Your task is to generate a personalized weekly summary.
 You will act as a friendly and motivational coach.
 
