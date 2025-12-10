@@ -8,11 +8,38 @@ import Onboarding from "@/components/Onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, Cloud, RefreshCw, CloudOff, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { SyncStatus } from "@/types";
+
+const SyncIndicator = ({ status }: { status: SyncStatus }) => {
+    const config = {
+        idle: { Icon: Cloud, color: 'text-muted-foreground', label: 'Sync Idle' },
+        syncing: { Icon: RefreshCw, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
+        synced: { Icon: Cloud, color: 'text-green-500', label: 'Up to Date' },
+        offline: { Icon: CloudOff, color: 'text-muted-foreground', label: 'Offline' },
+        error: { Icon: AlertCircle, color: 'text-destructive', label: 'Sync Error' },
+    };
+    const { Icon, color, label } = config[status];
+
+    return (
+        <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Icon className={`h-5 w-5 ${color}`} />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{label}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
+
 
 export default function DashboardPage() {
-  const { subjects, timetable, isLoaded, userName, user } = useApp();
+  const { subjects, timetable, isLoaded, userName, user, syncStatus } = useApp();
 
   if (!isLoaded) {
     return (
@@ -38,7 +65,30 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {!user && (
+      {user && (
+         <Card>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 text-primary p-2.5 rounded-full">
+                <Cloud className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base">Cloud Sync Status</h3>
+                <p className="text-muted-foreground text-sm capitalize">{syncStatus}</p>
+              </div>
+            </div>
+            <SyncIndicator status={syncStatus} />
+          </CardContent>
+        </Card>
+      )}
+
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+        {userName ? `Welcome, ${userName}!` : 'Dashboard'}
+      </h2>
+      <AttendanceStats />
+      <TodaysClasses />
+
+       {!user && (
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -60,12 +110,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
-
-      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-        {userName ? `Welcome, ${userName}!` : 'Dashboard'}
-      </h2>
-      <AttendanceStats />
-      <TodaysClasses />
     </div>
   );
 }

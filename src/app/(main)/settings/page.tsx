@@ -6,7 +6,7 @@ import { useApp } from "@/components/AppProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History, Cloud, CloudSync, AlertCircle } from "lucide-react";
+import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History, Cloud, AlertCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { BackupData, ArchivedSemester, SyncStatus } from "@/types";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ const BACKUP_VERSION = 1;
 const SyncIndicator = ({ status }: { status: SyncStatus }) => {
     const config = {
         idle: { Icon: Cloud, color: 'text-muted-foreground', label: 'Sync Idle' },
-        syncing: { Icon: CloudSync, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
+        syncing: { Icon: RefreshCw, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
         synced: { Icon: Cloud, color: 'text-green-500', label: 'Up to Date' },
         offline: { Icon: CloudOff, color: 'text-muted-foreground', label: 'Offline' },
         error: { Icon: AlertCircle, color: 'text-destructive', label: 'Sync Error' },
