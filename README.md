@@ -106,7 +106,7 @@ This is the most complex and powerful feature of Attendly.
         - It iterates through the slots and adds them to the existing timetable, checking for duplicates.
     - The new state is saved to `localStorage`, and the UI updates instantly.
 
-## Getting Started
+## Get started with Attendly
 
 To run this project locally, follow these steps:
 
