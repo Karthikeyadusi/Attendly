@@ -37,15 +37,6 @@ export async function generateWeeklyDebrief(input: WeeklyDebriefInput): Promise<
   const totalConducted = input.attendedClasses.length + input.missedClasses.length;
   const attendancePercentage = totalConducted > 0 ? (input.attendedClasses.length / totalConducted) * 100 : 100;
   
-  /*
-  // Return a mocked response instead of calling the AI
-  return {
-    headline: "Solid Week!",
-    summary: "You're doing great. Keep up the consistent effort and you'll finish the semester strong. Let's aim to catch that one class next week!",
-    attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
-  };
-  */
-
   const aiInput = {
     ...input,
     attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
@@ -62,6 +53,7 @@ const weeklyDebriefPrompt = ai.definePrompt({
   name: 'weeklyDebriefPrompt',
   input: { schema: WeeklyDebriefInputSchema.extend({ attendancePercentage: z.number() }) },
   output: { schema: WeeklyDebriefOutputSchema },
+  model: 'gemini-1.5-flash',
   prompt: `You are an AI assistant in an attendance tracking app called Attendly. Your task is to generate a personalized weekly summary.
 You will act as a friendly and motivational coach.
 
