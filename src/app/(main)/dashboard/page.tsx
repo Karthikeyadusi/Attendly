@@ -65,7 +65,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {user && (
+      {user ? (
          <Card>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -80,15 +80,7 @@ export default function DashboardPage() {
             <SyncIndicator status={syncStatus} />
           </CardContent>
         </Card>
-      )}
-
-      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-        {userName ? `Welcome, ${userName}!` : 'Dashboard'}
-      </h2>
-      <AttendanceStats />
-      <TodaysClasses />
-
-       {!user && (
+      ) : (
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -110,6 +102,13 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+        {userName ? `Welcome, ${userName}!` : 'Dashboard'}
+      </h2>
+      
+      <AttendanceStats />
+      <TodaysClasses />
     </div>
   );
 }
