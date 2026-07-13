@@ -1,0 +1,1455 @@
+{
+  "subjects": [
+    {
+      "name": "OOSE",
+      "id": "a5200f44-5a94-4e45-bb00-bb6750b84970",
+      "type": "Lecture"
+    },
+    {
+      "name": "CC",
+      "type": "Lecture",
+      "id": "e255b713-0c82-4993-bd4b-fedfee2c76e8"
+    },
+    {
+      "name": "DC&CN",
+      "id": "7053b881-2c4d-4d0b-b3b5-e6a7bcdf9fcf",
+      "type": "Lecture"
+    },
+    {
+      "id": "e0fbce2f-79b4-4ba8-85a2-e02e0c364d27",
+      "name": "AI",
+      "type": "Lecture"
+    },
+    {
+      "type": "Lab",
+      "id": "f86d3f04-fc8f-4faf-bf59-a64ffcb5d3aa",
+      "name": "DC&CN Lab-1"
+    },
+    {
+      "name": "SWACHBHARAT",
+      "type": "Lecture",
+      "id": "61745aff-5b1f-4f94-923d-3d4533ae98f2"
+    },
+    {
+      "name": "BA",
+      "id": "5599fbb7-e035-4c69-b63c-c90a6a19a780",
+      "type": "Lecture"
+    },
+    {
+      "id": "dccd7df5-1f3d-44c6-9342-fd1c09b6cd7c",
+      "name": "Soft Skills",
+      "type": "Lecture"
+    },
+    {
+      "name": "OOSE Lab 1",
+      "id": "f3a1c92c-1c0b-4095-826c-10b9ff363785",
+      "type": "Lab"
+    }
+  ],
+  "timetable": [
+    {
+      "endTime": "09:50",
+      "id": "0889067d-c442-449e-8222-2b744a32240d",
+      "subjectId": "a5200f44-5a94-4e45-bb00-bb6750b84970",
+      "credits": 1,
+      "startTime": "09:00",
+      "day": "Mon"
+    },
+    {
+      "day": "Mon",
+      "credits": 3,
+      "subjectId": "e255b713-0c82-4993-bd4b-fedfee2c76e8",
+      "endTime": "12:20",
+      "id": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "startTime": "09:50"
+    },
+    {
+      "startTime": "09:00",
+      "id": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "subjectId": "7053b881-2c4d-4d0b-b3b5-e6a7bcdf9fcf",
+      "credits": 2,
+      "day": "Tue",
+      "endTime": "10:40"
+    },
+    {
+      "credits": 2,
+      "startTime": "10:40",
+      "day": "Tue",
+      "endTime": "12:20",
+      "subjectId": "e0fbce2f-79b4-4ba8-85a2-e02e0c364d27",
+      "id": "a9233730-7b70-4370-9e51-a752067f3767"
+    },
+    {
+      "day": "Tue",
+      "id": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "credits": 2,
+      "endTime": "15:10",
+      "startTime": "13:30",
+      "subjectId": "f86d3f04-fc8f-4faf-bf59-a64ffcb5d3aa"
+    },
+    {
+      "subjectId": "7053b881-2c4d-4d0b-b3b5-e6a7bcdf9fcf",
+      "startTime": "09:00",
+      "endTime": "10:40",
+      "day": "Wed",
+      "id": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "credits": 2
+    },
+    {
+      "id": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "endTime": "12:20",
+      "subjectId": "e0fbce2f-79b4-4ba8-85a2-e02e0c364d27",
+      "startTime": "10:40",
+      "credits": 2,
+      "day": "Wed"
+    },
+    {
+      "day": "Wed",
+      "credits": 2,
+      "startTime": "01:30",
+      "id": "2461263d-60a8-489e-8883-918629930b29",
+      "endTime": "15:10",
+      "subjectId": "e255b713-0c82-4993-bd4b-fedfee2c76e8"
+    },
+    {
+      "startTime": "15:10",
+      "credits": 2,
+      "endTime": "16:00",
+      "day": "Wed",
+      "id": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "subjectId": "61745aff-5b1f-4f94-923d-3d4533ae98f2"
+    },
+    {
+      "credits": 1,
+      "subjectId": "a5200f44-5a94-4e45-bb00-bb6750b84970",
+      "id": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "endTime": "09:50",
+      "startTime": "09:00",
+      "day": "Thu"
+    },
+    {
+      "credits": 3,
+      "endTime": "12:20",
+      "startTime": "09:50",
+      "subjectId": "5599fbb7-e035-4c69-b63c-c90a6a19a780",
+      "id": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "day": "Thu"
+    },
+    {
+      "endTime": "09:50",
+      "startTime": "09:00",
+      "id": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "subjectId": "a5200f44-5a94-4e45-bb00-bb6750b84970",
+      "day": "Fri",
+      "credits": 1
+    },
+    {
+      "subjectId": "5599fbb7-e035-4c69-b63c-c90a6a19a780",
+      "day": "Fri",
+      "credits": 3,
+      "id": "bb435967-83ed-490a-a7bd-07791397ad69",
+      "endTime": "12:20",
+      "startTime": "09:50"
+    },
+    {
+      "startTime": "13:30",
+      "id": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "credits": 3,
+      "endTime": "16:00",
+      "day": "Fri",
+      "subjectId": "dccd7df5-1f3d-44c6-9342-fd1c09b6cd7c"
+    },
+    {
+      "endTime": "09:50",
+      "id": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "subjectId": "a5200f44-5a94-4e45-bb00-bb6750b84970",
+      "credits": 1,
+      "startTime": "09:00",
+      "day": "Sat"
+    },
+    {
+      "id": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "credits": 3,
+      "startTime": "09:50",
+      "endTime": "12:20",
+      "subjectId": "f3a1c92c-1c0b-4095-826c-10b9ff363785",
+      "day": "Sat"
+    }
+  ],
+  "attendance": [
+    {
+      "status": "Attended",
+      "id": "2025-08-26-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "date": "2025-08-26"
+    },
+    {
+      "id": "2025-08-26-a9233730-7b70-4370-9e51-a752067f3767",
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "date": "2025-08-26",
+      "status": "Attended"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "id": "2025-08-26-b506939a-7146-4b92-b677-401389e2c2e0",
+      "date": "2025-08-26"
+    },
+    {
+      "date": "2025-08-25",
+      "status": "Attended",
+      "id": "2025-08-25-0889067d-c442-449e-8222-2b744a32240d",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d"
+    },
+    {
+      "id": "2025-08-25-821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "status": "Cancelled",
+      "date": "2025-08-25"
+    },
+    {
+      "slotId": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "id": "2025-08-23-6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "status": "Absent",
+      "date": "2025-08-23"
+    },
+    {
+      "status": "Absent",
+      "slotId": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "date": "2025-08-23",
+      "id": "2025-08-23-c4d032fa-deb4-4541-984e-8944a952b053"
+    },
+    {
+      "id": "2025-08-21-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-08-21",
+      "status": "Absent",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "id": "2025-08-21-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-08-21"
+    },
+    {
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "status": "Absent",
+      "date": "2025-08-22",
+      "id": "2025-08-22-35233a33-961c-40b5-8cf4-cc0e19124ad5"
+    },
+    {
+      "date": "2025-08-22",
+      "status": "Absent",
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69",
+      "id": "2025-08-22-bb435967-83ed-490a-a7bd-07791397ad69"
+    },
+    {
+      "id": "2025-08-22-798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "slotId": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "status": "Cancelled",
+      "date": "2025-08-22"
+    },
+    {
+      "id": "2025-09-01-0889067d-c442-449e-8222-2b744a32240d",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d",
+      "status": "Attended",
+      "date": "2025-09-01"
+    },
+    {
+      "date": "2025-09-01",
+      "id": "2025-09-01-821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "status": "Attended",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83"
+    },
+    {
+      "id": "2025-09-02-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "status": "Attended",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "date": "2025-09-02"
+    },
+    {
+      "status": "Attended",
+      "id": "2025-09-02-a9233730-7b70-4370-9e51-a752067f3767",
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "date": "2025-09-02"
+    },
+    {
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "status": "Cancelled",
+      "id": "2025-09-02-b506939a-7146-4b92-b677-401389e2c2e0",
+      "date": "2025-09-02"
+    },
+    {
+      "date": "2025-09-03",
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "status": "Absent",
+      "id": "2025-09-03-59ce2bc2-4483-4ab9-8584-1997e323036c"
+    },
+    {
+      "status": "Absent",
+      "id": "2025-09-03-ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "date": "2025-09-03"
+    },
+    {
+      "status": "Absent",
+      "date": "2025-09-04",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "id": "2025-09-04-02555180-3f7b-4e89-8a21-7c0934e74170"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "id": "2025-09-04-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-09-04"
+    },
+    {
+      "status": "Absent",
+      "date": "2025-09-03",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "id": "2025-09-03-2461263d-60a8-489e-8883-918629930b29"
+    },
+    {
+      "id": "2025-09-03-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "date": "2025-09-03",
+      "status": "Absent"
+    },
+    {
+      "date": "2025-09-06",
+      "id": "2025-09-06-6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "slotId": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "status": "Attended"
+    },
+    {
+      "date": "2025-09-06",
+      "slotId": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "id": "2025-09-06-c4d032fa-deb4-4541-984e-8944a952b053",
+      "status": "Attended"
+    },
+    {
+      "status": "Attended",
+      "id": "2025-09-08-0889067d-c442-449e-8222-2b744a32240d",
+      "date": "2025-09-08",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d"
+    },
+    {
+      "date": "2025-09-08",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "status": "Attended",
+      "id": "2025-09-08-821511ff-eeec-46d0-bf25-02a2a1bc9e83"
+    },
+    {
+      "id": "2025-08-28-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-08-28",
+      "status": "Cancelled"
+    },
+    {
+      "status": "Absent",
+      "id": "2025-08-28-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-08-28",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170"
+    },
+    {
+      "id": "2025-08-30-c4d032fa-deb4-4541-984e-8944a952b053",
+      "status": "Cancelled",
+      "slotId": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "date": "2025-08-30"
+    },
+    {
+      "date": "2025-08-30",
+      "status": "Absent",
+      "id": "2025-08-30-6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "slotId": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7"
+    },
+    {
+      "id": "2025-09-09-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "date": "2025-09-09",
+      "status": "Attended",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f"
+    },
+    {
+      "id": "2025-09-09-b506939a-7146-4b92-b677-401389e2c2e0",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "status": "Attended",
+      "date": "2025-09-09"
+    },
+    {
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "id": "2025-09-09-a9233730-7b70-4370-9e51-a752067f3767",
+      "date": "2025-09-09",
+      "status": "Cancelled"
+    },
+    {
+      "id": "2025-09-10-2461263d-60a8-489e-8883-918629930b29",
+      "date": "2025-09-10",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "status": "Attended"
+    },
+    {
+      "id": "2025-09-10-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "status": "Attended",
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "date": "2025-09-10"
+    },
+    {
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "date": "2025-09-10",
+      "id": "2025-09-10-ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "status": "Attended"
+    },
+    {
+      "id": "2025-09-11-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "status": "Cancelled",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-09-11"
+    },
+    {
+      "date": "2025-09-10",
+      "id": "2025-09-10-59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "status": "Postponed",
+      "previousStatus": null,
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c"
+    },
+    {
+      "id": "2025-09-11-d038e0f7-ec24-4181-845f-15ffe8f69b29",
+      "status": "Attended",
+      "date": "2025-09-11",
+      "slotId": "d038e0f7-ec24-4181-845f-15ffe8f69b29"
+    },
+    {
+      "status": "Attended",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "id": "2025-09-11-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-09-11"
+    },
+    {
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d",
+      "status": "Attended",
+      "date": "2025-09-15",
+      "id": "2025-09-15-0889067d-c442-449e-8222-2b744a32240d"
+    },
+    {
+      "id": "2025-09-15-821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "status": "Attended",
+      "date": "2025-09-15"
+    },
+    {
+      "date": "2025-09-16",
+      "id": "2025-09-16-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "status": "Attended",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f"
+    },
+    {
+      "date": "2025-09-16",
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "id": "2025-09-16-a9233730-7b70-4370-9e51-a752067f3767",
+      "status": "Cancelled"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "id": "2025-09-16-b506939a-7146-4b92-b677-401389e2c2e0",
+      "date": "2025-09-16"
+    },
+    {
+      "id": "2025-09-17-59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "date": "2025-09-17",
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "status": "Attended"
+    },
+    {
+      "status": "Attended",
+      "date": "2025-09-17",
+      "id": "2025-09-17-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "id": "2025-09-17-2461263d-60a8-489e-8883-918629930b29",
+      "date": "2025-09-17"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "date": "2025-09-17",
+      "id": "2025-09-17-ec6e0ead-c12e-4638-9611-199a391d8dc6"
+    },
+    {
+      "id": "2025-09-18-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-09-18",
+      "status": "Attended",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170"
+    },
+    {
+      "status": "Attended",
+      "id": "2025-09-18-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-09-18",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b"
+    },
+    {
+      "slotId": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "date": "2025-09-18",
+      "status": "Cancelled",
+      "id": "2025-09-18-798b4747-3ba4-46ce-b928-4848b31b0d80"
+    },
+    {
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "date": "2025-09-19",
+      "id": "2025-09-19-35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "status": "Absent"
+    },
+    {
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69",
+      "id": "2025-09-19-bb435967-83ed-490a-a7bd-07791397ad69",
+      "status": "Absent",
+      "date": "2025-09-19"
+    },
+    {
+      "date": "2025-09-20",
+      "id": "2025-09-20-6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "slotId": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "status": "Attended"
+    },
+    {
+      "slotId": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "date": "2025-09-20",
+      "status": "Cancelled",
+      "id": "2025-09-20-c4d032fa-deb4-4541-984e-8944a952b053"
+    },
+    {
+      "date": "2025-09-12",
+      "id": "2025-09-12-35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "status": "Cancelled"
+    },
+    {
+      "id": "2025-09-12-bb435967-83ed-490a-a7bd-07791397ad69",
+      "status": "Cancelled",
+      "date": "2025-09-12",
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69"
+    },
+    {
+      "status": "Absent",
+      "date": "2025-09-22",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d",
+      "id": "2025-09-22-0889067d-c442-449e-8222-2b744a32240d"
+    },
+    {
+      "status": "Cancelled",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "date": "2025-09-22",
+      "id": "2025-09-22-821511ff-eeec-46d0-bf25-02a2a1bc9e83"
+    },
+    {
+      "id": "2025-09-24-2461263d-60a8-489e-8883-918629930b29",
+      "date": "2025-09-24",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "status": "Attended"
+    },
+    {
+      "status": "Attended",
+      "date": "2025-09-24",
+      "id": "2025-09-24-59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c"
+    },
+    {
+      "id": "2025-09-24-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "date": "2025-09-24",
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "status": "Cancelled"
+    },
+    {
+      "date": "2025-09-23",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "id": "2025-09-23-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "status": "Attended"
+    },
+    {
+      "status": "Attended",
+      "date": "2025-09-23",
+      "id": "2025-09-23-a9233730-7b70-4370-9e51-a752067f3767",
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767"
+    },
+    {
+      "date": "2025-09-23",
+      "id": "2025-09-23-b506939a-7146-4b92-b677-401389e2c2e0",
+      "status": "Attended",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0"
+    },
+    {
+      "id": "2025-09-24-ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "status": "Attended",
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "date": "2025-09-24"
+    },
+    {
+      "id": "2025-09-25-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "status": "Attended",
+      "date": "2025-09-25"
+    },
+    {
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "date": "2025-09-25",
+      "status": "Cancelled",
+      "id": "2025-09-25-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b"
+    },
+    {
+      "slotId": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "date": "2025-09-25",
+      "id": "2025-09-25-798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "status": "Cancelled"
+    },
+    {
+      "status": "Absent",
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "id": "2025-09-26-35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "date": "2025-09-26"
+    },
+    {
+      "date": "2025-09-26",
+      "id": "2025-09-26-bb435967-83ed-490a-a7bd-07791397ad69",
+      "status": "Cancelled",
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69"
+    },
+    {
+      "id": "2025-10-06-0889067d-c442-449e-8222-2b744a32240d",
+      "date": "2025-10-06",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d",
+      "status": "Absent"
+    },
+    {
+      "id": "2025-10-06-821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "date": "2025-10-06",
+      "status": "Absent"
+    },
+    {
+      "status": "Absent",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "date": "2025-10-07",
+      "id": "2025-10-07-16979718-befd-4e8d-b42d-4aafd7820f0f"
+    },
+    {
+      "status": "Absent",
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "date": "2025-10-07",
+      "id": "2025-10-07-a9233730-7b70-4370-9e51-a752067f3767"
+    },
+    {
+      "date": "2025-10-07",
+      "id": "2025-10-07-b506939a-7146-4b92-b677-401389e2c2e0",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "status": "Absent"
+    },
+    {
+      "status": "Attended",
+      "date": "2025-10-08",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "id": "2025-10-08-2461263d-60a8-489e-8883-918629930b29"
+    },
+    {
+      "status": "Attended",
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "date": "2025-10-08",
+      "id": "2025-10-08-59ce2bc2-4483-4ab9-8584-1997e323036c"
+    },
+    {
+      "status": "Attended",
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "date": "2025-10-08",
+      "id": "2025-10-08-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1"
+    },
+    {
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "id": "2025-10-08-ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "date": "2025-10-08",
+      "status": "Attended"
+    },
+    {
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-10-09",
+      "status": "Absent",
+      "id": "2025-10-09-02555180-3f7b-4e89-8a21-7c0934e74170"
+    },
+    {
+      "slotId": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "date": "2025-10-09",
+      "id": "2025-10-09-798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "status": "Cancelled"
+    },
+    {
+      "status": "Cancelled",
+      "date": "2025-10-10",
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "id": "2025-10-10-35233a33-961c-40b5-8cf4-cc0e19124ad5"
+    },
+    {
+      "id": "2025-10-10-bb435967-83ed-490a-a7bd-07791397ad69",
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69",
+      "date": "2025-10-10",
+      "status": "Cancelled"
+    },
+    {
+      "status": "Attended",
+      "id": "2025-10-13-0889067d-c442-449e-8222-2b744a32240d",
+      "slotId": "0889067d-c442-449e-8222-2b744a32240d",
+      "date": "2025-10-13"
+    },
+    {
+      "id": "2025-10-13-821511ff-eeec-46d0-bf25-02a2a1bc9e83",
+      "date": "2025-10-13",
+      "status": "Attended",
+      "slotId": "821511ff-eeec-46d0-bf25-02a2a1bc9e83"
+    },
+    {
+      "id": "2025-10-14-16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "date": "2025-10-14",
+      "slotId": "16979718-befd-4e8d-b42d-4aafd7820f0f",
+      "status": "Attended"
+    },
+    {
+      "slotId": "a9233730-7b70-4370-9e51-a752067f3767",
+      "date": "2025-10-14",
+      "status": "Attended",
+      "id": "2025-10-14-a9233730-7b70-4370-9e51-a752067f3767"
+    },
+    {
+      "status": "Attended",
+      "slotId": "b506939a-7146-4b92-b677-401389e2c2e0",
+      "id": "2025-10-14-b506939a-7146-4b92-b677-401389e2c2e0",
+      "date": "2025-10-14"
+    },
+    {
+      "slotId": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "id": "2025-10-15-59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "status": "Attended",
+      "date": "2025-10-15"
+    },
+    {
+      "slotId": "7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "status": "Attended",
+      "id": "2025-10-15-7b2df31c-fe5a-4a6d-9bbb-4739a215e7e1",
+      "date": "2025-10-15"
+    },
+    {
+      "status": "Attended",
+      "slotId": "2461263d-60a8-489e-8883-918629930b29",
+      "date": "2025-10-15",
+      "id": "2025-10-15-2461263d-60a8-489e-8883-918629930b29"
+    },
+    {
+      "date": "2025-10-15",
+      "id": "2025-10-15-ec6e0ead-c12e-4638-9611-199a391d8dc6",
+      "status": "Attended",
+      "slotId": "ec6e0ead-c12e-4638-9611-199a391d8dc6"
+    },
+    {
+      "slotId": "02555180-3f7b-4e89-8a21-7c0934e74170",
+      "date": "2025-10-16",
+      "id": "2025-10-16-02555180-3f7b-4e89-8a21-7c0934e74170",
+      "status": "Attended"
+    },
+    {
+      "id": "2025-10-16-fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "slotId": "fb8b66fd-d4e3-4ec1-9f8e-2c593b102f1b",
+      "status": "Attended",
+      "date": "2025-10-16"
+    },
+    {
+      "id": "2025-10-17-35233a33-961c-40b5-8cf4-cc0e19124ad5",
+      "status": "Attended",
+      "date": "2025-10-17",
+      "slotId": "35233a33-961c-40b5-8cf4-cc0e19124ad5"
+    },
+    {
+      "id": "2025-10-17-bb435967-83ed-490a-a7bd-07791397ad69",
+      "status": "Attended",
+      "date": "2025-10-17",
+      "slotId": "bb435967-83ed-490a-a7bd-07791397ad69"
+    },
+    {
+      "slotId": "798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "id": "2025-10-17-798b4747-3ba4-46ce-b928-4848b31b0d80",
+      "status": "Absent",
+      "date": "2025-10-17"
+    },
+    {
+      "date": "2025-10-18",
+      "status": "Attended",
+      "id": "2025-10-18-6e54c97e-92d6-4ad9-8ce1-bbed565d9de7",
+      "slotId": "6e54c97e-92d6-4ad9-8ce1-bbed565d9de7"
+    },
+    {
+      "status": "Attended",
+      "date": "2025-10-18",
+      "slotId": "c4d032fa-deb4-4541-984e-8944a952b053",
+      "id": "2025-10-18-c4d032fa-deb4-4541-984e-8944a952b053"
+    }
+  ],
+  "oneOffSlots": [
+    {
+      "date": "2025-09-11",
+      "endTime": "10:40",
+      "originalDate": "2025-09-10",
+      "originalSlotId": "59ce2bc2-4483-4ab9-8584-1997e323036c",
+      "id": "d038e0f7-ec24-4181-845f-15ffe8f69b29",
+      "startTime": "09:00",
+      "subjectId": "7053b881-2c4d-4d0b-b3b5-e6a7bcdf9fcf",
+      "credits": 2
+    }
+  ],
+  "holidays": [
+    "2025-08-27",
+    "2025-09-05",
+    "2025-08-29",
+    "2025-09-13",
+    "2025-09-29",
+    "2025-09-30",
+    "2025-10-01",
+    "2025-10-02",
+    "2025-10-03",
+    "2025-10-04",
+    "2025-09-27",
+    "2025-10-11"
+  ],
+  "minAttendancePercentage": 75,
+  "historicalData": {
+    "attendedCredits": 66,
+    "conductedCredits": 111
+  },
+  "trackingStartDate": "2025-10-12",
+  "userName": "Karthik",
+  "archives": [
+    {
+      "holidays": [
+        "2025-07-12",
+        "2025-07-31",
+        "2025-07-28",
+        "2025-07-29",
+        "2025-07-30"
+      ],
+      "minAttendancePercentage": 75,
+      "historicalData": {
+        "conductedCredits": 192,
+        "attendedCredits": 136
+      },
+      "name": "2-2 SEM 2025",
+      "oneOffSlots": [
+        {
+          "id": "f6e2098e-9b0b-4142-a631-221cc4228ab9",
+          "endTime": "20:40",
+          "subjectId": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "startTime": "19:00",
+          "date": "2025-07-07",
+          "originalSlotId": "a157828b-7bb8-4eb7-a0fb-b632b08b028c"
+        },
+        {
+          "subjectId": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "id": "9ba69a9f-a2b5-4255-b828-97a32c1de874",
+          "startTime": "19:00",
+          "date": "2025-07-07",
+          "originalSlotId": "a157828b-7bb8-4eb7-a0fb-b632b08b028c",
+          "endTime": "20:40"
+        },
+        {
+          "startTime": "10:40",
+          "subjectId": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8",
+          "date": "2025-07-11",
+          "id": "3eee9215-2774-4b38-84f4-edfc658fb440",
+          "originalSlotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "endTime": "12:20",
+          "originalDate": "2025-07-08"
+        },
+        {
+          "originalSlotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "date": "2025-07-18",
+          "id": "ec9e6457-02ca-4ece-9c5d-c36326fbca7f",
+          "subjectId": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8",
+          "originalDate": "2025-07-15",
+          "endTime": "12:20",
+          "startTime": "10:40"
+        },
+        {
+          "id": "2777bb51-dcf5-4016-8353-40c1ecfb5976",
+          "endTime": "10:40",
+          "startTime": "09:00",
+          "originalSlotId": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "subjectId": "3d258f3d-414c-4412-b910-c4ed3a9b33b9",
+          "originalDate": "2025-07-18",
+          "date": "2025-07-19"
+        },
+        {
+          "originalDate": "2025-07-22",
+          "date": "2025-07-25",
+          "startTime": "10:40",
+          "subjectId": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8",
+          "endTime": "12:20",
+          "id": "a921b6d8-5c74-4a6c-839d-6db777b6d20f",
+          "originalSlotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e"
+        },
+        {
+          "originalSlotId": "8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "id": "5fc47986-ae41-41bd-bfe7-8c95df96a6b0",
+          "endTime": "10:40",
+          "startTime": "09:00",
+          "originalDate": "2025-07-23",
+          "subjectId": "3d258f3d-414c-4412-b910-c4ed3a9b33b9",
+          "date": "2025-07-24"
+        },
+        {
+          "endTime": "15:10",
+          "originalDate": "2025-07-24",
+          "subjectId": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "id": "4024fa77-0fe1-4e5f-85cc-eb106449b9df",
+          "originalSlotId": "a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "startTime": "13:30",
+          "date": "2025-07-24"
+        }
+      ],
+      "subjects": [
+        {
+          "id": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "type": "Lecture",
+          "name": "FLAT",
+          "credits": 2
+        },
+        {
+          "id": "2b4c1795-62ac-4bc6-914a-d501ef1b2a62",
+          "name": "DAA",
+          "type": "Lecture",
+          "credits": 2
+        },
+        {
+          "id": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8",
+          "name": "DBMS",
+          "type": "Lecture",
+          "credits": 2
+        },
+        {
+          "credits": 2,
+          "type": "Lecture",
+          "name": "ME",
+          "id": "0687dc10-2c1b-4c5c-aefc-bceac5093c83"
+        },
+        {
+          "name": "WT LAB-2/DWDM LAB-1",
+          "type": "Lab",
+          "credits": 2,
+          "id": "cd437d91-5d63-44ec-a8fa-782ea405ef90"
+        },
+        {
+          "credits": 2,
+          "id": "3d258f3d-414c-4412-b910-c4ed3a9b33b9",
+          "type": "Lecture",
+          "name": "MP"
+        },
+        {
+          "type": "Lab",
+          "name": "ALC LAB -1",
+          "id": "e544f003-81a4-4078-8713-e02d7b246c7b",
+          "credits": 2
+        },
+        {
+          "type": "Lecture",
+          "id": "5815b9b5-18d2-4f09-afbb-16a9384ae5e9",
+          "credits": 2,
+          "name": "SWACHBHARAT"
+        },
+        {
+          "type": "Lab",
+          "id": "764145de-66a6-411d-970e-ae46abee65d0",
+          "credits": 2,
+          "name": "ALC LAB-2/ WT LAB-1"
+        }
+      ],
+      "attendance": [
+        {
+          "status": "Attended",
+          "id": "2025-07-01-5989e145-bf17-4a18-bf54-59b46f693d99",
+          "slotId": "5989e145-bf17-4a18-bf54-59b46f693d99",
+          "date": "2025-07-01"
+        },
+        {
+          "date": "2025-07-01",
+          "id": "2025-07-01-21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "slotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "status": "Cancelled"
+        },
+        {
+          "id": "2025-07-01-433a39f0-a612-4737-8f4b-667012d49a77",
+          "status": "Attended",
+          "slotId": "433a39f0-a612-4737-8f4b-667012d49a77",
+          "date": "2025-07-01"
+        },
+        {
+          "id": "2025-07-02-c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "slotId": "c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "status": "Attended",
+          "date": "2025-07-02"
+        },
+        {
+          "id": "2025-07-02-8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "status": "Attended",
+          "slotId": "8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "date": "2025-07-02"
+        },
+        {
+          "slotId": "8609bfad-67db-4608-9887-4ba130ba59dd",
+          "status": "Attended",
+          "id": "2025-07-02-8609bfad-67db-4608-9887-4ba130ba59dd",
+          "date": "2025-07-02"
+        },
+        {
+          "slotId": "a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "id": "2025-07-03-a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "status": "Attended",
+          "date": "2025-07-03"
+        },
+        {
+          "date": "2025-07-03",
+          "status": "Attended",
+          "id": "2025-07-03-35c98396-807c-4278-bbb7-aa6970f76317",
+          "slotId": "35c98396-807c-4278-bbb7-aa6970f76317"
+        },
+        {
+          "id": "2025-07-03-80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "slotId": "80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "date": "2025-07-03",
+          "status": "Attended"
+        },
+        {
+          "date": "2025-07-04",
+          "slotId": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "status": "Absent",
+          "id": "2025-07-04-6c51a3bc-4ad2-4f4b-94d2-43f52379bc92"
+        },
+        {
+          "id": "2025-07-04-26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "slotId": "26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "date": "2025-07-04",
+          "status": "Cancelled"
+        },
+        {
+          "slotId": "e9e23125-f27a-4177-aad6-b5697f604bf4",
+          "date": "2025-07-05",
+          "id": "2025-07-05-e9e23125-f27a-4177-aad6-b5697f604bf4",
+          "status": "Attended"
+        },
+        {
+          "status": "Attended",
+          "id": "2025-07-07-fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "slotId": "fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "date": "2025-07-07"
+        },
+        {
+          "id": "2025-07-07-f6e2098e-9b0b-4142-a631-221cc4228ab9",
+          "slotId": "f6e2098e-9b0b-4142-a631-221cc4228ab9",
+          "date": "2025-07-07",
+          "status": "Cancelled"
+        },
+        {
+          "slotId": "9ba69a9f-a2b5-4255-b828-97a32c1de874",
+          "date": "2025-07-07",
+          "status": "Cancelled",
+          "id": "2025-07-07-9ba69a9f-a2b5-4255-b828-97a32c1de874"
+        },
+        {
+          "id": "2025-07-07-a157828b-7bb8-4eb7-a0fb-b632b08b028c",
+          "status": "Attended",
+          "date": "2025-07-07",
+          "slotId": "a157828b-7bb8-4eb7-a0fb-b632b08b028c"
+        },
+        {
+          "id": "2025-07-08-21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "date": "2025-07-08",
+          "slotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "previousStatus": null,
+          "status": "Postponed"
+        },
+        {
+          "status": "Attended",
+          "id": "2025-07-08-5989e145-bf17-4a18-bf54-59b46f693d99",
+          "slotId": "5989e145-bf17-4a18-bf54-59b46f693d99",
+          "date": "2025-07-08"
+        },
+        {
+          "slotId": "433a39f0-a612-4737-8f4b-667012d49a77",
+          "date": "2025-07-08",
+          "id": "2025-07-08-433a39f0-a612-4737-8f4b-667012d49a77",
+          "status": "Attended"
+        },
+        {
+          "id": "2025-07-09-c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "date": "2025-07-09",
+          "status": "Attended",
+          "slotId": "c38fdf23-4a93-41a5-888e-15355ebab61a"
+        },
+        {
+          "id": "2025-07-09-8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "status": "Attended",
+          "date": "2025-07-09",
+          "slotId": "8ccc5e51-6e4b-45e4-8933-4b70365e6502"
+        },
+        {
+          "id": "2025-07-09-8609bfad-67db-4608-9887-4ba130ba59dd",
+          "slotId": "8609bfad-67db-4608-9887-4ba130ba59dd",
+          "date": "2025-07-09",
+          "status": "Attended"
+        },
+        {
+          "date": "2025-07-10",
+          "slotId": "35c98396-807c-4278-bbb7-aa6970f76317",
+          "id": "2025-07-10-35c98396-807c-4278-bbb7-aa6970f76317",
+          "status": "Attended"
+        },
+        {
+          "slotId": "a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "status": "Attended",
+          "date": "2025-07-10",
+          "id": "2025-07-10-a4102f49-02bb-473f-8355-4d3b3cb0d88e"
+        },
+        {
+          "status": "Attended",
+          "slotId": "80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "id": "2025-07-10-80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "date": "2025-07-10"
+        },
+        {
+          "date": "2025-07-11",
+          "id": "2025-07-11-6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "status": "Attended",
+          "slotId": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92"
+        },
+        {
+          "status": "Cancelled",
+          "slotId": "3eee9215-2774-4b38-84f4-edfc658fb440",
+          "id": "2025-07-11-3eee9215-2774-4b38-84f4-edfc658fb440",
+          "date": "2025-07-11"
+        },
+        {
+          "status": "Cancelled",
+          "slotId": "26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "id": "2025-07-11-26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "date": "2025-07-11"
+        },
+        {
+          "date": "2025-07-14",
+          "status": "Attended",
+          "slotId": "a157828b-7bb8-4eb7-a0fb-b632b08b028c",
+          "id": "2025-07-14-a157828b-7bb8-4eb7-a0fb-b632b08b028c"
+        },
+        {
+          "slotId": "fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "date": "2025-07-14",
+          "id": "2025-07-14-fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "status": "Attended"
+        },
+        {
+          "slotId": "5989e145-bf17-4a18-bf54-59b46f693d99",
+          "status": "Attended",
+          "date": "2025-07-15",
+          "id": "2025-07-15-5989e145-bf17-4a18-bf54-59b46f693d99"
+        },
+        {
+          "slotId": "433a39f0-a612-4737-8f4b-667012d49a77",
+          "id": "2025-07-15-433a39f0-a612-4737-8f4b-667012d49a77",
+          "date": "2025-07-15",
+          "status": "Attended"
+        },
+        {
+          "date": "2025-07-15",
+          "status": "Postponed",
+          "id": "2025-07-15-21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "previousStatus": null,
+          "slotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e"
+        },
+        {
+          "id": "2025-07-16-c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "status": "Absent",
+          "slotId": "c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "date": "2025-07-16"
+        },
+        {
+          "slotId": "8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "status": "Absent",
+          "date": "2025-07-16",
+          "id": "2025-07-16-8ccc5e51-6e4b-45e4-8933-4b70365e6502"
+        },
+        {
+          "date": "2025-07-16",
+          "id": "2025-07-16-8609bfad-67db-4608-9887-4ba130ba59dd",
+          "slotId": "8609bfad-67db-4608-9887-4ba130ba59dd",
+          "status": "Absent"
+        },
+        {
+          "slotId": "a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "date": "2025-07-17",
+          "id": "2025-07-17-a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "status": "Attended"
+        },
+        {
+          "slotId": "35c98396-807c-4278-bbb7-aa6970f76317",
+          "date": "2025-07-17",
+          "status": "Attended",
+          "id": "2025-07-17-35c98396-807c-4278-bbb7-aa6970f76317"
+        },
+        {
+          "id": "2025-07-17-80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "slotId": "80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "date": "2025-07-17",
+          "status": "Cancelled"
+        },
+        {
+          "id": "2025-07-18-ec9e6457-02ca-4ece-9c5d-c36326fbca7f",
+          "status": "Cancelled",
+          "slotId": "ec9e6457-02ca-4ece-9c5d-c36326fbca7f",
+          "date": "2025-07-18"
+        },
+        {
+          "slotId": "26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "id": "2025-07-18-26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "status": "Absent",
+          "date": "2025-07-18"
+        },
+        {
+          "date": "2025-07-19",
+          "id": "2025-07-19-cc5c3012-336f-4705-bfde-a7a910bfc8d2",
+          "status": "Attended",
+          "slotId": "cc5c3012-336f-4705-bfde-a7a910bfc8d2"
+        },
+        {
+          "date": "2025-07-19",
+          "status": "Absent",
+          "slotId": "e9e23125-f27a-4177-aad6-b5697f604bf4",
+          "id": "2025-07-19-e9e23125-f27a-4177-aad6-b5697f604bf4"
+        },
+        {
+          "date": "2025-07-18",
+          "id": "2025-07-18-6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "previousStatus": "Cancelled",
+          "slotId": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "status": "Postponed"
+        },
+        {
+          "slotId": "2777bb51-dcf5-4016-8353-40c1ecfb5976",
+          "date": "2025-07-19",
+          "status": "Attended",
+          "id": "2025-07-19-2777bb51-dcf5-4016-8353-40c1ecfb5976"
+        },
+        {
+          "status": "Cancelled",
+          "id": "2025-07-21-a157828b-7bb8-4eb7-a0fb-b632b08b028c",
+          "date": "2025-07-21",
+          "slotId": "a157828b-7bb8-4eb7-a0fb-b632b08b028c"
+        },
+        {
+          "id": "2025-07-21-fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "status": "Attended",
+          "date": "2025-07-21",
+          "slotId": "fbe9c96b-c1ec-475b-8263-fadb2964ad7d"
+        },
+        {
+          "status": "Postponed",
+          "id": "2025-07-22-21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "previousStatus": null,
+          "slotId": "21e977c8-fb6f-44cf-beb4-19b5003a750e",
+          "date": "2025-07-22"
+        },
+        {
+          "date": "2025-07-22",
+          "slotId": "433a39f0-a612-4737-8f4b-667012d49a77",
+          "id": "2025-07-22-433a39f0-a612-4737-8f4b-667012d49a77",
+          "status": "Cancelled"
+        },
+        {
+          "date": "2025-07-22",
+          "slotId": "5989e145-bf17-4a18-bf54-59b46f693d99",
+          "status": "Absent",
+          "id": "2025-07-22-5989e145-bf17-4a18-bf54-59b46f693d99"
+        },
+        {
+          "status": "Cancelled",
+          "slotId": "80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "date": "2025-07-24",
+          "id": "2025-07-24-80630a1c-f5e9-4413-beb6-c4465ec4c0e0"
+        },
+        {
+          "date": "2025-07-24",
+          "previousStatus": null,
+          "status": "Postponed",
+          "id": "2025-07-24-a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "slotId": "a4102f49-02bb-473f-8355-4d3b3cb0d88e"
+        },
+        {
+          "date": "2025-07-24",
+          "slotId": "5fc47986-ae41-41bd-bfe7-8c95df96a6b0",
+          "status": "Attended",
+          "id": "2025-07-24-5fc47986-ae41-41bd-bfe7-8c95df96a6b0"
+        },
+        {
+          "id": "2025-07-24-35c98396-807c-4278-bbb7-aa6970f76317",
+          "status": "Attended",
+          "slotId": "35c98396-807c-4278-bbb7-aa6970f76317",
+          "date": "2025-07-24"
+        },
+        {
+          "status": "Attended",
+          "id": "2025-07-24-4024fa77-0fe1-4e5f-85cc-eb106449b9df",
+          "slotId": "4024fa77-0fe1-4e5f-85cc-eb106449b9df",
+          "date": "2025-07-24"
+        },
+        {
+          "id": "2025-07-25-6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "status": "Attended",
+          "date": "2025-07-25",
+          "slotId": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92"
+        },
+        {
+          "id": "2025-07-25-a921b6d8-5c74-4a6c-839d-6db777b6d20f",
+          "date": "2025-07-25",
+          "status": "Attended",
+          "slotId": "a921b6d8-5c74-4a6c-839d-6db777b6d20f"
+        },
+        {
+          "id": "2025-07-25-26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "status": "Attended",
+          "slotId": "26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "date": "2025-07-25"
+        },
+        {
+          "slotId": "e9e23125-f27a-4177-aad6-b5697f604bf4",
+          "date": "2025-07-26",
+          "id": "2025-07-26-e9e23125-f27a-4177-aad6-b5697f604bf4",
+          "status": "Attended"
+        },
+        {
+          "id": "2025-07-23-c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "date": "2025-07-23",
+          "slotId": "c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "status": "Attended"
+        },
+        {
+          "date": "2025-07-23",
+          "id": "2025-07-23-8609bfad-67db-4608-9887-4ba130ba59dd",
+          "status": "Attended",
+          "slotId": "8609bfad-67db-4608-9887-4ba130ba59dd"
+        },
+        {
+          "id": "2025-07-23-8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "slotId": "8ccc5e51-6e4b-45e4-8933-4b70365e6502",
+          "date": "2025-07-23",
+          "status": "Cancelled"
+        }
+      ],
+      "timetable": [
+        {
+          "startTime": "09:00",
+          "subjectId": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "id": "a157828b-7bb8-4eb7-a0fb-b632b08b028c",
+          "endTime": "10:40",
+          "day": "Mon"
+        },
+        {
+          "endTime": "12:20",
+          "id": "fbe9c96b-c1ec-475b-8263-fadb2964ad7d",
+          "day": "Mon",
+          "subjectId": "2b4c1795-62ac-4bc6-914a-d501ef1b2a62",
+          "startTime": "10:40"
+        },
+        {
+          "subjectId": "2b4c1795-62ac-4bc6-914a-d501ef1b2a62",
+          "startTime": "09:00",
+          "day": "Tue",
+          "endTime": "10:40",
+          "id": "5989e145-bf17-4a18-bf54-59b46f693d99"
+        },
+        {
+          "subjectId": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8",
+          "day": "Tue",
+          "endTime": "12:20",
+          "startTime": "10:40",
+          "id": "21e977c8-fb6f-44cf-beb4-19b5003a750e"
+        },
+        {
+          "subjectId": "0687dc10-2c1b-4c5c-aefc-bceac5093c83",
+          "day": "Tue",
+          "endTime": "15:10",
+          "startTime": "13:30",
+          "id": "433a39f0-a612-4737-8f4b-667012d49a77"
+        },
+        {
+          "subjectId": "cd437d91-5d63-44ec-a8fa-782ea405ef90",
+          "id": "c38fdf23-4a93-41a5-888e-15355ebab61a",
+          "day": "Wed",
+          "startTime": "09:00",
+          "endTime": "10:40"
+        },
+        {
+          "startTime": "10:40",
+          "subjectId": "3d258f3d-414c-4412-b910-c4ed3a9b33b9",
+          "endTime": "12:20",
+          "day": "Wed",
+          "id": "8ccc5e51-6e4b-45e4-8933-4b70365e6502"
+        },
+        {
+          "subjectId": "e544f003-81a4-4078-8713-e02d7b246c7b",
+          "day": "Wed",
+          "endTime": "15:10",
+          "startTime": "13:30",
+          "id": "8609bfad-67db-4608-9887-4ba130ba59dd"
+        },
+        {
+          "startTime": "09:00",
+          "endTime": "10:40",
+          "id": "a4102f49-02bb-473f-8355-4d3b3cb0d88e",
+          "subjectId": "176ca8fa-793c-4ae8-bb43-6a40546b250a",
+          "day": "Thu"
+        },
+        {
+          "startTime": "10:40",
+          "endTime": "12:20",
+          "id": "35c98396-807c-4278-bbb7-aa6970f76317",
+          "day": "Thu",
+          "subjectId": "5c607ef0-f07c-4b1f-85b2-b2f936ebf8c8"
+        },
+        {
+          "id": "80630a1c-f5e9-4413-beb6-c4465ec4c0e0",
+          "endTime": "15:10",
+          "startTime": "13:30",
+          "subjectId": "0687dc10-2c1b-4c5c-aefc-bceac5093c83",
+          "day": "Thu"
+        },
+        {
+          "endTime": "10:40",
+          "id": "6c51a3bc-4ad2-4f4b-94d2-43f52379bc92",
+          "startTime": "09:00",
+          "day": "Fri",
+          "subjectId": "3d258f3d-414c-4412-b910-c4ed3a9b33b9"
+        },
+        {
+          "endTime": "15:10",
+          "day": "Fri",
+          "id": "26ac791d-f5c0-4258-98eb-5ca38e289887",
+          "subjectId": "5815b9b5-18d2-4f09-afbb-16a9384ae5e9",
+          "startTime": "13:30"
+        },
+        {
+          "startTime": "10:40",
+          "endTime": "12:20",
+          "subjectId": "764145de-66a6-411d-970e-ae46abee65d0",
+          "day": "Sat",
+          "id": "e9e23125-f27a-4177-aad6-b5697f604bf4"
+        }
+      ],
+      "trackingStartDate": "2025-07-01",
+      "archivedAt": "2025-08-01T10:38:08.022Z"
+    }
+  ],
+  "version": 1,
+  "exportedAt": "2025-10-18T06:44:06.385Z"
+}

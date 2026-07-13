@@ -1,147 +1,199 @@
+# Attendly
 
-<!-- Test change to verify deployment. -->
-# Attendly: Your Smart College Attendance Tracker
+### **Make informed academic decisions. An offline-first, mobile-optimized college attendance companion.**
 
-Attendly is a modern, AI-powered web application designed to help college students effortlessly track their class attendance, manage their schedule, and stay on top of their academic requirements. Built with a focus on a seamless mobile-first experience, it leverages AI to simplify setup and provides clear, actionable insights into attendance data.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Vitest Unit Tests](https://img.shields.io/badge/tests-47%20passed-blue.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PWA Status](https://img.shields.io/badge/PWA-fully--supported-orange.svg)]()
 
-## 💡 Our Collaborative Journey
+---
 
-This project has been a dynamic and iterative collaboration. Our workflow is a tight loop of ideation, implementation, and refinement: the project lead identifies a new feature or a critical bug, and the AI coding partner translates that vision into concrete code changes across the Next.js and Genkit stack. Together, we've implemented the "Weekly Debrief," a motivational, AI-powered summary that cleverly uses the empty dashboard space on Sundays to provide users with personalized feedback. More importantly, we've diligently hunted down and squashed several complex bugs, from critical React rendering errors caused by misplaced state updates to subtle timezone-related issues that incorrectly marked days as holidays. We also enhanced the user experience by adding crucial features like the ability to undo logged attendance and a fail-safe mechanism to delete accidentally duplicated postponed classes, making the app not just more powerful, but significantly more reliable and user-friendly.
+## 🚀 Project Highlights
 
-## ✨ Core Features
+*   **Production Tested:** Active user base of ~20 students across 3 academic semesters.
+*   **Offline-First & Installable:** Progressive Web App (PWA) that loads instantly and runs entirely offline.
+*   **Local-First OCR:** Scan and parse printed university timetables locally in-browser using Tesseract.js.
+*   **Pure Attendance Engine:** 100% pure function architecture for attendance logic, isolated from database and framework side-effects.
+*   **Comprehensive Test Suite:** 47 automated Vitest unit tests verifying calculations and parser edge cases.
+*   **Optional Firebase Sync:** Synchronize across multiple devices with real-time cloud backup, only if signed in.
+*   **Strict Security Boundaries:** Data persistence, backup uploads, and OCR outputs validated using Zod.
 
-- **Dashboard**: An at-a-glance overview of your day, showing today's classes and key attendance statistics.
-- **AI-Powered Timetable Import**: Simply upload a picture of your timetable, and our AI will analyze it, extract your schedule, and set it up for you automatically.
-- **AI Weekly Debrief**: Every Sunday, receive a personalized, AI-generated summary of your weekly attendance with a motivational message to keep you on track.
-- **Manual Schedule Management**: Easily add, edit, and delete subjects and individual class slots in your weekly timetable.
-- **Intuitive Attendance Logging**: Log attendance for each class with a single tap using clear, color-coded statuses (✅ Attended, ❌ Absent, 🚫 Cancelled), and easily undo any mistakes.
-- **Class Rescheduling**: Postpone a class to a different day, which creates a one-off entry in your schedule and can be deleted if needed.
-- **Swipeable Timetable UI**: A beautiful, mobile-first card stack layout lets you swipe through your weekly schedule, with today's date automatically highlighted.
-- **Insightful Statistics**: Track your overall attendance percentage for each subject and see how many classes you can "safely" miss based on your college's requirements.
-- **Client-Side Storage**: All your data is stored securely in your browser's `localStorage`, making the app fast, responsive, and available offline.
-- **Dark/Light Mode**: A theme toggle to switch between dark and light modes for comfortable viewing.
+---
 
-## 🚀 Technical Stack & Architecture
+## 📌 The Problem
 
-Attendly is built with a modern, robust, and scalable tech stack.
+In many universities, attendance tracking remains analog— professors record attendance on physical registers, leaving students guessing their actual status.
 
-- **UI Library**: **React 18**. The core of our application is built using React, leveraging functional components and hooks for a declarative and efficient user interface.
-- **Framework**: **Next.js 15**. Built on top of React, Next.js provides the structure for our application, including the App Router, Server Components, and a seamless development experience.
-- **Language**: **TypeScript**. We use TypeScript across the entire project for robust type safety, better autocompletion, and improved code quality.
-- **Generative AI**: **Google Genkit** serves as our backend-for-frontend, orchestrating powerful AI flows that use the **Gemini 2.0 Flash** model for vision and reasoning tasks.
-- **Styling**: **Tailwind CSS** is used for its utility-first styling approach, combined with **ShadCN UI** for our library of beautifully designed, accessible, and customizable components.
-- **Data & State Management**: State is managed with **React Hooks** and the Context API, centralized in our `useAppData` hook. For persistence, we use **`localStorage`** for an offline-first approach and **Firebase (Firestore)** for optional cloud backup and sync.
-- **Icons**: **Lucide React** provides a comprehensive and consistent set of icons.
+Students are forced to mentally calculate percentages, guess how many classes they can skip, or manage schedules in messy text files. 
 
-### Project Structure
+**Attendly solves this single problem.** It provides an installable mobile dashboard that tells students exactly where they stand, how many classes they can safely miss, or how many consecutive classes they must attend to recover their percentage.
 
-The project follows a standard Next.js App Router structure, organized for clarity and maintainability.
+---
 
-```
-/src
-├── ai/
-│   ├── flows/
-│   │   ├── extract-timetable-flow.ts  # Genkit flow for AI timetable parsing
-│   │   └── weekly-debrief-flow.ts     # Genkit flow for the weekly summary
-│   └── genkit.ts                      # Genkit configuration
-├── app/
-│   ├── (main)/                        # Main authenticated app routes
-│   │   ├── dashboard/
-│   │   ├── subjects/
-│   │   └── timetable/
-│   ├── globals.css                    # Global styles & Tailwind CSS
-│   └── layout.tsx                     # Root application layout
-├── components/
-│   ├── ui/                            # ShadCN UI components
-│   ├── attendance/                    # Components for attendance tracking
-│   ├── layout/                        # Header, BottomNav, etc.
-│   ├── subjects/                      # Components for subject management
-│   └── timetable/                     # Components for the timetable view
-├── hooks/
-│   ├── useAppData.ts                  # Core hook for all app logic and data
-│   └── use-toast.ts                   # Custom hook for toast notifications
-├── types/
-│   └── index.ts                       # TypeScript type definitions
-└── lib/
-    └── utils.ts                       # Utility functions (e.g., cn for classnames)
+## 🛠️ System Architecture
+
+Attendly is designed as a **client-side-first** application. All core state changes and calculations occur locally in the user's browser, with optional real-time cloud synchronization.
+
+```mermaid
+graph TD
+    User([User Action]) --> UI[React Components]
+    UI --> Context[AppProvider Context]
+    Context --> Hook[useAppData Hook]
+    Hook --> Engine[Attendance Engine <br> pure functions]
+    Hook --> Storage[(localStorage)]
+    Hook --> Cloud[(Cloud Firestore <br> optional sync)]
+
+    style Storage fill:#f9f,stroke:#333,stroke-width:2px
+    style Cloud fill:#bbf,stroke:#333,stroke-width:1px
 ```
 
-## 🧠 How It Works: A Deep Dive
+### The OCR Timetable Pipeline
 
-### Data Management with `useAppData`
+The OCR pipeline runs entirely on the client, enabling offline schedule imports without backend costs or API keys.
 
-The entire application state (subjects, timetable, attendance) is managed through the `useAppData` custom hook (`src/hooks/useAppData.ts`). This hook acts as a single source of truth.
+```mermaid
+graph LR
+    Image[Timetable Photo] --> Tesseract[Tesseract.js WASM]
+    Tesseract --> RawText[Raw Text Output]
+    RawText --> Parser[parseOcrText]
+    Parser --> Process[processRawSlots]
+    Process --> EditUI[Review & Map UI]
+    EditUI --> Import[Import Schedule]
+```
 
-1.  **Initialization**: On app load, it reads data from `localStorage`. If no data exists, it starts with a clean initial state.
-2.  **State Updates**: All actions (adding a subject, logging attendance, etc.) are functions within this hook. They update the state object.
-3.  **Persistence**: A `useEffect` hook listens for any changes to the state. Whenever the data changes, it's automatically saved back to `localStorage`.
-4.  **Context Provider**: The state and action functions are provided to the entire component tree via `AppProvider`, making the data globally accessible without prop drilling.
+---
 
-### The AI Timetable Import Flow
+## ✨ Features
 
-This is the most complex and powerful feature of Attendly.
+### 📅 Schedule & Session Management
+- **Timetable Scanner:** Import schedule instantly by uploading an image of your printed timetable.
+- **Rescheduling & Postponing:** Shift individual classes to other dates. The system tracks rescheduled sessions as `OneOffSlots` linked to original weekly classes.
+- **Semester Archival:** Reset the dashboard for a fresh semester while preserving historical data.
 
-1.  **User Interaction (`TimetableImportDialog.tsx`)**:
-    - The user clicks "Import with AI" and selects an image file.
-    - The image is converted into a **Base64 Data URI**. This is a string representation of the image that can be easily sent as part of a JSON payload to the AI.
+### 📈 Smart Attendance Insights
+- **Color-Coded Statuses:** Log sessions as **Attended**, **Absent**, **Cancelled**, or **Postponed** with a single tap.
+- **Safe-to-Miss Math:** Know exactly how many classes you can skip while remaining above your college's minimum attendance threshold (e.g., 75%).
+- **Classes Needed:** If you drop below the threshold, the app calculates the exact number of consecutive classes you must attend to recover.
+- **Historical Bridging:** Enter prior attendance credits manually if you started tracking midway through a semester.
 
-2.  **AI Invocation (`extract-timetable-flow.ts`)**:
-    - The Data URI is passed to the `extractTimetable` Genkit flow.
-    - This flow is defined with a Zod schema for its input (`photoDataUri`) and output (`slots`).
-    - It contains a detailed **prompt** that instructs the Gemini model on its task. The prompt is crucial and tells the AI:
-        - It is an intelligent timetable parser.
-        - To identify the subject, day, start time, and end time.
-        - The expected output format (JSON).
-        - **Critical Inference Logic**: A client-side processing function (`processRawSlots`) intelligently calculates end times by looking ahead to the next class and handling special cases like lunch breaks, ensuring a robust and accurate schedule is generated even from incomplete timetable images.
-    - The `{{media url=photoDataUri}}` Handlebars syntax in the prompt tells Genkit to embed the image for the model to "see".
+---
 
-3.  **Processing and Confirmation**:
-    - The AI model returns a structured JSON object containing an array of extracted class slots.
-    - The `TimetableImportDialog` component receives this data and displays it in a preview list, allowing the user to review and edit any details.
+## 🧠 Core Engineering Highlights
 
-4.  **Saving the Data (`useAppData.ts`)**:
-    - When  user clicks "Save," the extracted slots are passed to the `importTimetable` function in `useAppData`.
-    - This function intelligently merges the data:
-        - It checks if the subjects already exist. If not, it creates them.
-        - It iterates through the slots and adds them to the existing timetable, checking for duplicates.
-    - The new state is saved to `localStorage`, and the UI updates instantly.
+### 1. Pure Function Attendance Engine
+All attendance calculations are isolated in [`src/lib/attendanceEngine.ts`](src/lib/attendanceEngine.ts). 
+*   **Predictable Calculations:** The module contains no React state or DOM dependencies. It relies entirely on input arguments, making it **100% predictable and unit-testable**.
+*   **Credit-Weighting:** Instead of counting raw class numbers, calculations use **credits** (e.g., Labs count as 3 credits, lectures count as 2). The attendance percentage represents:
+  $$\text{Attendance \%} = \frac{\text{Attended Credits}}{\text{Conducted Credits}} \times 100$$
+*   **Automatic Filtering:** Excludes holidays, Sundays, cancelled classes, and records logged before the tracking start date.
 
-## Get started with Attendly
+### 2. Offline-First Design
+*   **localStorage Primary:** State changes are persisted to `localStorage` immediately.
+*   **Conflict-Free Sync:** Firestore sync is optional and non-blocking. It uses a `hasPendingWrites` metadata guard to ignore local echoes, preventing synchronization write loops.
+*   **PWA Asset Cache:** Web assets and web fonts are cached via custom service workers configured in `next.config.ts`.
 
-To run this project locally, follow these steps:
+### 3. Deterministic OCR Parser
+*   **Adaptive Row Splitting:** Splits grid layout columns based on double spaces if formatting is preserved, falling back to single-space parsing when lines are compressed.
+*   **Token Combiners:** Custom combiners merge multi-word subjects (e.g., `AAP` + `LAB` + `1` $\rightarrow$ `AAP LAB 1`) to preserve timetable naming.
+*   **OCR Error Corrector:** Translates digit-substitution errors (e.g., `M0N` $\rightarrow$ `MON`, `T11E` $\rightarrow$ `TUE`).
+*   **Punctuation Filter:** Automatically discards vertical pipes and brackets generated by table borders.
 
-1.  **Clone the Repository**
-    ```bash
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+### 4. Zod Validation Boundaries
+All data crossing trust boundaries is validated with schemas in [`src/lib/schemas.ts`](src/lib/schemas.ts).
+*   **Compatibility:** Schema definitions use Zod `.default()` and `.nullish()` to automatically backfill missing properties when importing older storage formats.
+*   **Boundaries:** local storage, Firestore snapshot sync, and manual file imports are verified prior to loading.
 
-2.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
+---
 
-3.  **Set Up Environment Variables**
-    - Create a `.env` file in the root of the project.
-    - Add your Google Gemini API key to this file. You can get one from [Google AI Studio](https://aistudio.google.com/).
-      ```
-      GOOGLE_API_KEY=__YOUR_API_KEY__
-      ```
+## 💾 Data Model
 
-4.  **Run the Development Server**
-    The Next.js app and the Genkit AI flows run on different ports.
+The data model keeps memory consumption low and runs local database state on a clean relation:
 
-    - **Start the Next.js App:**
-      ```bash
-      npm run dev
-      ```
-      The application will be available at `http://localhost:9002`.
+| Entity | Description | Key Fields |
+|---|---|---|
+| **`Subject`** | Represents a course. | `id`, `name`, `type` (Lecture / Lab) |
+| **`TimeSlot`** | A recurring weekly class. | `day`, `startTime`, `endTime`, `subjectId`, `credits` |
+| **`OneOffSlot`** | A rescheduled class for a specific date. | `date`, `originalSlotId` (pointing to the base TimeSlot) |
+| **`AttendanceRecord`** | Logs attendance for a slot on a specific date. | `date`, `slotId`, `status` (Attended / Absent / Cancelled / Postponed) |
+| **`HistoricalData`** | Credits conducted prior to using the app. | `conductedCredits`, `attendedCredits` |
+| **`ArchivedSemester`** | A snapshot index of a completed semester. | `name`, `archivedAt`, `subjects[]`, `attendance[]` |
 
-    - **Start the Genkit Dev Server (Optional):**
-      To inspect the AI flows and view logs, you can run the Genkit UI in a separate terminal.
-      ```bash
-      npm run genkit:dev
-      ```
-      The Genkit UI will be available at `http://localhost:4000`.
+---
 
-Now you can open your browser and start using our Attendly!
+## 🎛️ Technology Stack
+
+*   **Core Framework:** React 18, Next.js 15 (App Router)
+*   **Language:** TypeScript
+*   **OCR Pipeline:** Tesseract.js (Client-side WASM compilation)
+*   **Styling:** Tailwind CSS, ShadCN UI
+*   **Data Validation:** Zod
+*   **Local Storage:** Native Web Storage API (`localStorage`)
+*   **Cloud Layer:** Firebase Client SDK (Auth & Firestore)
+*   **Testing:** Vitest
+
+---
+
+## 🚀 Getting Started
+
+### Installation
+
+1. Clone the repository and install dependencies:
+   ```bash
+   git clone https://github.com/yourusername/attendly.git
+   cd attendly
+   npm install
+   ```
+
+2. Set up environment variables (Optional — only required for Cloud Sync):
+   Create a `.env.local` file at the root:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:9002` in your browser.
+
+---
+
+## 🧪 Testing
+
+We maintain **47 unit tests** powered by **Vitest** that cover all pure mathematical functions in the Attendance Engine and token resolution in the OCR parser.
+
+Run the test suite:
+```bash
+npm test
+```
+
+Check code coverage:
+```bash
+npm run test:coverage
+```
+
+---
+
+## 📖 Architecture Reference
+
+For a deep engineering dive into state transitions, Firestore snapshot syncing rules, double-reschedule invariants, and edge-case testing, please read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+---
+
+## 🎓 Lessons Learned
+
+1. **Building for Real Users:** Tracking data over multiple semesters showed the need for strict database validations. We introduced Zod boundaries to prevent invalid storage loads or malformed manual imports from crashing the app.
+2. **Offline-First Synchronization:** Synchronizing local changes with a cloud backup database without creating echoes is hard. Using strict metadata checks (`hasPendingWrites`) was necessary to ensure local updates were not duplicated.
+3. **Intentional Scope Limitation:** Keeping Attendly restricted strictly to attendance calculations (rather than adding assignments or calendars) kept the app lightweight, fast, and free of backend hosting costs.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.

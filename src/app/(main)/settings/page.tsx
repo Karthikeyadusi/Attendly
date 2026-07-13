@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Download, Upload, LogIn, LogOut, CloudOff, RefreshCw, AlertTriangle, Archive, ArchiveRestore, History, Cloud, AlertCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import type { BackupData, ArchivedSemester, SyncStatus } from "@/types";
+import type { BackupData, ArchivedSemester } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,34 +17,10 @@ import { firebaseEnabled } from "@/lib/firebase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import SemesterViewDialog from "@/components/calendar/SemesterViewDialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import SyncIndicator from "@/components/layout/SyncIndicator";
+import { BackupDataSchema } from "@/lib/schemas";
 
 
-const BACKUP_VERSION = 1;
-
-const SyncIndicator = ({ status }: { status: SyncStatus }) => {
-    const config = {
-        idle: { Icon: Cloud, color: 'text-muted-foreground', label: 'Sync Idle' },
-        syncing: { Icon: RefreshCw, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
-        synced: { Icon: Cloud, color: 'text-green-500', label: 'Up to Date' },
-        offline: { Icon: CloudOff, color: 'text-muted-foreground', label: 'Offline' },
-        error: { Icon: AlertCircle, color: 'text-destructive', label: 'Sync Error' },
-    };
-    const { Icon, color, label } = config[status];
-
-    return (
-        <TooltipProvider delayDuration={100}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Icon className={`h-5 w-5 ${color}`} />
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{label}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
-};
 
 
 export default function SettingsPage() {
@@ -120,32 +96,35 @@ export default function SettingsPage() {
     reader.onload = (e) => {
       try {
         const text = e.target?.result;
-        if (typeof text !== 'string') throw new Error("File is not readable");
+        if (typeof text !== 'string') throw new Error('File is not readable');
         const parsedData = JSON.parse(text);
 
-        // Basic validation
-        if (
-          parsedData.version !== BACKUP_VERSION ||
-          !Array.isArray(parsedData.subjects) ||
-          !Array.isArray(parsedData.timetable) ||
-          !Array.isArray(parsedData.attendance)
-        ) {
-          throw new Error("Invalid backup file format.");
+        // D10: Use BackupDataSchema for full structural validation.
+        // This catches version mismatches, missing required fields, and wrong types.
+        const result = BackupDataSchema.safeParse(parsedData);
+        if (!result.success) {
+          const firstError = result.error.errors[0];
+          const path = firstError.path.join('.');
+          throw new Error(
+            path
+              ? `Invalid field "${path}": ${firstError.message}`
+              : firstError.message
+          );
         }
 
-        setBackupToRestore(parsedData);
+        setBackupToRestore(result.data as BackupData);
         setIsImportConfirmOpen(true);
 
       } catch (error) {
-        console.error("Import failed:", error);
+        console.error('Import failed:', error);
         toast({
-          variant: "destructive",
-          title: "Import Failed",
-          description: error instanceof Error ? error.message : "The selected file is not a valid backup.",
+          variant: 'destructive',
+          title: 'Import Failed',
+          description: error instanceof Error ? error.message : 'The selected file is not a valid backup.',
         });
       } finally {
         if (fileInputRef.current) {
-          fileInputRef.current.value = "";
+          fileInputRef.current.value = '';
         }
       }
     };

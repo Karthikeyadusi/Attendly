@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,168 +15,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { extractTimetable } from "@/ai/flows/extract-timetable-flow";
 import { useApp } from "../AppProvider";
-import { Loader2, Upload, Trash2, Sparkles, AlertCircle, FileText } from "lucide-react";
-import type { ExtractedSlot, DayOfWeek, Subject } from "@/types";
+import { Loader2, Upload, Trash2, ScanText, AlertCircle } from "lucide-react";
+import type { ExtractedSlot, DayOfWeek } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { addMinutes, parse, format as formatDate } from 'date-fns';
+import { parseOcrText, processRawSlots } from "@/lib/ocrParser";
+import { Progress } from "../ui/progress";
 
 const days: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const NEW_SUBJECT_ID_PREFIX = 'new-subject_';
 
-type RawExtractedSlot = {
-    day: DayOfWeek;
-    startTime: string;
-    subjectName: string;
-};
-
 type MappedExtractedSlot = ExtractedSlot & {
-    subjectIdOrName: string; // Will hold either an existing subject ID or a new subject name
-};
-
-
-const processRawSlots = (rawSlots: RawExtractedSlot[]): ExtractedSlot[] => {
-    // Helper function to fix inconsistent time formats from the AI.
-    const normalizeTime = (timeStr: string): string => {
-        try {
-            if (!timeStr) return "00:00";
-            timeStr = timeStr.replace('.', ':').trim();
-            const isPM = timeStr.toLowerCase().includes('pm');
-            const isAM = timeStr.toLowerCase().includes('am');
-            timeStr = timeStr.replace(/am|pm/i, '').trim();
-
-            let [hourStr, minuteStr] = timeStr.split(':');
-            if (!hourStr || !minuteStr) return timeStr;
-
-            let hour = parseInt(hourStr, 10);
-            if (isNaN(hour)) return timeStr;
-
-            // Simple heuristic for 12-hour format without AM/PM
-            if (!isPM && !isAM && hour >= 1 && hour <= 7) { 
-                hour += 12;
-            } else if (isPM && hour < 12) {
-                hour += 12;
-            } else if (isAM && hour === 12) {
-                hour = 0; // Midnight case
-            }
-            
-            let minute = parseInt(minuteStr, 10);
-            if (isNaN(minute)) return timeStr;
-
-            const h = String(hour).padStart(2, '0');
-            const m = String(minute).padStart(2, '0');
-
-            return `${h}:${m}`;
-        } catch {
-            return timeStr;
-        }
-    };
-    
-    // 1. Normalize times and filter out invalid slots
-    const allSlotsNormalized = rawSlots
-        .map(slot => ({ ...slot, startTime: normalizeTime(slot.startTime) }))
-        .filter(slot => slot.day && slot.startTime && slot.subjectName && slot.startTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/));
-
-    const slotsByDay = new Map<DayOfWeek, RawExtractedSlot[]>();
-
-    // 2. Group ALL normalized slots by day
-    for (const slot of allSlotsNormalized) {
-        if (!slotsByDay.has(slot.day)) {
-            slotsByDay.set(slot.day, []);
-        }
-        slotsByDay.get(slot.day)!.push(slot);
-    }
-
-    const timedSlots: (RawExtractedSlot & { endTime: string })[] = [];
-
-    // 3. Calculate end times using the full schedule and hardcoded lunch rule
-    for (const day of slotsByDay.keys()) {
-        const daySlots = slotsByDay.get(day)!.sort((a, b) => a.startTime.localeCompare(b.startTime));
-        
-        for (let i = 0; i < daySlots.length; i++) {
-            const currentSlot = daySlots[i];
-            const nextSlot = i + 1 < daySlots.length ? daySlots[i + 1] : null;
-
-            try {
-                let endTime;
-                const lunchStartTime = "12:20"; // The hardcoded rule
-
-                if (nextSlot) {
-                    // If the current class is before lunch and the next one is during or after, cap the end time.
-                    if (currentSlot.startTime < lunchStartTime && nextSlot.startTime >= lunchStartTime) {
-                        endTime = lunchStartTime;
-                    } else {
-                        endTime = nextSlot.startTime;
-                    }
-                } else {
-                    // Last class of the day. If it's before lunch, cap it. Otherwise, use standard duration.
-                    if (currentSlot.startTime < lunchStartTime) {
-                        endTime = lunchStartTime;
-                    } else {
-                        const isLab = currentSlot.subjectName.toLowerCase().includes('lab');
-                        const duration = isLab ? 100 : 50; 
-                        endTime = formatDate(addMinutes(parse(currentSlot.startTime, 'HH:mm', new Date()), duration), 'HH:mm');
-                    }
-                }
-                
-                timedSlots.push({ ...currentSlot, endTime });
-            } catch (e) {
-                console.error("Error calculating end time:", currentSlot, e);
-            }
-        }
-    }
-
-    // 4. Merge consecutive slots that have the same subject name
-    const mergedSlots: (RawExtractedSlot & { endTime: string })[] = [];
-    const timedSlotsByDay = new Map<DayOfWeek, (RawExtractedSlot & { endTime: string })[]>();
-    for (const slot of timedSlots) {
-        if (!timedSlotsByDay.has(slot.day)) {
-            timedSlotsByDay.set(slot.day, []);
-        }
-        timedSlotsByDay.get(slot.day)!.push(slot);
-    }
-    
-    for (const day of timedSlotsByDay.keys()) {
-        const daySlots = timedSlotsByDay.get(day)!.sort((a,b) => a.startTime.localeCompare(b.startTime));
-        let i = 0;
-        while (i < daySlots.length) {
-            let currentSlot = { ...daySlots[i] };
-            
-            let j = i + 1;
-            while (
-                j < daySlots.length &&
-                daySlots[j].subjectName.toLowerCase() === currentSlot.subjectName.toLowerCase() &&
-                daySlots[j].startTime === currentSlot.endTime // Ensure they are perfectly consecutive
-            ) {
-                currentSlot.endTime = daySlots[j].endTime; // Extend the end time
-                j++;
-            }
-            
-            mergedSlots.push(currentSlot);
-            i = j; // Move index past all merged slots
-        }
-    }
-    
-    // 5. NOW filter out purely structural slots like 'LUNCH' or 'BREAK'
-    const structuralKeywords = ['lunch', 'break'];
-    const finalScheduleWithCredits = mergedSlots
-        .filter(slot => !structuralKeywords.some(keyword => slot.subjectName.toLowerCase().includes(keyword)))
-        .map(slot => ({
-            day: slot.day,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            subjectName: slot.subjectName.trim(),
-            credits: slot.subjectName.toLowerCase().includes('lab') ? 3 : 2, // Default credits
-        }));
-
-    // Return sorted by day, then time
-    return finalScheduleWithCredits.sort((a,b) => {
-        if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
-        return a.startTime.localeCompare(b.startTime);
-    });
+    subjectIdOrName: string;
 };
 
 
@@ -184,15 +36,17 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
   const { importTimetable, subjects } = useApp();
   const { toast } = useToast();
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [imageData, setImageData] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
   const [extractedSlots, setExtractedSlots] = useState<MappedExtractedSlot[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
     setFilePreview(null);
-    setImageData(null);
+    setImageFile(null);
     setIsLoading(false);
+    setOcrProgress(0);
     setExtractedSlots([]);
   };
 
@@ -210,61 +64,77 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
         toast({
             variant: "destructive",
             title: "Unsupported File Type",
-            description: "Please upload a valid image file.",
+            description: "Please upload a valid image file (JPG, PNG, WEBP, etc.).",
         });
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setFilePreview(URL.createObjectURL(file));
-        setImageData(dataUrl);
-      };
-      reader.readAsDataURL(file);
+      setFilePreview(URL.createObjectURL(file));
+      setImageFile(file);
     }
   };
 
   const handleAnalyze = async () => {
-    if (!imageData) return;
+    if (!imageFile) return;
 
     setIsLoading(true);
+    setOcrProgress(0);
     setExtractedSlots([]);
+
     try {
-      const result = await extractTimetable({ photoDataUri: imageData });
-      if (result && result.slots.length > 0) {
-        const processed = processRawSlots(result.slots);
+      // Dynamically import Tesseract.js to avoid adding it to the initial bundle
+      const Tesseract = await import('tesseract.js');
+
+      const result = await Tesseract.recognize(imageFile, 'eng', {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(Math.round((m.progress ?? 0) * 100));
+          }
+        },
+      });
+
+      const rawText = result.data.text;
+
+      if (!rawText.trim()) {
+        toast({
+          variant: 'destructive',
+          title: 'No Text Detected',
+          description: 'OCR could not find any text. Try a clearer, higher-resolution image.',
+        });
+        return;
+      }
+
+      // Parse the OCR text into raw slots, then process them
+      const rawSlots = parseOcrText(rawText);
+      const processed = processRawSlots(rawSlots);
+
+      if (processed.length > 0) {
         const mapped: MappedExtractedSlot[] = processed.map(p => {
           const existingSubject = subjects.find(s => s.name.toLowerCase() === p.subjectName.toLowerCase());
           return {
             ...p,
-            subjectIdOrName: existingSubject ? existingSubject.id : `${NEW_SUBJECT_ID_PREFIX}${p.subjectName}`
-          }
+            subjectIdOrName: existingSubject ? existingSubject.id : `${NEW_SUBJECT_ID_PREFIX}${p.subjectName}`,
+          };
         });
         setExtractedSlots(mapped);
-        toast({
-            title: "Analysis Complete",
-            description: "Review the extracted classes below.",
-        });
+        toast({ title: 'Scan Complete', description: `Found ${processed.length} class slot${processed.length !== 1 ? 's' : ''}. Review below.` });
       } else {
         toast({
-            variant: "destructive",
-            title: "Analysis Failed",
-            description: "Could not extract any timetable data. Please try another file.",
+          variant: 'destructive',
+          title: 'No Classes Found',
+          description: 'OCR ran successfully but no timetable structure was detected. Try a cleaner image or add slots manually.',
         });
       }
     } catch (error) {
-      console.error("Timetable extraction failed:", error);
+      console.error('OCR failed:', error);
       toast({
-        variant: "destructive",
-        title: "An Error Occurred",
-        description: "Failed to analyze the timetable file. Please try again.",
+        variant: 'destructive',
+        title: 'Scan Failed',
+        description: 'Something went wrong during OCR. Please try again with a different image.',
       });
     } finally {
       setIsLoading(false);
+      setOcrProgress(0);
     }
   };
   
@@ -331,9 +201,10 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl p-0 max-h-[90dvh] flex flex-col">
         <DialogHeader className="p-4 md:p-6 pb-4 border-b">
-          <DialogTitle>Import Timetable with AI</DialogTitle>
+          <DialogTitle>Import Timetable via OCR</DialogTitle>
           <DialogDescription>
-            Upload a picture of your timetable. You can map new subjects to existing ones to preserve history.
+            Upload a photo of your printed timetable. The scanner will extract classes automatically.
+            You can map detected subjects to existing ones to preserve attendance history.
           </DialogDescription>
         </DialogHeader>
 
@@ -347,11 +218,14 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                  >
                     {renderFilePreview()}
                  </div>
-                <Input id="timetable-upload" ref={fileInputRef} type="file" className="hidden" accept="image/*,application/pdf" onChange={handleFileChange} />
-                <Button onClick={handleAnalyze} disabled={!imageData || isLoading} className="w-full">
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2" />}
-                    {isLoading ? "Analyzing..." : "Analyze Timetable"}
+                <Input id="timetable-upload" ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                <Button onClick={handleAnalyze} disabled={!imageFile || isLoading} className="w-full">
+                    {isLoading ? <Loader2 className="animate-spin" /> : <ScanText className="mr-2" />}
+                    {isLoading ? `Scanning... ${ocrProgress}%` : 'Scan Timetable'}
                 </Button>
+                {isLoading && ocrProgress > 0 && (
+                    <Progress value={ocrProgress} className="h-1" />
+                )}
             </div>
 
             {/* Right side: Preview */}
@@ -359,13 +233,14 @@ export default function TimetableImportDialog({ open, onOpenChange }: { open: bo
                 <Label>Extracted Classes</Label>
                 <div className="w-full rounded-md border min-h-[280px]">
                     {isLoading ? (
-                        <div className="flex items-center justify-center h-full p-4">
+                        <div className="flex flex-col items-center justify-center h-full p-4 gap-2">
                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                           <p className="text-sm text-muted-foreground">Running OCR on your image...</p>
                         </div>
                     ) : !isLoading && extractedSlots.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-                            <p>Analysis results will appear here.</p>
-                            <p className="text-xs">You can map AI-detected subjects to your existing ones.</p>
+                            <p>Scan results will appear here.</p>
+                            <p className="text-xs">You can map detected subjects to your existing ones.</p>
                         </div>
                     ) : (
                          <div className="space-y-2 p-2">

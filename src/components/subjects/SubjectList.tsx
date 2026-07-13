@@ -8,9 +8,13 @@ import { Pencil, Trash2, BookHeart } from "lucide-react";
 import type { Subject } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "../ui/progress";
+import { computeSafeToMiss, computeClassesNeeded, computeAvgCredits } from "@/lib/attendanceEngine";
 
 export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => void; }) {
-    const { subjects, deleteSubject, subjectStats, minAttendancePercentage } = useApp();
+    const { subjects, deleteSubject, subjectStats, minAttendancePercentage, timetable } = useApp();
+
+    // Compute average credits per class from the timetable for the safe-miss conversion
+    const avgCredits = computeAvgCredits(timetable);
 
     if (subjects.length === 0) {
         return (
@@ -34,16 +38,25 @@ export default function SubjectList({ onEdit }: { onEdit: (subject: Subject) => 
                 
                 let helperMessage = null;
                 if (stats && stats.conductedClasses > 0) {
-                    const minAtt = minAttendancePercentage;
-                    if (percentage < minAtt) {
-                        const classesToAttend = Math.ceil((minAtt / 100 * stats.conductedClasses - stats.attendedClasses) / (1 - minAtt / 100));
-                        if (classesToAttend > 0) {
-                            helperMessage = `📈 Attend ${classesToAttend} more class${classesToAttend > 1 ? 'es' : ''} to reach ${minAtt}%`;
+                    if (percentage < minAttendancePercentage) {
+                        const needed = computeClassesNeeded(
+                            stats.attendedClasses,
+                            stats.conductedClasses,
+                            minAttendancePercentage,
+                            avgCredits
+                        );
+                        if (needed > 0) {
+                            helperMessage = `📈 Attend ${needed} more class${needed > 1 ? 'es' : ''} to reach ${minAttendancePercentage}%`;
                         }
-                    } else if (percentage > minAtt) {
-                        const classesCanMiss = Math.floor((stats.attendedClasses - minAtt / 100 * stats.conductedClasses) / (minAtt / 100));
-                        if (classesCanMiss > 0) {
-                            helperMessage = `✅ You're safe to miss ${classesCanMiss} more class${classesCanMiss > 1 ? 'es' : ''}`;
+                    } else if (percentage > minAttendancePercentage) {
+                        const canMiss = computeSafeToMiss(
+                            stats.attendedClasses,
+                            stats.conductedClasses,
+                            minAttendancePercentage,
+                            avgCredits
+                        );
+                        if (canMiss > 0) {
+                            helperMessage = `✅ You're safe to miss ${canMiss} more class${canMiss > 1 ? 'es' : ''}`;
                         }
                     }
                 }

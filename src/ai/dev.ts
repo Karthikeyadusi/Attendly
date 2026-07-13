@@ -1,3 +1,3 @@
-// Flows will be imported for their side effects in this file.
-import './flows/extract-timetable-flow';
-import './flows/weekly-debrief-flow';
+// Genkit AI flows have been archived to _archived/ directory.
+// OCR and weekly summary are now handled by deterministic pipelines.
+// See: src/ai/flows/_archived/ for reference implementations.

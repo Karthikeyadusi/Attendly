@@ -10,9 +10,11 @@ import { app as firebaseApp, firebaseEnabled } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { isSunday } from '@/lib/utils';
 import { parse } from 'date-fns';
+import { computeSubjectStats } from '@/lib/attendanceEngine';
+import { AppCoreDataSchema, BACKUP_VERSION } from '@/lib/schemas';
 
-const APP_DATA_KEY = 'attdendlyData';
-const BACKUP_VERSION = 1;
+const APP_DATA_KEY = 'attendlyData';
+const LEGACY_APP_DATA_KEY = 'attdendlyData'; // typo from original, kept for migration
 
 const dayMap: { [key: number]: DayOfWeek | undefined } = {
     0: undefined, // Sunday
@@ -91,12 +93,28 @@ export function useAppData() {
   useEffect(() => {
     if (isClient) {
       try {
+        // A3: One-time migration from the legacy mis-spelled key
+        const legacyData = localStorage.getItem(LEGACY_APP_DATA_KEY);
+        if (legacyData && !localStorage.getItem(APP_DATA_KEY)) {
+          localStorage.setItem(APP_DATA_KEY, legacyData);
+          localStorage.removeItem(LEGACY_APP_DATA_KEY);
+        }
+
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
           const parsed = JSON.parse(storedData);
-          // Backwards compatibility for old data
-          const initial = getInitialData();
-          setData({ ...initial, ...parsed });
+          // D10: Validate with Zod. .parse() applies .default() for missing fields
+          // (backwards compatibility) and throws on truly invalid structures.
+          const result = AppCoreDataSchema.safeParse(parsed);
+          if (result.success) {
+            setData(result.data);
+          } else {
+            console.warn(
+              'localStorage data failed schema validation. Falling back to defaults.',
+              result.error.flatten()
+            );
+            // Keep existing state (getInitialData() from useState) rather than crashing
+          }
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -147,9 +165,17 @@ export function useAppData() {
       }
       
       if (docSnap.exists()) {
-        const cloudData = docSnap.data() as AppCoreData;
-        const initial = getInitialData();
-        setData({ ...initial, ...cloudData });
+        // D10: Validate Firestore data before applying to state.
+        // Guards against corrupt or out-of-date cloud documents.
+        const result = AppCoreDataSchema.safeParse(docSnap.data());
+        if (result.success) {
+          setData(result.data);
+        } else {
+          console.warn(
+            'Firestore document failed schema validation. Keeping local state.',
+            result.error.flatten()
+          );
+        }
       }
       setSyncStatus('synced');
       setIsLoaded(true); // Data is loaded (or we know it doesn't exist)
@@ -288,16 +314,23 @@ export function useAppData() {
 
   const deleteSubject = useCallback((subjectId: string) => {
     setData(prev => {
-      const newTimetable = prev.timetable.filter(slot => slot.subjectId !== subjectId);
-      const newAttendance = prev.attendance.filter(record => !newTimetable.find(slot => slot.id === record.slotId));
-      const newOneOffSlots = (prev.oneOffSlots || []).filter(slot => slot.subjectId !== subjectId);
-      
+      // A1: Collect the slot IDs that belong to this subject BEFORE filtering,
+      // so we can remove exactly their attendance records — nothing more, nothing less.
+      const deletedSlotIds = new Set(
+        prev.timetable.filter(s => s.subjectId === subjectId).map(s => s.id)
+      );
+      const deletedOneOffIds = new Set(
+        (prev.oneOffSlots || []).filter(s => s.subjectId === subjectId).map(s => s.id)
+      );
+
       return {
         ...prev,
         subjects: prev.subjects.filter(s => s.id !== subjectId),
-        timetable: newTimetable,
-        attendance: newAttendance,
-        oneOffSlots: newOneOffSlots,
+        timetable: prev.timetable.filter(s => s.subjectId !== subjectId),
+        oneOffSlots: (prev.oneOffSlots || []).filter(s => s.subjectId !== subjectId),
+        attendance: prev.attendance.filter(
+          r => !deletedSlotIds.has(r.slotId) && !deletedOneOffIds.has(r.slotId)
+        ),
       };
     });
   }, []);
@@ -416,40 +449,37 @@ export function useAppData() {
   }, []);
 
   const undoPostpone = useCallback((oneOffSlotId: string) => {
-    let success = false;
+    // A4: Validate BEFORE calling setData so the toast is unconditionally reliable.
+    // Reading from `data` (not `prev`) is safe here because we only read, not write.
+    const oneOffs = data.oneOffSlots || [];
+    const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
+    if (!slotToUndo) return;
+
+    const originalAttendanceId = `${slotToUndo.originalDate}-${slotToUndo.originalSlotId}`;
+    const originalRecord = data.attendance.find(
+      r => r.id === originalAttendanceId && r.status === 'Postponed'
+    );
+    if (!originalRecord) return;
+
+    // Validation passed — now mutate
     setData(prev => {
-        const oneOffs = prev.oneOffSlots || [];
-        const slotToUndo = oneOffs.find(s => s.id === oneOffSlotId);
-        if (!slotToUndo) return prev;
-
-        const originalAttendanceId = `${slotToUndo.originalDate}-${slotToUndo.originalSlotId}`;
-        const originalRecord = prev.attendance.find(
-            r => r.id === originalAttendanceId && r.status === 'Postponed'
-        );
-        if (!originalRecord) return prev;
-
-        const newOneOffSlots = oneOffs.filter(s => s.id !== oneOffSlotId);
-        
-        let newAttendance = [...prev.attendance];
-        if (originalRecord.previousStatus) {
-            const restoredRecord: AttendanceRecord = { ...originalRecord, status: originalRecord.previousStatus };
-            delete restoredRecord.previousStatus;
-            newAttendance = newAttendance.map(r => r.id === originalRecord.id ? restoredRecord : r);
-        } else {
-            newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
-        }
-        
-        success = true;
-        return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
+      const newOneOffSlots = (prev.oneOffSlots || []).filter(s => s.id !== oneOffSlotId);
+      let newAttendance = [...prev.attendance];
+      if (originalRecord.previousStatus) {
+        const restoredRecord: AttendanceRecord = { ...originalRecord, status: originalRecord.previousStatus };
+        delete restoredRecord.previousStatus;
+        newAttendance = newAttendance.map(r => r.id === originalRecord.id ? restoredRecord : r);
+      } else {
+        newAttendance = newAttendance.filter(r => r.id !== originalRecord.id);
+      }
+      return { ...prev, oneOffSlots: newOneOffSlots, attendance: newAttendance };
     });
 
-    if (success) {
-        toast({
-            title: "Postponement Undone",
-            description: "The class has been restored to its original schedule.",
-        });
-    }
-  }, [toast]);
+    toast({
+      title: "Postponement Undone",
+      description: "The class has been restored to its original schedule.",
+    });
+  }, [data.oneOffSlots, data.attendance, toast]);
 
   const deleteOneOffSlot = useCallback((oneOffSlotId: string) => {
     setData(prev => {
@@ -660,45 +690,15 @@ export function useAppData() {
   }, [data.attendance]);
 
   const subjectStats: SubjectStatsMap = useMemo(() => {
-    const stats: SubjectStatsMap = new Map();
-    if (!isLoaded) return stats;
-  
+    if (!isLoaded) return new Map();
     const allSlots = [...data.timetable, ...(data.oneOffSlots || [])];
-    const slotMap = new Map(allSlots.map(slot => [slot.id, slot]));
-  
-    for (const subject of data.subjects) {
-      stats.set(subject.id, { attendedClasses: 0, conductedClasses: 0, percentage: 100 });
-    }
-  
-    const filteredAttendance = data.trackingStartDate
-      ? data.attendance.filter(r => r.date >= data.trackingStartDate!)
-      : data.attendance;
-  
-    for (const record of filteredAttendance) {
-      if ((data.holidays || []).includes(record.date) || isSunday(record.date)) continue;
-      if (record.status === 'Cancelled' || record.status === 'Postponed') continue;
-      
-      const slot = slotMap.get(record.slotId);
-      if (slot) {
-        const subjectStat = stats.get(slot.subjectId);
-        if (subjectStat) {
-          subjectStat.conductedClasses += slot.credits;
-          if (record.status === 'Attended') {
-            subjectStat.attendedClasses += slot.credits;
-          }
-        }
-      }
-    }
-    
-    for(const stat of stats.values()) {
-      if (stat.conductedClasses > 0) {
-        stat.percentage = (stat.attendedClasses / stat.conductedClasses) * 100;
-      } else {
-        stat.percentage = 100;
-      }
-    }
-    
-    return stats;
+    return computeSubjectStats(
+      data.subjects,
+      allSlots,
+      data.attendance,
+      data.trackingStartDate,
+      data.holidays || []
+    );
   }, [data.subjects, data.timetable, data.oneOffSlots, data.attendance, data.trackingStartDate, data.holidays, isLoaded]);
 
   return {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import TodaysClasses from "@/components/attendance/TodaysClasses";
@@ -8,34 +7,9 @@ import Onboarding from "@/components/Onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, Cloud, RefreshCw, CloudOff, AlertCircle } from "lucide-react";
+import { LogIn, Cloud, CloudOff } from "lucide-react";
 import Link from "next/link";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { SyncStatus } from "@/types";
-
-const SyncIndicator = ({ status }: { status: SyncStatus }) => {
-    const config = {
-        idle: { Icon: Cloud, color: 'text-muted-foreground', label: 'Sync Idle' },
-        syncing: { Icon: RefreshCw, color: 'text-blue-500 animate-spin', label: 'Syncing...' },
-        synced: { Icon: Cloud, color: 'text-green-500', label: 'Up to Date' },
-        offline: { Icon: CloudOff, color: 'text-muted-foreground', label: 'Offline' },
-        error: { Icon: AlertCircle, color: 'text-destructive', label: 'Sync Error' },
-    };
-    const { Icon, color, label } = config[status];
-
-    return (
-        <TooltipProvider delayDuration={100}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Icon className={`h-5 w-5 ${color}`} />
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{label}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
-};
+import SyncIndicator from "@/components/layout/SyncIndicator";
 
 
 export default function DashboardPage() {

@@ -7,7 +7,7 @@ import TimetableSlotForm from "@/components/timetable/TimetableSlotForm";
 import TimetableImportDialog from "@/components/timetable/TimetableImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlusCircle, Sparkles } from "lucide-react";
+import { PlusCircle, ScanText } from "lucide-react";
 import { useState } from "react";
 import type { TimeSlot } from "@/types";
 
@@ -50,8 +50,8 @@ export default function TimetablePage() {
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Weekly Timetable</h2>
                 <div className="flex flex-col sm:flex-row gap-2">
                     <Button onClick={() => setIsImportOpen(true)} variant="outline">
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Import with AI
+                        <ScanText className="mr-2 h-4 w-4" />
+                        Scan Timetable
                     </Button>
                     <Button onClick={handleAddSlot} disabled={subjects.length === 0}>
                         <PlusCircle className="mr-2 h-4 w-4" />
