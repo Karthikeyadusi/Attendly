@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PWA Status](https://img.shields.io/badge/PWA-fully--supported-orange.svg)]()
 
+**Latest Release:** [v1.0.0](https://github.com/Karthikeyadusi/Attendly/releases/tag/v1.0.0)
+
 ---
 
 ## 🚀 Project Highlights
