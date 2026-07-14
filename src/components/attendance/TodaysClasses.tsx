@@ -145,7 +145,7 @@ export default function TodaysClasses() {
                   </Button>
                 </div>
               )}
-              {isOneOff && 'originalDate' in slot && (
+              {isOneOff && 'originalDate' in slot && slot.originalDate && (
                 <div className="mt-2 pt-2 border-t border-amber-500/20 flex justify-center items-center gap-2">
                   <Button variant="link" size="sm" className="text-amber-600 dark:text-amber-500" onClick={() => undoPostpone(slot.id)}>
                     <Undo2 className="mr-2 h-4 w-4" />

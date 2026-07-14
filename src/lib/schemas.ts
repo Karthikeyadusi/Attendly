@@ -62,8 +62,8 @@ export const OneOffSlotSchema = z.object({
   endTime: TimeStringSchema,
   subjectId: z.string().min(1),
   credits: z.number().int().min(0).default(1),
-  originalSlotId: z.string().min(1),
-  originalDate: DateStringSchema,
+  originalSlotId: z.string().min(1).nullish(),
+  originalDate: DateStringSchema.nullish(),
 });
 
 export const AttendanceRecordSchema = z.object({

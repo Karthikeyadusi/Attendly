@@ -27,8 +27,8 @@ export type OneOffSlot = {
   endTime: string; // "HH:MM"
   subjectId: string;
   credits: number;
-  originalSlotId: string; // To trace it back
-  originalDate: string; // The date this class was moved FROM
+  originalSlotId?: string | null; // To trace it back
+  originalDate?: string | null; // The date this class was moved FROM
 };
 
 export type AttendanceStatus = 'Attended' | 'Absent' | 'Cancelled' | 'Postponed';

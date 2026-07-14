@@ -159,7 +159,7 @@ function DailySchedule({ selectedDate }: DailyScheduleProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {isOneOff && 'originalDate' in slot && (
+                    {isOneOff && 'originalDate' in slot && slot.originalDate && (
                       <div className="flex items-center gap-1">
                         <TooltipProvider delayDuration={100}>
                           <Tooltip>
