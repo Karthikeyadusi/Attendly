@@ -131,8 +131,11 @@ export function useAppData() {
     }
     const auth = getAuth(firebaseApp);
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (!currentUser) {
+      if (currentUser) {
+        setIsLoaded(false); // Reset loaded status so we don't overwrite cloud before fetching
+        setUser(currentUser);
+      } else {
+        setUser(null);
         // User logged out, ensure local data is loaded and defaults are set
         const storedData = localStorage.getItem(APP_DATA_KEY);
         if (storedData) {
@@ -221,6 +224,8 @@ export function useAppData() {
         const loggedInUser = result.user;
         
         setSyncStatus('syncing');
+        setIsLoaded(false); // Reset loaded status immediately to block overwrites
+        
         const db = getFirestore(firebaseApp);
         const userDocRef = doc(db, 'users', loggedInUser.uid);
         const docSnap = await getDoc(userDocRef);
@@ -238,6 +243,7 @@ export function useAppData() {
             setData({ ...initial, ...cloudData });
         }
         setSyncStatus('synced');
+        setIsLoaded(true); // Now safe to write updates to storage/cloud
     } catch (error: any) {
         setSyncStatus('error');
         console.error("Google Sign-in failed:", error);
